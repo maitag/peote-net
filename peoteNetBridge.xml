@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<project>
+	
+	<meta title="PeoteNetBridge" package="de.peote.net" version="0.1.0" company="Sylvio Sell - maitag.de" />
+	<app main="PeoteNetBridge" path="Export" file="peoteNetBridge" />
+	
+	<source path="Source" />
+	<source path="./../PeoteSocket/Source/" />
+
+	<haxelib name="openfl" />
+	
+	<haxeflag name="-dce" value="full" />
+	<haxedef name="no-traces" />
+	
+	<assets path="Assets" rename="assets" exclude="*.svg" />
+	<icon path="Assets/openfl.svg" />
+	
+</project>

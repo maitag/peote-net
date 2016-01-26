@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<project>
+	
+	<meta title="PeoteNetTest" package="de.peote.net" version="0.1.0" company="Sylvio Sell - maitag" />
+	
+	<app main="PeoteServerTest" path="Export" file="PeoteServerTest" />
+	<!--<app main="PeoteClientTest" path="Export" file="PeoteClientTest" />-->
+	
+	<source path="Source" />
+	<source path="./../PeoteSocket/Source/" />
+	
+	<haxelib name="lime" />
+	
+	<assets path="Assets" rename="assets" exclude="lime.svg" />
+	<icon path="Assets/lime.svg" />
+	
+</project>
