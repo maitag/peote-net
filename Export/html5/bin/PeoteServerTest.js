@@ -32,7 +32,7 @@ ApplicationMain.create = function() {
 	ApplicationMain.preloader.load(urls,types);
 };
 ApplicationMain.main = function() {
-	ApplicationMain.config = { build : "1", company : "Sylvio Sell - maitag", file : "PeoteServerTest", fps : 60, name : "PeoteNetTest", orientation : "", packageName : "de.peote.net", version : "0.1.0", windows : [{ antialiasing : 0, background : 16777215, borderless : false, depthBuffer : false, display : 0, fullscreen : false, hardware : true, height : 0, parameters : "{}", resizable : true, stencilBuffer : false, title : "PeoteNetTest", vsync : false, width : 0, x : null, y : null}]};
+	ApplicationMain.config = { build : "139", company : "Sylvio Sell - maitag", file : "PeoteServerTest", fps : 60, name : "PeoteNetTest", orientation : "", packageName : "de.peote.net", version : "0.2.0", windows : [{ antialiasing : 0, background : 16777215, borderless : false, depthBuffer : false, display : 0, fullscreen : false, hardware : true, height : 0, parameters : "{}", resizable : true, stencilBuffer : false, title : "PeoteNetTest", vsync : false, width : 0, x : null, y : null}]};
 };
 ApplicationMain.start = function() {
 	var result = ApplicationMain.app.exec();
@@ -1121,14 +1121,14 @@ var PeoteServerTest = function() {
 	var _g = this;
 	lime_app_Application.call(this);
 	this.peoteServer = new PeoteServer({ onCreateJoint : function(jointNr) {
-		haxe_Log.trace("onCreateJoint:" + jointNr,{ fileName : "PeoteServerTest.hx", lineNumber : 22, className : "PeoteServerTest", methodName : "new"});
+		haxe_Log.trace("onCreateJoint:" + jointNr,{ fileName : "PeoteServerTest.hx", lineNumber : 25, className : "PeoteServerTest", methodName : "new"});
 	}, onCreateJointError : function(errorNr) {
-		haxe_Log.trace("onCreateJointError:" + errorNr,{ fileName : "PeoteServerTest.hx", lineNumber : 25, className : "PeoteServerTest", methodName : "new"});
+		haxe_Log.trace("onCreateJointError:" + errorNr,{ fileName : "PeoteServerTest.hx", lineNumber : 28, className : "PeoteServerTest", methodName : "new"});
 	}, onUserConnect : function(jointNr1,userNr) {
-		haxe_Log.trace("onUserConnect: jointNr=" + jointNr1 + ", userNr=" + userNr,{ fileName : "PeoteServerTest.hx", lineNumber : 28, className : "PeoteServerTest", methodName : "new"});
-		_g.peoteServer.send(userNr,[3,2,1]);
+		haxe_Log.trace("onUserConnect: jointNr=" + jointNr1 + ", userNr=" + userNr,{ fileName : "PeoteServerTest.hx", lineNumber : 31, className : "PeoteServerTest", methodName : "new"});
+		_g.sendTestData(userNr);
 	}, onUserDisconnect : function(jointNr2,userNr1,reason) {
-		haxe_Log.trace("onUserDisconnect: jointNr=" + jointNr2 + ", userNr=" + userNr1 + ", reason=" + reason,{ fileName : "PeoteServerTest.hx", lineNumber : 36, className : "PeoteServerTest", methodName : "new"});
+		haxe_Log.trace("onUserDisconnect: jointNr=" + jointNr2 + ", userNr=" + userNr1 + ", reason=" + reason,{ fileName : "PeoteServerTest.hx", lineNumber : 35, className : "PeoteServerTest", methodName : "new"});
 	}, onData : $bind(this,this.onData)});
 	this.peoteServer.createJoint("localhost",7680,"testserver");
 };
@@ -1136,26 +1136,39 @@ $hxClasses["PeoteServerTest"] = PeoteServerTest;
 PeoteServerTest.__name__ = true;
 PeoteServerTest.__super__ = lime_app_Application;
 PeoteServerTest.prototype = $extend(lime_app_Application.prototype,{
-	onData: function(jointNr,userNr,data) {
-		haxe_Log.trace("onData: jointNr=" + jointNr + ", userNr=" + userNr,{ fileName : "PeoteServerTest.hx", lineNumber : 47, className : "PeoteServerTest", methodName : "onData"});
-		var bytes = haxe_io_Bytes.ofData(new ArrayBuffer(data.length));
-		var _g1 = 0;
-		var _g = data.length;
-		while(_g1 < _g) {
-			var i = _g1++;
-			bytes.b[i] = data[i] & 255;
-		}
-		this.debug_output(bytes);
+	sendTestData: function(userNr) {
+		var output = new de_peote_io_js_PeoteBytesOutput();
+		output.bytes.push(255);
+		output.bytes.push(57);
+		output.bytes.push(48);
+		output.bytes.push(21);
+		output.bytes.push(205);
+		output.bytes.push(91);
+		output.bytes.push(7);
+		output.writeFloat(1.2345678);
+		output.writeDouble(1.2345678901234567890123456789);
+		output.writeString("Hello Client " + userNr);
+		this.peoteServer.send(userNr,output.bytes);
 	}
-	,debug_output: function(bytes) {
-		var s = "";
-		var _g1 = 0;
-		var _g = bytes.length;
-		while(_g1 < _g) {
-			var i = _g1++;
-			s += bytes.b[i] + " ";
-		}
-		haxe_Log.trace("onData:" + s,{ fileName : "PeoteServerTest.hx", lineNumber : 64, className : "PeoteServerTest", methodName : "debug_output"});
+	,onData: function(jointNr,userNr,peoteBytes) {
+		haxe_Log.trace("onData: jointNr=" + jointNr + ", userNr=" + userNr,{ fileName : "PeoteServerTest.hx", lineNumber : 61, className : "PeoteServerTest", methodName : "onData"});
+		var input = new de_peote_io_js_PeoteBytesInput(peoteBytes);
+		haxe_Log.trace(input.bytes[input.pos++],{ fileName : "PeoteServerTest.hx", lineNumber : 66, className : "PeoteServerTest", methodName : "onData"});
+		haxe_Log.trace((function($this) {
+			var $r;
+			input.pos += 2;
+			$r = input.bytes[input.pos - 1] << 8 | input.bytes[input.pos - 2];
+			return $r;
+		}(this)),{ fileName : "PeoteServerTest.hx", lineNumber : 67, className : "PeoteServerTest", methodName : "onData"});
+		haxe_Log.trace((function($this) {
+			var $r;
+			input.pos += 4;
+			$r = input.bytes[input.pos - 1] << 24 | input.bytes[input.pos - 2] << 16 | input.bytes[input.pos - 3] << 8 | input.bytes[input.pos - 4];
+			return $r;
+		}(this)),{ fileName : "PeoteServerTest.hx", lineNumber : 68, className : "PeoteServerTest", methodName : "onData"});
+		haxe_Log.trace(input.readFloat(),{ fileName : "PeoteServerTest.hx", lineNumber : 69, className : "PeoteServerTest", methodName : "onData"});
+		haxe_Log.trace(input.readDouble(),{ fileName : "PeoteServerTest.hx", lineNumber : 70, className : "PeoteServerTest", methodName : "onData"});
+		haxe_Log.trace(input.readString(),{ fileName : "PeoteServerTest.hx", lineNumber : 71, className : "PeoteServerTest", methodName : "onData"});
 	}
 	,__class__: PeoteServerTest
 });
@@ -1248,6 +1261,118 @@ _$UInt_UInt_$Impl_$.__name__ = true;
 _$UInt_UInt_$Impl_$.toFloat = function(this1) {
 	var $int = this1;
 	if($int < 0) return 4294967296.0 + $int; else return $int + 0.0;
+};
+var de_peote_io_js_PeoteBytesInput = $hx_exports.PeoteBytesInput = function(bytes) {
+	this.pos = 0;
+	this.bytes = bytes;
+};
+$hxClasses["de.peote.io.js.PeoteBytesInput"] = de_peote_io_js_PeoteBytesInput;
+de_peote_io_js_PeoteBytesInput.__name__ = true;
+de_peote_io_js_PeoteBytesInput.main = function() {
+};
+de_peote_io_js_PeoteBytesInput.prototype = {
+	readByte: function() {
+		return this.bytes[this.pos++];
+	}
+	,readInt16: function() {
+		this.pos += 2;
+		return this.bytes[this.pos - 1] << 8 | this.bytes[this.pos - 2];
+	}
+	,readInt32: function() {
+		this.pos += 4;
+		return this.bytes[this.pos - 1] << 24 | this.bytes[this.pos - 2] << 16 | this.bytes[this.pos - 3] << 8 | this.bytes[this.pos - 4];
+	}
+	,readFloat: function() {
+		var b = haxe_io_Bytes.alloc(4);
+		b.setInt32(0,(function($this) {
+			var $r;
+			$this.pos += 4;
+			$r = $this.bytes[$this.pos - 1] << 24 | $this.bytes[$this.pos - 2] << 16 | $this.bytes[$this.pos - 3] << 8 | $this.bytes[$this.pos - 4];
+			return $r;
+		}(this)));
+		return b.getFloat(0);
+	}
+	,readDouble: function() {
+		var b = haxe_io_Bytes.alloc(8);
+		b.setInt32(0,(function($this) {
+			var $r;
+			$this.pos += 4;
+			$r = $this.bytes[$this.pos - 1] << 24 | $this.bytes[$this.pos - 2] << 16 | $this.bytes[$this.pos - 3] << 8 | $this.bytes[$this.pos - 4];
+			return $r;
+		}(this)));
+		b.setInt32(4,(function($this) {
+			var $r;
+			$this.pos += 4;
+			$r = $this.bytes[$this.pos - 1] << 24 | $this.bytes[$this.pos - 2] << 16 | $this.bytes[$this.pos - 3] << 8 | $this.bytes[$this.pos - 4];
+			return $r;
+		}(this)));
+		return b.getDouble(0);
+	}
+	,readString: function() {
+		var len;
+		this.pos += 2;
+		len = this.bytes[this.pos - 1] << 8 | this.bytes[this.pos - 2];
+		var b = haxe_io_Bytes.alloc(len * 4);
+		var _g = 0;
+		while(_g < len) {
+			var i = _g++;
+			b.setInt32(i * 4,(function($this) {
+				var $r;
+				$this.pos += 4;
+				$r = $this.bytes[$this.pos - 1] << 24 | $this.bytes[$this.pos - 2] << 16 | $this.bytes[$this.pos - 3] << 8 | $this.bytes[$this.pos - 4];
+				return $r;
+			}(this)));
+		}
+		return b.getString(0,len);
+	}
+	,__class__: de_peote_io_js_PeoteBytesInput
+};
+var de_peote_io_js_PeoteBytesOutput = $hx_exports.PeoteBytesOutput = function() {
+	this.bytes = [];
+};
+$hxClasses["de.peote.io.js.PeoteBytesOutput"] = de_peote_io_js_PeoteBytesOutput;
+de_peote_io_js_PeoteBytesOutput.__name__ = true;
+de_peote_io_js_PeoteBytesOutput.main = function() {
+};
+de_peote_io_js_PeoteBytesOutput.prototype = {
+	writeByte: function(b) {
+		this.bytes.push(b);
+	}
+	,writeInt16: function(b) {
+		this.bytes.push(b & 255);
+		this.bytes.push(b >> 8 & 255);
+	}
+	,writeInt32: function(b) {
+		this.bytes.push(b & 255);
+		this.bytes.push(b >> 8 & 255);
+		this.bytes.push(b >> 16 & 255);
+		this.bytes.push(b >> 24 & 255);
+	}
+	,writeFloat: function(f) {
+		var b = haxe_io_Bytes.alloc(4);
+		b.setFloat(0,f);
+		this.writeInt32(b.getInt32(0));
+	}
+	,writeDouble: function(f) {
+		var b = haxe_io_Bytes.alloc(8);
+		b.setDouble(0,f);
+		this.writeInt32(b.getInt32(0));
+		this.writeInt32(b.getInt32(4));
+	}
+	,writeString: function(s) {
+		var b = haxe_io_Bytes.ofString(s);
+		this.writeInt16(s.length);
+		var _g1 = 0;
+		var _g = b.length;
+		while(_g1 < _g) {
+			var i = _g1++;
+			this.bytes.push(b.b[i]);
+		}
+	}
+	,getBytes: function() {
+		return this.bytes;
+	}
+	,__class__: de_peote_io_js_PeoteBytesOutput
 };
 var haxe_IMap = function() { };
 $hxClasses["haxe.IMap"] = haxe_IMap;
@@ -1480,9 +1605,29 @@ haxe_io_Bytes.prototype = {
 		if(pos < 0 || srcpos < 0 || len < 0 || pos + len > this.length || srcpos + len > src.length) throw new js__$Boot_HaxeError(haxe_io_Error.OutsideBounds);
 		if(srcpos == 0 && len == src.length) this.b.set(src.b,pos); else this.b.set(src.b.subarray(srcpos,srcpos + len),pos);
 	}
+	,getDouble: function(pos) {
+		if(this.data == null) this.data = new DataView(this.b.buffer,this.b.byteOffset,this.b.byteLength);
+		return this.data.getFloat64(pos,true);
+	}
+	,getFloat: function(pos) {
+		if(this.data == null) this.data = new DataView(this.b.buffer,this.b.byteOffset,this.b.byteLength);
+		return this.data.getFloat32(pos,true);
+	}
+	,setDouble: function(pos,v) {
+		if(this.data == null) this.data = new DataView(this.b.buffer,this.b.byteOffset,this.b.byteLength);
+		this.data.setFloat64(pos,v,true);
+	}
+	,setFloat: function(pos,v) {
+		if(this.data == null) this.data = new DataView(this.b.buffer,this.b.byteOffset,this.b.byteLength);
+		this.data.setFloat32(pos,v,true);
+	}
 	,setUInt16: function(pos,v) {
 		if(this.data == null) this.data = new DataView(this.b.buffer,this.b.byteOffset,this.b.byteLength);
 		this.data.setUint16(pos,v,true);
+	}
+	,getInt32: function(pos) {
+		if(this.data == null) this.data = new DataView(this.b.buffer,this.b.byteOffset,this.b.byteLength);
+		return this.data.getInt32(pos,true);
 	}
 	,setInt32: function(pos,v) {
 		if(this.data == null) this.data = new DataView(this.b.buffer,this.b.byteOffset,this.b.byteLength);

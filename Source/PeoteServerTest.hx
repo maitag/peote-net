@@ -1,13 +1,16 @@
 package;
 
+import haxe.io.StringInput;
 import lime.app.Application;
 import haxe.Timer;
 
 import haxe.io.Bytes;
-import haxe.io.BytesData;
-
 
 import de.peote.net.PeoteServer;
+import de.peote.io.PeoteBytes;
+import de.peote.io.PeoteBytesOutput;
+import de.peote.io.PeoteBytesInput;
+
 
 class PeoteServerTest extends Application {
 	
@@ -25,12 +28,8 @@ class PeoteServerTest extends Application {
 					trace("onCreateJointError:"+errorNr);
 				},
 				onUserConnect: function(jointNr:Int, userNr:Int) {
-					trace("onUserConnect: jointNr="+jointNr+", userNr="+userNr);
-					#if js
-					peoteServer.send(userNr, [3,2,1] );
-					#else
-					peoteServer.send(userNr, Bytes.ofString("3 2 1") );
-					#end
+					trace("onUserConnect: jointNr=" + jointNr + ", userNr=" + userNr);
+					sendTestData(userNr);
 				},
 				onUserDisconnect: function(jointNr:Int, userNr:Int, reason:Int) {
 					trace("onUserDisconnect: jointNr="+jointNr+", userNr="+userNr+", reason="+reason);
@@ -41,27 +40,34 @@ class PeoteServerTest extends Application {
 		peoteServer.createJoint("localhost", 7680, "testserver");
 		
 	}
-	
-	#if js
-	public inline function onData(jointNr:Int, userNr:Int, data:Array<Int>):Void {
-		trace("onData: jointNr="+jointNr+", userNr="+userNr);
-		var bytes:Bytes = Bytes.ofData(new BytesData(data.length));
-		for (i in 0...data.length) bytes.set(i, data[i]);
-		debug_output( bytes );
-	}
-	#else
 
-	public inline function onData(jointNr:Int, userNr:Int, bytes:Bytes):Void	{
-		trace("onData: jointNr="+jointNr+", userNr="+userNr);
-		debug_output(bytes);
+	public inline function sendTestData(userNr:Int):Void
+	{	
+		// TODO: max value for PeoteBytesOutput length 
+		var output:PeoteBytesOutput = new PeoteBytesOutput();
+		
+		output.writeByte(255);
+		output.writeInt16(12345);
+		output.writeInt32(123456789);
+		output.writeFloat(1.2345678);
+		output.writeDouble(1.2345678901234567890123456789);
+		output.writeString("Hello Client " + userNr);
+		
+		peoteServer.send(userNr, output.getBytes() ); // send chunk
 	}
-	#end
 	
-	public inline function debug_output(bytes:Bytes):Void 
+	public inline function onData(jointNr:Int, userNr:Int, peoteBytes:PeoteBytes ):Void 
 	{
-		var s:String = "";
-		for (i in 0 ...bytes.length) s += bytes.get(i)+" ";
-		trace("onData:" + s);
-	}
+		trace("onData: jointNr="+jointNr+", userNr="+userNr);
 
+		// TODO: check PeoteBytesInput length 
+		var input:PeoteBytesInput = new PeoteBytesInput(peoteBytes);
+		
+		trace(input.readByte());
+		trace(input.readInt16());
+		trace(input.readInt32());
+		trace(input.readFloat());
+		trace(input.readDouble());
+		trace(input.readString());
+	}
 }

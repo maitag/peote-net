@@ -4,10 +4,12 @@ import lime.app.Application;
 import haxe.Timer;
 
 import haxe.io.Bytes;
-import haxe.io.BytesData;
-
 
 import de.peote.net.PeoteClient;
+import de.peote.io.PeoteBytes;
+import de.peote.io.PeoteBytesOutput;
+import de.peote.io.PeoteBytesInput;
+
 
 class PeoteClientTest extends Application {
 	
@@ -19,18 +21,14 @@ class PeoteClientTest extends Application {
 		
 		peoteClient = new PeoteClient({
 				onEnterJoint: function(jointNr:Int) {
-					trace("onCreateJoint: jointNr=" + jointNr);
-					#if js
-					peoteClient.send( [1,2,3] );
-					#else
-					peoteClient.send(Bytes.ofString("1 2 3") );
-					#end
+					trace("onEnterJoint: jointNr=" + jointNr);
+					sendTestData();
 				},
 				onEnterJointError: function(errorNr:Int) {
-					trace("onCreateJointError:"+errorNr);
+					trace("onEnterJointError:"+errorNr);
 				},
 				onDisconnect: function(jointNr:Int, reason:Int) {
-					trace("onUserDisconnect: jointNr="+jointNr+", reason="+reason);
+					trace("onDisconnect: jointNr="+jointNr+", reason="+reason);
 				},
 				onData: onData
 			});
@@ -39,26 +37,34 @@ class PeoteClientTest extends Application {
 		
 	}
 	
-	#if js
-	public inline function onData(jointNr:Int, data:Array<Int>):Void {
-		trace("onData: jointNr="+jointNr);
-		var bytes:Bytes = Bytes.ofData(new BytesData(data.length));
-		for (i in 0...data.length) bytes.set(i, data[i]);
-		debug_output( bytes );
-	}
-	#else
-
-	public inline function onData(jointNr:Int, bytes:Bytes):Void	{
-		trace("onData: jointNr="+jointNr);
-		debug_output(bytes);
-	}
-	#end
-	
-	public inline function debug_output(bytes:Bytes):Void 
+	public inline function sendTestData():Void
 	{
-		var s:String = "";
-		for (i in 0 ...bytes.length) s += bytes.get(i)+" ";
-		trace("onData:" + s);
+		// TODO: max value for PeoteBytesOutput length 
+		var output:PeoteBytesOutput = new PeoteBytesOutput();
+		output.writeByte(255);
+		output.writeInt16(12345);
+		output.writeInt32(123456789);
+		output.writeFloat(1.2345678);
+		output.writeDouble(1.2345678901234567890123456789);
+		output.writeString("Hello Server");
+		
+		peoteClient.send( output.getBytes() ); // send chunk
 	}
 
+	public inline function onData(jointNr:Int, peoteBytes:PeoteBytes):Void 
+	{
+		trace("onData: jointNr=" + jointNr);
+		
+		// TODO: check PeoteBytesInput length
+		var input:PeoteBytesInput = new PeoteBytesInput(peoteBytes);
+		
+		trace(input.readByte());
+		trace(input.readInt16());
+		trace(input.readInt32());
+		trace(input.readFloat());
+		trace(input.readDouble());
+		trace(input.readString());
+	}
+
+	
 }

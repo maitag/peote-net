@@ -2,7 +2,10 @@
 
 <head>
 	<meta charset="ISO-8859-1">
+
 	<script src="swfobject.js" type="text/javascript"></script>
+	<script src="PeoteBytesInput.js" type="text/javascript"></script>
+	<script src="PeoteBytesOutput.js" type="text/javascript"></script>
 	
 	<script type="text/javascript">
 		function PeoteNetBridge() {
@@ -10,7 +13,16 @@
 			var peoteClient = new PeoteClient({
 				onEnterJoint: function(jointNr) {
 					console.log("onEnterJoint:"+jointNr);
-					peoteClient.send([1,2,3]);
+					
+					var output = new PeoteBytesOutput();
+					output.writeByte(255);
+					output.writeInt16(12345);
+					output.writeInt32(123456789);
+					output.writeFloat(1.2345678);
+					output.writeDouble(1.2345678901234567890123456789);
+					output.writeString("Hello Server");
+
+					peoteClient.send(output.getBytes());
 				},
 				onEnterJointError: function(errorNr) {
 					console.log("onEnterJointError:"+errorNr);
@@ -18,8 +30,16 @@
 				onDisconnect: function(jointNr, reason) {
 					console.log("onDisconnect:"+jointNr+", "+reason);
 				},
-				onData: function(jointNr, data) {
-					console.log("onData: jointNr="+jointNr,data);
+				onData: function(jointNr, peoteBytes) {
+					console.log("onData: jointNr="+jointNr);
+					
+					var input = new PeoteBytesInput(peoteBytes);
+					console.log(input.readByte());
+					console.log(input.readInt16());
+					console.log(input.readInt32());
+					console.log(input.readFloat());
+					console.log(input.readDouble());
+					console.log(input.readString());
 				}
 			});
 			peoteClient.enterJoint("localhost", 7680, "testserver");

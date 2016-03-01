@@ -76,7 +76,6 @@ class PeoteNet
 {
 	private static var sockets:Map<String, PeoteNetSocket> = new Map<String, PeoteNetSocket>();
 	
-	// TODO: alles syncen per command-queue und worker function
 	public static function createJoint(obj:PeoteServer, server:String, port:Int, jointId:String):Void 
 	{
 		var p:PeoteNetSocket;
