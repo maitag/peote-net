@@ -17,19 +17,23 @@ StringTools.__name__ = true;
 StringTools.fastCodeAt = function(s,index) {
 	return s.charCodeAt(index);
 };
-var de_peote_net_js_PeoteBytesOutput = $hx_exports.PeoteBytesOutput = function() {
+var de_peote_io_js_PeoteBytesOutput = $hx_exports.PeoteBytesOutput = function() {
 	this.bytes = [];
 };
-de_peote_net_js_PeoteBytesOutput.__name__ = true;
-de_peote_net_js_PeoteBytesOutput.main = function() {
+de_peote_io_js_PeoteBytesOutput.__name__ = true;
+de_peote_io_js_PeoteBytesOutput.main = function() {
 };
-de_peote_net_js_PeoteBytesOutput.prototype = {
+de_peote_io_js_PeoteBytesOutput.prototype = {
 	writeByte: function(b) {
 		this.bytes.push(b);
 	}
-	,writeInt16: function(b) {
+	,writeUInt16: function(b) {
 		this.bytes.push(b & 255);
 		this.bytes.push(b >> 8 & 255);
+	}
+	,writeInt16: function(b) {
+		this.bytes.push(b & 255);
+		if(b >= -32768 && b < 0) this.bytes.push((b >> 8 & 127) + 128); else if(b < 32768) this.bytes.push(b >> 8 & 127); else throw new js__$Boot_HaxeError(haxe_io_Error.Overflow);
 	}
 	,writeInt32: function(b) {
 		this.bytes.push(b & 255);
@@ -61,7 +65,7 @@ de_peote_net_js_PeoteBytesOutput.prototype = {
 	,getBytes: function() {
 		return this.bytes;
 	}
-	,__class__: de_peote_net_js_PeoteBytesOutput
+	,__class__: de_peote_io_js_PeoteBytesOutput
 };
 var haxe__$Int64__$_$_$Int64 = function(high,low) {
 	this.high = high;
@@ -524,5 +528,5 @@ haxe_io_FPHelper.i64tmp = (function($this) {
 }(this));
 js_Boot.__toStr = {}.toString;
 js_html_compat_Uint8Array.BYTES_PER_ELEMENT = 1;
-de_peote_net_js_PeoteBytesOutput.main();
+de_peote_io_js_PeoteBytesOutput.main();
 })(typeof console != "undefined" ? console : {log:function(){}}, typeof window != "undefined" ? window : exports, typeof window != "undefined" ? window : typeof global != "undefined" ? global : typeof self != "undefined" ? self : this);

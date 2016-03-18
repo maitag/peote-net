@@ -42,8 +42,11 @@ class PeoteClientTest extends Application {
 		// TODO: max value for PeoteBytesOutput length 
 		var output:PeoteBytesOutput = new PeoteBytesOutput();
 		output.writeByte(255);
-		output.writeInt16(12345);
-		output.writeInt32(123456789);
+		output.writeUInt16(65535);
+		output.writeInt16(32767);
+		output.writeInt16(-32768);
+		output.writeInt32(2147483647);
+		output.writeInt32(-2147483648);
 		output.writeFloat(1.2345678);
 		output.writeDouble(1.2345678901234567890123456789);
 		output.writeString("Hello Server");
@@ -59,7 +62,10 @@ class PeoteClientTest extends Application {
 		var input:PeoteBytesInput = new PeoteBytesInput(peoteBytes);
 		
 		trace(input.readByte());
+		trace(input.readUInt16());
 		trace(input.readInt16());
+		trace(input.readInt16());
+		trace(input.readInt32());
 		trace(input.readInt32());
 		trace(input.readFloat());
 		trace(input.readDouble());

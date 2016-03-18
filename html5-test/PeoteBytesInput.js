@@ -12,31 +12,39 @@ Std.__name__ = true;
 Std.string = function(s) {
 	return js_Boot.__string_rec(s,"");
 };
-var de_peote_net_js_PeoteBytesInput = $hx_exports.PeoteBytesInput = function(bytes) {
-	this.pos = 0;
+var de_peote_io_js_PeoteBytesInput = $hx_exports.PeoteBytesInput = function(bytes) {
+	this.position = 0;
+	this.length = 0;
 	this.bytes = bytes;
+	this.length = bytes.length;
 };
-de_peote_net_js_PeoteBytesInput.__name__ = true;
-de_peote_net_js_PeoteBytesInput.main = function() {
+de_peote_io_js_PeoteBytesInput.__name__ = true;
+de_peote_io_js_PeoteBytesInput.main = function() {
 };
-de_peote_net_js_PeoteBytesInput.prototype = {
+de_peote_io_js_PeoteBytesInput.prototype = {
 	readByte: function() {
-		return this.bytes[this.pos++];
+		return this.bytes[this.position++];
+	}
+	,readUInt16: function() {
+		this.position += 2;
+		return this.bytes[this.position - 1] << 8 | this.bytes[this.position - 2];
 	}
 	,readInt16: function() {
-		this.pos += 2;
-		return this.bytes[this.pos - 1] << 8 | this.bytes[this.pos - 2];
+		this.position += 2;
+		var output = this.bytes[this.position - 1] << 8 | this.bytes[this.position - 2];
+		if(output > 32767) output = output - 65536;
+		return output;
 	}
 	,readInt32: function() {
-		this.pos += 4;
-		return this.bytes[this.pos - 1] << 24 | this.bytes[this.pos - 2] << 16 | this.bytes[this.pos - 3] << 8 | this.bytes[this.pos - 4];
+		this.position += 4;
+		return this.bytes[this.position - 1] << 24 | this.bytes[this.position - 2] << 16 | this.bytes[this.position - 3] << 8 | this.bytes[this.position - 4];
 	}
 	,readFloat: function() {
 		var b = haxe_io_Bytes.alloc(4);
 		b.setInt32(0,(function($this) {
 			var $r;
-			$this.pos += 4;
-			$r = $this.bytes[$this.pos - 1] << 24 | $this.bytes[$this.pos - 2] << 16 | $this.bytes[$this.pos - 3] << 8 | $this.bytes[$this.pos - 4];
+			$this.position += 4;
+			$r = $this.bytes[$this.position - 1] << 24 | $this.bytes[$this.position - 2] << 16 | $this.bytes[$this.position - 3] << 8 | $this.bytes[$this.position - 4];
 			return $r;
 		}(this)));
 		return b.getFloat(0);
@@ -45,36 +53,34 @@ de_peote_net_js_PeoteBytesInput.prototype = {
 		var b = haxe_io_Bytes.alloc(8);
 		b.setInt32(0,(function($this) {
 			var $r;
-			$this.pos += 4;
-			$r = $this.bytes[$this.pos - 1] << 24 | $this.bytes[$this.pos - 2] << 16 | $this.bytes[$this.pos - 3] << 8 | $this.bytes[$this.pos - 4];
+			$this.position += 4;
+			$r = $this.bytes[$this.position - 1] << 24 | $this.bytes[$this.position - 2] << 16 | $this.bytes[$this.position - 3] << 8 | $this.bytes[$this.position - 4];
 			return $r;
 		}(this)));
 		b.setInt32(4,(function($this) {
 			var $r;
-			$this.pos += 4;
-			$r = $this.bytes[$this.pos - 1] << 24 | $this.bytes[$this.pos - 2] << 16 | $this.bytes[$this.pos - 3] << 8 | $this.bytes[$this.pos - 4];
+			$this.position += 4;
+			$r = $this.bytes[$this.position - 1] << 24 | $this.bytes[$this.position - 2] << 16 | $this.bytes[$this.position - 3] << 8 | $this.bytes[$this.position - 4];
 			return $r;
 		}(this)));
 		return b.getDouble(0);
 	}
 	,readString: function() {
-		var len;
-		this.pos += 2;
-		len = this.bytes[this.pos - 1] << 8 | this.bytes[this.pos - 2];
+		var len = this.readInt16();
 		var b = haxe_io_Bytes.alloc(len * 4);
 		var _g = 0;
 		while(_g < len) {
 			var i = _g++;
 			b.setInt32(i * 4,(function($this) {
 				var $r;
-				$this.pos += 4;
-				$r = $this.bytes[$this.pos - 1] << 24 | $this.bytes[$this.pos - 2] << 16 | $this.bytes[$this.pos - 3] << 8 | $this.bytes[$this.pos - 4];
+				$this.position += 4;
+				$r = $this.bytes[$this.position - 1] << 24 | $this.bytes[$this.position - 2] << 16 | $this.bytes[$this.position - 3] << 8 | $this.bytes[$this.position - 4];
 				return $r;
 			}(this)));
 		}
 		return b.getString(0,len);
 	}
-	,__class__: de_peote_net_js_PeoteBytesInput
+	,__class__: de_peote_io_js_PeoteBytesInput
 };
 var haxe__$Int64__$_$_$Int64 = function(high,low) {
 	this.high = high;
@@ -540,5 +546,5 @@ haxe_io_FPHelper.i64tmp = (function($this) {
 }(this));
 js_Boot.__toStr = {}.toString;
 js_html_compat_Uint8Array.BYTES_PER_ELEMENT = 1;
-de_peote_net_js_PeoteBytesInput.main();
+de_peote_io_js_PeoteBytesInput.main();
 })(typeof console != "undefined" ? console : {log:function(){}}, typeof window != "undefined" ? window : exports, typeof window != "undefined" ? window : typeof global != "undefined" ? global : typeof self != "undefined" ? self : this);
