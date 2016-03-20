@@ -24,7 +24,10 @@ de_peote_io_js_PeoteBytesOutput.__name__ = true;
 de_peote_io_js_PeoteBytesOutput.main = function() {
 };
 de_peote_io_js_PeoteBytesOutput.prototype = {
-	writeByte: function(b) {
+	get_length: function() {
+		return this.bytes.length;
+	}
+	,writeByte: function(b) {
 		this.bytes.push(b);
 	}
 	,writeUInt16: function(b) {
@@ -54,7 +57,7 @@ de_peote_io_js_PeoteBytesOutput.prototype = {
 	}
 	,writeString: function(s) {
 		var b = haxe_io_Bytes.ofString(s);
-		this.writeInt16(s.length);
+		this.writeUInt16(s.length);
 		var _g1 = 0;
 		var _g = b.length;
 		while(_g1 < _g) {

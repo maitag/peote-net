@@ -10,8 +10,5 @@
 	<source path="./../PeoteSocket/Source/" />
 	
 	<haxelib name="lime" />
-	
-	<assets path="Assets" rename="assets" exclude="lime.svg" />
-	<icon path="Assets/lime.svg" />
-	
+
 </project>

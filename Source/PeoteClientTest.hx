@@ -15,9 +15,13 @@ class PeoteClientTest extends Application {
 	
 	public var peoteClient:PeoteClient;
 	
-	public function new () {
-		
+	var inputBuffer:PeoteBytesInput; // stores not fully readed chunk
+	public var chunk_size:Int = 0;
+	
+	public function new () {		
 		super();
+		
+		inputBuffer = new PeoteBytesInput();
 		
 		peoteClient = new PeoteClient({
 				onEnterJoint: function(jointNr:Int) {
@@ -37,10 +41,16 @@ class PeoteClientTest extends Application {
 		
 	}
 	
+	// ---------------------------------------------------------
+	// -------------------- SEND DATA --------------------------
+	// ---------------------------------------------------------
+
 	public inline function sendTestData():Void
 	{
-		// TODO: max value for PeoteBytesOutput length 
 		var output:PeoteBytesOutput = new PeoteBytesOutput();
+		output.writeString("DATATYPES");
+
+		output.writeString("Hello Server");
 		output.writeByte(255);
 		output.writeUInt16(65535);
 		output.writeInt16(32767);
@@ -49,27 +59,72 @@ class PeoteClientTest extends Application {
 		output.writeInt32(-2147483648);
 		output.writeFloat(1.2345678);
 		output.writeDouble(1.2345678901234567890123456789);
-		output.writeString("Hello Server");
 		
-		peoteClient.send( output.getBytes() ); // send chunk
+		sendChunk(output);
+		
+		// -------- send another chunk -----------
+		
+		output = new PeoteBytesOutput();
+		output.writeString("FIBONACCI");
+		
+		var fib_pre:Int = 1; output.writeInt32(fib_pre);
+		var fib:Int = 2; output.writeInt32(fib);
+		
+		while ( fib < 2147483648 - fib_pre )
+		{
+			fib = fib + fib_pre;
+			fib_pre = fib - fib_pre;
+			output.writeInt32(fib);
+		}
+		sendChunk(output);
 	}
 
-	public inline function onData(jointNr:Int, peoteBytes:PeoteBytes):Void 
+	public inline function sendChunk(output:PeoteBytesOutput):Void
+	{	
+		var chunksize:PeoteBytesOutput = new PeoteBytesOutput(); // TODO: optimize
+		chunksize.writeUInt16(output.length);
+		peoteClient.send( chunksize.getBytes() );
+		peoteClient.send( output.getBytes() );
+	}
+
+	// ---------------------------------------------------------
+	// -------------------- RECIEVE DATA -----------------------
+	// ---------------------------------------------------------
+	
+	
+	// read full chunk
+	public function onData(jointNr:Int, peoteBytes:PeoteBytes ):Void 
+	{	
+		inputBuffer.append( peoteBytes );
+		trace('inputBuffer size: ${inputBuffer.length}');
+		
+		if (chunk_size == 0) {
+			chunk_size = inputBuffer.readUInt16(); // read chunk size
+			trace('read chunk size: $chunk_size');
+		}
+		
+		trace('bytesLeft: ${inputBuffer.bytesLeft()}');
+		if ( inputBuffer.bytesLeft() >= chunk_size )
+		{
+			onDataChunk(jointNr, inputBuffer, chunk_size );
+			chunk_size = 0;
+		}
+	}
+	
+	// this will called if full chunk arrives
+	public inline function onDataChunk(jointNr:Int, input:PeoteBytesInput, chunk_size:Int):Void 
 	{
 		trace("onData: jointNr=" + jointNr);
 		
-		// TODO: check PeoteBytesInput length
-		var input:PeoteBytesInput = new PeoteBytesInput(peoteBytes);
-		
-		trace(input.readByte());
-		trace(input.readUInt16());
-		trace(input.readInt16());
-		trace(input.readInt16());
-		trace(input.readInt32());
-		trace(input.readInt32());
-		trace(input.readFloat());
-		trace(input.readDouble());
-		trace(input.readString());
+		trace('string     : '+input.readString());
+		trace('max Byte   : '+input.readByte());
+		trace('max UInt16 : '+input.readUInt16());
+		trace('max Int16  : '+input.readInt16());
+		trace('min Int16  : '+input.readInt16());
+		trace('max Int32  : '+input.readInt32());
+		trace('min Int32  : '+input.readInt32());
+		trace('float      : '+input.readFloat());
+		trace('double     : '+input.readDouble());
 	}
 
 	

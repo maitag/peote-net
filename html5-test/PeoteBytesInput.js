@@ -12,17 +12,28 @@ Std.__name__ = true;
 Std.string = function(s) {
 	return js_Boot.__string_rec(s,"");
 };
-var de_peote_io_js_PeoteBytesInput = $hx_exports.PeoteBytesInput = function(bytes) {
+var de_peote_io_js_PeoteBytesInput = $hx_exports.PeoteBytesInput = function(b) {
 	this.position = 0;
 	this.length = 0;
-	this.bytes = bytes;
-	this.length = bytes.length;
+	if(b != null) this.bytes = b; else this.bytes = [];
+	this.length = this.bytes.length;
 };
 de_peote_io_js_PeoteBytesInput.__name__ = true;
 de_peote_io_js_PeoteBytesInput.main = function() {
 };
 de_peote_io_js_PeoteBytesInput.prototype = {
-	readByte: function() {
+	bytesLeft: function() {
+		return this.length - this.position;
+	}
+	,append: function(b,max_pos_before_trim) {
+		if(max_pos_before_trim == null) max_pos_before_trim = 1024;
+		if(max_pos_before_trim != 0 && this.position >= max_pos_before_trim) {
+			this.bytes = this.bytes.splice(this.position,this.length - this.position).concat(b);
+			this.position = 0;
+		} else this.bytes = this.bytes.concat(b);
+		this.length = this.bytes.length;
+	}
+	,readByte: function() {
 		return this.bytes[this.position++];
 	}
 	,readUInt16: function() {
@@ -66,17 +77,14 @@ de_peote_io_js_PeoteBytesInput.prototype = {
 		return b.getDouble(0);
 	}
 	,readString: function() {
-		var len = this.readInt16();
-		var b = haxe_io_Bytes.alloc(len * 4);
+		var len;
+		this.position += 2;
+		len = this.bytes[this.position - 1] << 8 | this.bytes[this.position - 2];
+		var b = haxe_io_Bytes.alloc(len);
 		var _g = 0;
 		while(_g < len) {
 			var i = _g++;
-			b.setInt32(i * 4,(function($this) {
-				var $r;
-				$this.position += 4;
-				$r = $this.bytes[$this.position - 1] << 24 | $this.bytes[$this.position - 2] << 16 | $this.bytes[$this.position - 3] << 8 | $this.bytes[$this.position - 4];
-				return $r;
-			}(this)));
+			b.set(i,this.bytes[this.position++]);
 		}
 		return b.getString(0,len);
 	}
@@ -102,7 +110,10 @@ haxe_io_Bytes.alloc = function(length) {
 	return new haxe_io_Bytes(new ArrayBuffer(length));
 };
 haxe_io_Bytes.prototype = {
-	getDouble: function(pos) {
+	set: function(pos,v) {
+		this.b[pos] = v & 255;
+	}
+	,getDouble: function(pos) {
 		if(this.data == null) this.data = new DataView(this.b.buffer,this.b.byteOffset,this.b.byteLength);
 		return this.data.getFloat64(pos,true);
 	}
