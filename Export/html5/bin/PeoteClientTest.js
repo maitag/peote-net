@@ -30,7 +30,7 @@ ApplicationMain.create = function() {
 	ApplicationMain.preloader.load(urls,types);
 };
 ApplicationMain.main = function() {
-	ApplicationMain.config = { build : "5", company : "Sylvio Sell - maitag", file : "PeoteClientTest", fps : 60, name : "PeoteNetTest", orientation : "", packageName : "de.peote.net", version : "0.2.0", windows : [{ antialiasing : 0, background : 16777215, borderless : false, depthBuffer : false, display : 0, fullscreen : false, hardware : true, height : 0, parameters : "{}", resizable : true, stencilBuffer : false, title : "PeoteNetTest", vsync : false, width : 0, x : null, y : null}]};
+	ApplicationMain.config = { build : "11", company : "Sylvio Sell - maitag", file : "PeoteClientTest", fps : 60, name : "PeoteNetTest", orientation : "", packageName : "de.peote.net", version : "0.2.0", windows : [{ antialiasing : 0, background : 16777215, borderless : false, depthBuffer : false, display : 0, fullscreen : false, hardware : true, height : 0, parameters : "{}", resizable : true, stencilBuffer : false, title : "PeoteNetTest", vsync : false, width : 0, x : null, y : null}]};
 };
 ApplicationMain.start = function() {
 	var result = ApplicationMain.app.exec();
@@ -1184,12 +1184,12 @@ PeoteClientTest.prototype = $extend(lime_app_Application.prototype,{
 	,onData: function(jointNr,peoteBytes) {
 		this.inputBuffer.append(peoteBytes,null);
 		haxe_Log.trace("inputBuffer size: " + this.inputBuffer.length,{ fileName : "PeoteClientTest.hx", lineNumber : 99, className : "PeoteClientTest", methodName : "onData"});
-		if(this.chunk_size == 0) {
+		if(this.chunk_size == 0 && this.inputBuffer.bytesLeft() >= 2) {
 			this.chunk_size = this.inputBuffer.readUInt16();
 			haxe_Log.trace("read chunk size: " + this.chunk_size,{ fileName : "PeoteClientTest.hx", lineNumber : 103, className : "PeoteClientTest", methodName : "onData"});
 		}
 		haxe_Log.trace("bytesLeft: " + this.inputBuffer.bytesLeft(),{ fileName : "PeoteClientTest.hx", lineNumber : 106, className : "PeoteClientTest", methodName : "onData"});
-		if(this.inputBuffer.bytesLeft() >= this.chunk_size) {
+		if(this.chunk_size != 0 && this.inputBuffer.bytesLeft() >= this.chunk_size) {
 			this.onDataChunk(jointNr,this.inputBuffer,this.chunk_size);
 			this.chunk_size = 0;
 		}

@@ -85,13 +85,13 @@ class PeoteServerTest extends Application {
 		inputBuffer.append( peoteBytes );
 		trace('inputBuffer size: ${inputBuffer.length}');
 		
-		if (chunk_size == 0) {
+		if (chunk_size == 0 && inputBuffer.bytesLeft() >=2 ) {
 			chunk_size = inputBuffer.readUInt16(); // read chunk size
 			trace('read chunk size: $chunk_size');
 		}
 		
 		trace('bytesLeft: ${inputBuffer.bytesLeft()}');
-		if ( inputBuffer.bytesLeft() >= chunk_size )
+		if ( chunk_size != 0 && inputBuffer.bytesLeft() >= chunk_size )
 		{
 			onDataChunk(jointNr, userNr, inputBuffer, chunk_size );
 			chunk_size = 0;
