@@ -30,7 +30,7 @@ ApplicationMain.create = function() {
 	ApplicationMain.preloader.load(urls,types);
 };
 ApplicationMain.main = function() {
-	ApplicationMain.config = { build : "11", company : "Sylvio Sell - maitag", file : "PeoteClientTest", fps : 60, name : "PeoteNetTest", orientation : "", packageName : "de.peote.net", version : "0.2.0", windows : [{ antialiasing : 0, background : 16777215, borderless : false, depthBuffer : false, display : 0, fullscreen : false, hardware : true, height : 0, parameters : "{}", resizable : true, stencilBuffer : false, title : "PeoteNetTest", vsync : false, width : 0, x : null, y : null}]};
+	ApplicationMain.config = { build : "28", company : "Sylvio Sell - maitag", file : "PeoteClientTest", fps : 60, name : "PeoteNetTest", orientation : "", packageName : "de.peote.net", version : "0.3.0", windows : [{ antialiasing : 0, background : 16777215, borderless : false, depthBuffer : false, display : 0, fullscreen : false, hardware : true, height : 0, parameters : "{}", resizable : true, stencilBuffer : false, title : "PeoteNetTest", vsync : false, width : 0, x : null, y : null}]};
 };
 ApplicationMain.start = function() {
 	var result = ApplicationMain.app.exec();
@@ -1125,7 +1125,7 @@ var PeoteClientTest = function() {
 	}, onDisconnect : function(jointNr1,reason) {
 		haxe_Log.trace("onDisconnect: jointNr=" + jointNr1 + ", reason=" + reason,{ fileName : "PeoteClientTest.hx", lineNumber : 35, className : "PeoteClientTest", methodName : "new"});
 	}, onData : $bind(this,this.onData)});
-	this.peoteClient.enterJoint("localhost",7680,"testserver");
+	this.peoteClient.enterJoint("maitag.de",7680,"testserver");
 };
 $hxClasses["PeoteClientTest"] = PeoteClientTest;
 PeoteClientTest.__name__ = true;
@@ -1433,7 +1433,7 @@ de_peote_io_js_PeoteBytesOutput.prototype = {
 	}
 	,writeString: function(s) {
 		var b = haxe_io_Bytes.ofString(s);
-		this.writeUInt16(s.length);
+		this.writeUInt16(b.length);
 		var _g1 = 0;
 		var _g = b.length;
 		while(_g1 < _g) {

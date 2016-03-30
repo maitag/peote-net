@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<project>
+	
+	<meta title="PeoteChat" package="de.peote" version="0.1.0" company="OpenFL" />
+	<app main="PeoteChat" path="Export" file="peote-chat" />
+	
+	<source path="Source" />
+	<source path="../../Source" />
+	<source path="../../../PeoteSocket/Source" />
+	
+	<haxelib name="openfl" />
+	
+	<!--<assets path="Assets" rename="assets" />-->
+	
+</project>

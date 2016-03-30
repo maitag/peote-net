@@ -21,7 +21,7 @@ import de.peote.net.flash.PeoteJointSocket;
 	public function new (param:Dynamic) {}
 
 	public function enterJoint(server:String, port:Int, jointId:String):Void {}
-	public function deleteJoint():Void {}
+	public function leaveJoint():Void {}
 	public function send(data:Array<Int>):Void {}
 }
 #else

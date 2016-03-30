@@ -1,0 +1,190 @@
+package;
+
+
+import de.peote.io.PeoteBytesInput;
+import de.peote.io.PeoteBytesOutput;
+import haxe.ds.IntMap;
+import haxe.io.StringInput;
+
+import openfl.display.Sprite;
+import openfl.text.TextField;
+import openfl.text.TextFormat;
+import openfl.text.TextFormatAlign;
+import openfl.events.MouseEvent;
+
+import de.peote.net.PeoteClient;
+import de.peote.io.PeoteBytes;
+
+class PeoteChat extends Sprite {
+	
+	var channels:Map<String, I_Channel>;
+	var active:I_Channel = null;
+
+	var input_username:InputText;
+	
+	var create_channel:InputText;
+	var enter_channel:InputText;
+	
+	var send_message:InputText;
+	
+	var channel_list:ChannelList;
+	var close_button:Button;
+	
+	var username:String = "";
+	
+	public function new () {
+		
+		super ();
+		/*
+		var output:PeoteBytesOutput = new PeoteBytesOutput(); // TODO: optimize
+		output.writeString("Бвг");
+		output.writeString("Бвг");
+		//output.writeString("abc");
+		var input:PeoteBytesInput = new PeoteBytesInput(output.getBytes());
+		var test:String = input.readString();
+		var test1:String = input.readString();
+		*/
+		
+		channels = new Map();
+		
+		// server adress and port number of peote-server (perl proxy with peote-net protocol)
+		var server:String = "localhost";
+		var port:Int = 7680;
+		
+		
+		// -------------------------- input user name ---------------------
+		
+		input_username = new InputText("Enter Name", 160, 3, 140, 32,
+		//input_username = new InputTextField("'"+test+test1+"'", 160, 3, 140, 32,
+		
+			function(input:TextField) // on Send Message
+			{
+				if ( input.text != ""  ) {
+					username = input.text;
+					removeChild(input_username);
+					addChild(create_channel);
+					addChild(enter_channel);
+					addChild(channel_list);
+					create_channel.focus();
+				} 
+				else input_username.focus();
+			}
+		);
+		addChild(input_username);
+		input_username.focus();
+		
+		// -------------------------- SERVER ---------------------------
+		
+		create_channel = new InputText("Create Channel", 160, 3, 140, 32,
+			
+			function(input:TextField) // on Create New Channel
+			{ 	
+				if (input.text != "" && !channels.exists(input.text) ) {
+					
+					if (active == null) {
+						addChild(close_button);
+						addChild(send_message);
+					}
+					
+					active = new ServerChannel( server, port, input.text, username );
+					channels.set( input.text, active );
+					
+					addChild( cast active);
+					channel_list.addChannel(active.channelName);
+					
+					input.text = "";
+				}
+				create_channel.focus();
+			}
+		);
+		
+		
+		// -------------------------- CLIENT ---------------------------
+		
+		enter_channel = new InputText("Enter Channel", 480, 3, 140, 32,
+			
+			function(input:TextField) // on Enter Channel
+			{
+				if (input.text != "" && !channels.exists(input.text) ) {
+					
+					if (active == null) {
+						addChild(close_button);
+						addChild(send_message);
+					}
+					
+					active = new ClientChannel( server, port, input.text, username );
+					channels.set( input.text, active );
+					
+					addChild( cast active);
+					channel_list.addChannel(active.channelName);
+					
+					input.text = "";
+				}
+				enter_channel.focus();
+			}
+		);
+		
+		
+		// -------------------------- Send Message ---------------------
+		
+		send_message = new InputText("Send", 160, 560, 460, 32,
+		
+			function(input:TextField) // on Send Message
+			{
+				if ( input.text != ""  ) {
+					active.send(input.text);
+					
+					input.text = "";
+					stage.focus = input; // work on js target ?
+				}
+			}
+		);
+		
+		
+		// --------------- Channel List (to select open connections ------
+		
+		channel_list = new ChannelList(
+			
+			function(name:String) // select Channel
+			{
+				swapChildren( cast channels.get(name), cast active );
+				active = channels.get(name);
+			}
+		);
+		
+		
+		// -------------------------- close Channel ----------------------
+		
+		close_button = new Button("close", 744, 44, 50, 32,
+			
+			function(_) // close Channel
+			{		
+				active.close();
+				
+				channel_list.removeChannel(active.channelName);
+				channels.remove(active.channelName);
+				
+				var old:I_Channel = active;
+				active = channels.iterator().next();
+				
+				if (active != null)
+				{
+					swapChildren( cast old, cast active );
+					channel_list.setSelector(active.channelName);
+				}
+				else
+				{
+					removeChild(send_message);
+					removeChild(close_button);
+					channel_list.hideSelector();
+				}
+				
+				removeChild( cast old );
+			}
+		);
+		
+		
+	}
+	
+	
+}

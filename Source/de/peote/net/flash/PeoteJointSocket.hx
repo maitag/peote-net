@@ -369,7 +369,8 @@ class PeoteJointSocket extends PeoteSocket
 						{
 							inDisconnectCallback.get(j_nr)(command_chunk);
 						}
-						else trace("ERROR:kein gueltiges Servercommand"); // TODO
+						//else if (server_command == 255)// keepalive
+						//else trace("ERROR:kein gueltiges Servercommand"); // TODO
 					}
 					
 					command_mode = false;

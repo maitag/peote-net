@@ -37,7 +37,7 @@ class PeoteClientTest extends Application {
 				onData: onData
 			});
 			
-		peoteClient.enterJoint("localhost", 7680, "testserver");
+		peoteClient.enterJoint("maitag.de", 7680, "testserver");
 		
 	}
 	

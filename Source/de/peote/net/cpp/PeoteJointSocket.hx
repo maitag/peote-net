@@ -343,7 +343,7 @@ class PeoteJointSocket extends PeoteSocket
 					// zuerst die nr fuer entsprechenden callback
 					command_nr = input.get(input_pos++);
 					
-					//trace("CONTROL COMMAND " + command_nr + " input.bytesAvailable="+input.bytesAvailable+" bytes_left="+bytes_left);
+					trace("CONTROL COMMAND " + command_nr + " bytes_left="+bytes_left);
 						
 					if (command_nr > 0) // dann eine ANTWORT auf ein gesendetes Command
 					{	
@@ -381,7 +381,8 @@ class PeoteJointSocket extends PeoteSocket
 						{
 							inDisconnectCallback.get(j_nr)(command_chunk);
 						}
-						else trace("ERROR: no valid servercommand"); // TODO
+						//else if (server_command == 255)// keepalive
+						//else trace("ERROR: no valid servercommand"); // TODO
 					}
 					
 					command_mode = false;

@@ -1,0 +1,3 @@
+- messages for error-codes from peote-server
+- copy paste on cpp target (windows) not work
+- focus textfields for non flash targets

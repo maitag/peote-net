@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <project>
 	
-	<meta title="PeoteNetBridge" package="de.peote.net" version="0.2.0" company="Sylvio Sell - maitag.de" />
+	<meta title="PeoteNetBridge" package="de.peote.net" version="0.3.0" company="Sylvio Sell - maitag.de" />
 	<app main="PeoteNetBridge" path="Export" file="peoteNetBridge" />
 	
 	<source path="Source" />

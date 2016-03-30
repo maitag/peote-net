@@ -41,7 +41,7 @@ class PeoteServerTest extends Application {
 				onData: onData
 			});
 			
-		peoteServer.createJoint("localhost", 7680, "testserver");
+		peoteServer.createJoint("maitag.de", 7680, "testserver");
 		
 	}
 

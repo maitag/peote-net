@@ -57,7 +57,7 @@ de_peote_io_js_PeoteBytesOutput.prototype = {
 	}
 	,writeString: function(s) {
 		var b = haxe_io_Bytes.ofString(s);
-		this.writeUInt16(s.length);
+		this.writeUInt16(b.length);
 		var _g1 = 0;
 		var _g = b.length;
 		while(_g1 < _g) {

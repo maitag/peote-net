@@ -28,10 +28,10 @@ import de.peote.net.flash.PeoteJointSocket;
 
 class PeoteServer
 {
-	private var jointNr:Int;
-	private var peoteJointSocket:PeoteJointSocket;
-	private var server:String;
-	private var port:Int;
+	var jointNr:Int;
+	var peoteJointSocket:PeoteJointSocket;
+	var server:String = "";
+	var port:Int;
 
 	public var _onCreateJoint:Int -> Void;
 	public var onCreateJointError:Int -> Void;
@@ -53,9 +53,18 @@ class PeoteServer
 	
 	public function createJoint(server:String, port:Int, jointId:String):Void 
 	{
-		this.server = server;
-		this.port = port;
-		PeoteNet.createJoint(this, server, port, jointId);
+		if (this.server == "")
+		{
+			this.server = server;
+			this.port = port;
+			PeoteNet.createJoint(this, server, port, jointId);
+		}
+		else
+		{
+			trace("Error: PeoteServer already connected");
+			onCreateJointError(255);
+		}
+		
 	}
 
 	// -----------------------------------------------------------------------------------
@@ -64,6 +73,7 @@ class PeoteServer
 	public function deleteJoint():Void 
 	{
 		PeoteNet.deleteJoint(this, this.server, this.port, this.jointNr);
+		this.server = "";
 	}
 	
 	// -----------------------------------------------------------------------------------
