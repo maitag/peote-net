@@ -1,6 +1,7 @@
 package;
 
 import openfl.display.Sprite;
+import ui.OutputText;
 
 import de.peote.net.PeoteClient;
 import de.peote.io.PeoteBytes;
@@ -18,7 +19,7 @@ class ClientChannel extends Sprite implements I_Channel
 	var inputBuffer:PeoteBytesInput; // stores not fully readed chunk
 	var chunk_size:Int = 0;
 	
-	var output:OutputText;
+	var output:ui.OutputText;
 	
 	var peoteClient:PeoteClient;
 	
@@ -34,7 +35,7 @@ class ClientChannel extends Sprite implements I_Channel
 		this.channelName = channelName;
 		this.username = username;
 		
-		output = new OutputText(160, 45, 582, 510);
+		output = new ui.OutputText(160, 45, 582, 510);
 		addChild(output);
 		outputAppend("connecting..");
 		

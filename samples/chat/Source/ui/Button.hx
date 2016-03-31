@@ -1,4 +1,4 @@
-package;
+package ui;
 
 import flash.display.Sprite;
 import flash.text.TextField;

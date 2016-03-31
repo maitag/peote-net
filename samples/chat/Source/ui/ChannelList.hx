@@ -1,7 +1,8 @@
-package;
+package ui;
 
 import haxe.ds.IntMap;
 import flash.display.Sprite;
+import ui.Button;
 
 /**
  * ...
@@ -13,7 +14,7 @@ class ChannelList extends Sprite
 {
 
 	var onSelectCallback:String->Void;
-	var channels:Map<String, Button>;
+	var channels:Map<String, ui.Button>;
 	var y_bottom:Int = 44;
 	
 	var selector:Sprite;
@@ -36,7 +37,7 @@ class ChannelList extends Sprite
 	
 	public function addChannel(channelName:String):Void 
 	{
-		var channel:Button = new Button(channelName, 5, y_bottom, 150, 32, function(_) {
+		var channel:ui.Button = new ui.Button(channelName, 5, y_bottom, 150, 32, function(_) {
 			onSelectCallback(channelName);
 			setSelector(channelName);
 		}, true);
@@ -50,7 +51,7 @@ class ChannelList extends Sprite
 	
 	public function removeChannel(channelName:String):Void 
 	{
-		var channel:Button = channels.get(channelName);
+		var channel:ui.Button = channels.get(channelName);
 		removeChild(channel);
 		channels.remove(channelName);
 		reArrange();

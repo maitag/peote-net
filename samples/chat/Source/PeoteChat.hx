@@ -5,6 +5,9 @@ import de.peote.io.PeoteBytesInput;
 import de.peote.io.PeoteBytesOutput;
 import haxe.ds.IntMap;
 import haxe.io.StringInput;
+import ui.Button;
+import ui.ChannelList;
+import ui.InputText;
 
 import openfl.display.Sprite;
 import openfl.text.TextField;
@@ -20,15 +23,15 @@ class PeoteChat extends Sprite {
 	var channels:Map<String, I_Channel>;
 	var active:I_Channel = null;
 
-	var input_username:InputText;
+	var input_username:ui.InputText;
 	
-	var create_channel:InputText;
-	var enter_channel:InputText;
+	var create_channel:ui.InputText;
+	var enter_channel:ui.InputText;
 	
-	var send_message:InputText;
+	var send_message:ui.InputText;
 	
-	var channel_list:ChannelList;
-	var close_button:Button;
+	var channel_list:ui.ChannelList;
+	var close_button:ui.Button;
 	
 	var username:String = "";
 	
@@ -48,13 +51,13 @@ class PeoteChat extends Sprite {
 		channels = new Map();
 		
 		// server adress and port number of peote-server (perl proxy with peote-net protocol)
-		var server:String = "localhost";
+		var server:String = "maitag.de";
 		var port:Int = 7680;
 		
 		
 		// -------------------------- input user name ---------------------
 		
-		input_username = new InputText("Enter Name", 160, 3, 140, 32,
+		input_username = new ui.InputText("Enter Name", 160, 3, 140, 32,
 		//input_username = new InputTextField("'"+test+test1+"'", 160, 3, 140, 32,
 		
 			function(input:TextField) // on Send Message
@@ -75,7 +78,7 @@ class PeoteChat extends Sprite {
 		
 		// -------------------------- SERVER ---------------------------
 		
-		create_channel = new InputText("Create Channel", 160, 3, 140, 32,
+		create_channel = new ui.InputText("Create Channel", 160, 3, 140, 32,
 			
 			function(input:TextField) // on Create New Channel
 			{ 	
@@ -101,7 +104,7 @@ class PeoteChat extends Sprite {
 		
 		// -------------------------- CLIENT ---------------------------
 		
-		enter_channel = new InputText("Enter Channel", 480, 3, 140, 32,
+		enter_channel = new ui.InputText("Enter Channel", 480, 3, 140, 32,
 			
 			function(input:TextField) // on Enter Channel
 			{
@@ -127,7 +130,7 @@ class PeoteChat extends Sprite {
 		
 		// -------------------------- Send Message ---------------------
 		
-		send_message = new InputText("Send", 160, 560, 460, 32,
+		send_message = new ui.InputText("Send", 160, 560, 460, 32,
 		
 			function(input:TextField) // on Send Message
 			{
@@ -143,7 +146,7 @@ class PeoteChat extends Sprite {
 		
 		// --------------- Channel List (to select open connections ------
 		
-		channel_list = new ChannelList(
+		channel_list = new ui.ChannelList(
 			
 			function(name:String) // select Channel
 			{
@@ -155,7 +158,7 @@ class PeoteChat extends Sprite {
 		
 		// -------------------------- close Channel ----------------------
 		
-		close_button = new Button("close", 744, 44, 50, 32,
+		close_button = new ui.Button("close", 744, 44, 50, 32,
 			
 			function(_) // close Channel
 			{		

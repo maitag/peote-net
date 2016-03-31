@@ -1,4 +1,4 @@
-package;
+package ui;
 
 import openfl.display.Sprite;
 import openfl.text.Font;
@@ -7,6 +7,7 @@ import openfl.text.TextFieldType;
 import openfl.text.TextFormat;
 import lime.ui.KeyCode;
 import flash.events.KeyboardEvent;
+import ui.Button;
 
 /**
  * ...
@@ -19,7 +20,7 @@ class InputText extends Sprite
 	public function new(label:String, x:Int, y:Int, w:Int, h:Int, callback:TextField->Void) 
 	{
 		super();
-		var enter_button:Button = new Button(label, x+w+2, y, 120, h, function(_) {
+		var enter_button:ui.Button = new ui.Button(label, x+w+2, y, 120, h, function(_) {
 			callback(input);
 		});
 		addChild(enter_button);

@@ -1,4 +1,4 @@
-package;
+package ui;
 
 import openfl.display.Sprite;
 import openfl.text.Font;

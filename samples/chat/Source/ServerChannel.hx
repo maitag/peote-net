@@ -2,6 +2,7 @@ package;
 
 import haxe.ds.IntMap;
 import openfl.display.Sprite;
+import ui.OutputText;
 
 import de.peote.net.PeoteServer;
 import de.peote.io.PeoteBytes;
@@ -19,7 +20,7 @@ class ServerChannel extends Sprite implements I_Channel
 	var inputBuffer:PeoteBytesInput; // stores not fully readed chunk
 	var chunk_size:Int = 0;
 	
-	var output:OutputText;
+	var output:ui.OutputText;
 	
 	var peoteServer:PeoteServer;
 	var user:IntMap<String>;
@@ -38,7 +39,7 @@ class ServerChannel extends Sprite implements I_Channel
 		
 		user = new IntMap();
 		
-		output = new OutputText(160, 45, 582, 510);
+		output = new ui.OutputText(160, 45, 582, 510);
 		addChild(output);
 		outputAppend("connect..");
 		outputAppend("create new Channel " + channelName);
