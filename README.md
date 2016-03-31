@@ -1,17 +1,17 @@
 ### peote-net
-haxe api to use joint-protocol of [peote-server](https://github.com/maitag/peote-server)
+haxe api to use 'joint-protocol' of [peote-server](https://github.com/maitag/peote-server)
 
-written in [Haxe](http://haxe.org). Uses [OpenFl/Lime](http://www.openfl.org/documentation/setup/install-haxe/)
-to run on multiple hardware devices.
+written in [Haxe](http://haxe.org) and [OpenFl/Lime](http://www.openfl.org/documentation/setup/install-haxe/),  
+so it runs on all hardware ;)=
 
-If using this for web -> look into samples inside html5-test folder.
-There is some peoteNetBridge.swf embed, that wrapps around flash-raw-sockets.
+use in web -> look into html5-test folder how
+peoteNetBridge.swf works
 
-To test out Samples you will need a running TCP-Socket Server written in Perl:
+to test out Samples -> run TCP-Socket Server written in Perl:
 [peote-server](https://github.com/maitag/peote-server)
 
 
-####Depends
+####Depends on 
 [peote-socket](https://github.com/maitag/peote-socket)
 
 
