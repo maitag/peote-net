@@ -1,6 +1,8 @@
 package;
 
+import haxe.Timer;
 import openfl.display.Sprite;
+
 import ui.OutputText;
 
 import de.peote.net.PeoteClient;
@@ -28,7 +30,7 @@ class ClientChannel extends Sprite implements I_Channel
 	public var channelName:String;
 
 	
-	public function new( server:String, port:Int, channelName:String, username:String ) 
+	public function new( server:String, port:Int, channelName:String, username:String, onCloseConnection:ClientChannel->Void ) 
 	{
 		super();
 		
@@ -50,11 +52,13 @@ class ClientChannel extends Sprite implements I_Channel
 			},
 			
 			onEnterJointError: function(errorNr:Int) {
-				outputAppend('can\'t enter channel "$channelName" - error-code:'+errorNr);
+				outputAppend('can\'t enter channel "$channelName" - error-code:' + errorNr);
+				Timer.delay( function() { onCloseConnection(this); } , 1000);
 			},
 			
 			onDisconnect: function(jointNr:Int, reason:Int) {
 				outputAppend('disconnect channel ($jointNr) "$channelName", reason: $reason');
+				onCloseConnection(this);
 			},
 			
 			onData: onData

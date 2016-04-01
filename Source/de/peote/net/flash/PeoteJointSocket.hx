@@ -1,7 +1,7 @@
 package de.peote.net.flash;
 /**
  * ...
- * @author semmi
+ * @author Sylvio Sell
  */
 
 import flash.utils.ByteArray;
@@ -15,7 +15,7 @@ class PeoteJointSocket extends PeoteSocket
 	
 	var connected:Bool = false;
 	
-	var onConnectCallback:Bool -> String -> Void; // TODO: alles was mit socket zu tun hat umbenennen(onSocket...)
+	var onConnectCallback:Bool -> String -> Void;
 	var onCloseCallback:String -> Void;
 	var onErrorCallback:String -> Void;
 	
@@ -29,15 +29,6 @@ class PeoteJointSocket extends PeoteSocket
 	
 	var waitingCommandCallbacks:Map<Int,ByteArray -> Void> ;
 	
-	// TODO: evtl. noch datenstruktur anlegen was alles angelegt wurde und wo user drinne sind usw.
-	/*          
-	ownJoints = {  1: [35, 67],   // jn_nr: [user_nr, user_nr, ...]
-				   9: [26]
-				   7: [],         // offener Joint ohne user
-				};
-	inJoints =  {};
-	*/
-
 
 	var input:ByteArray;
 	var bytes_left:UInt = 0;
@@ -56,7 +47,6 @@ class PeoteJointSocket extends PeoteSocket
 		this.onCloseCallback = onCloseCallback;
 		this.onErrorCallback = onErrorCallback;
 		
-		//sbuff = new ByteArray();
 		input = new ByteArray();
 		
 		ownJointDataCallback = new Map<Int,Int -> Int -> Bytes -> Void>();
@@ -72,7 +62,7 @@ class PeoteJointSocket extends PeoteSocket
 		
 	}
 	
-	override public function connect(server:String, port:Int):Void // TODO: alles was mit socket zu tun hat umbenennen(socket...)
+	override public function connect(server:String, port:Int):Void
 	{
 		if ( connected )
 		{	trace("MaiSocket Error: socket is already connected and has to close before new connect()");
@@ -142,7 +132,6 @@ class PeoteJointSocket extends PeoteSocket
 	{
 		// TODO: if ( connected ) ...
 		
-		//var nr:Int = addCommandCallback(255, commandCallback);
 		var nr:Int = addCommandCallback(255, function(command_chunk:ByteArray):Void 
 						{ onCreateOwnJoint(command_chunk, commandCallback, dataCallback,
 														userConnectCallback, userDisconnectCallback,
@@ -157,12 +146,8 @@ class PeoteJointSocket extends PeoteSocket
 			writeByte(0); // create command
 			writeByte(nr); // command nummer fuer die spaetere antwort
 			
-			// ab hier aber alles fuer die ID in einen kleinen-CHUNK pressen
-			//var ba:ByteArray = new ByteArray();
+			// ab hier alles fuer die ID in einen kleinen-CHUNK pressen
 			var ba:Bytes = Bytes.ofString(joint_id);
-			//ba.writeUTFBytes(joint_id); // TODO: muss das hier UTF sein?
-			//ba.writeMultiByte(joint_id, "US-ASCII");
-			//trace("laenge des id-strings: "+ba.length);
 			writeByte(ba.length); // TODO: SICHERSTELLEN das <= 255
 			writeBytes(ba);
 			
@@ -200,13 +185,11 @@ class PeoteJointSocket extends PeoteSocket
 	
 	private function onUserConnect(userConnectCallback:Int -> Int -> Void, joint_nr:Int, command_chunk:ByteArray):Void
 	{
-		// TODO:  evtl. datenstruktur mit connecteten usern fuellen?
 		userConnectCallback(joint_nr, command_chunk.readUnsignedByte());
 	}
 	
 	private function onUserDisconnect(userDisconnectCallback:Int -> Int -> Int -> Void, joint_nr:Int, command_chunk:ByteArray):Void
 	{
-		// TODO: AUFRAUEMEN, -> ein user weniger
 		userDisconnectCallback(joint_nr, command_chunk.readUnsignedByte(), command_chunk.readUnsignedByte());
 	}
 	
@@ -256,12 +239,8 @@ class PeoteJointSocket extends PeoteSocket
 			writeByte(1); // enter_in command
 			writeByte(nr); // command nummer fuer die spaetere antwort
 			
-			// ab hier aber alles fuer die ID in einen kleinen-CHUNK pressen
-			//var ba:ByteArray = new ByteArray();
+			// ab hier alles fuer die ID in einen kleinen-CHUNK pressen
 			var ba:Bytes = Bytes.ofString(joint_id);
-			//ba.writeUTFBytes(joint_id); // TODO: muss das hier UTF sein?
-			//ba.writeMultiByte(joint_id, "US-ASCII");
-			//trace("laenge des id-strings: "+ba.length);
 			writeByte(ba.length); // TODO: SICHERSTELLEN das <= 255
 			writeBytes(ba);
 			
@@ -295,23 +274,13 @@ class PeoteJointSocket extends PeoteSocket
 	
 	private function onInDisconnect(disconnectCallback:Int -> Int -> Void, joint_nr:Int, command_chunk:ByteArray):Void
 	{
-		// TODO:  AUFRAUEMEN
 		inJointDataCallback.remove(joint_nr);
 		disconnectCallback(joint_nr, command_chunk.readUnsignedByte());
 	}
 
-	//private function onData(myBa:ByteArray, input_length:Int):Void
 	private function onData(bytes:Bytes):Void
-	{	var myBa:ByteArray = bytes.getData();
-		//trace("onData:   input.length=" + input.length + "---------------" );
-		// TODO: doch etwas anders vorgehen als in perl:
-		// VORGEHENSWEISE: ein input-bytearray immer mehr auffuellen bis chunk-ende erreicht ist,
-		//                 danach den callback mit diesen daten aufrufen und input-bytearray clear()
-		// ACHTUNG: - ein read loescht nix, sondern veraendert immer nur die position
-		//          - das erhaltene myBa ist schon ein NEU erzeugtes BA, enthaelt aber womoeglich 
-		//            auch DATEN hinter dem Chunk-ENDE oder zu wenig DATEN
-		
-		// zuerst den verbliebenen unverarbeiteten input mit den neuen socket-daten ergaenzen
+	{	
+		var myBa:ByteArray = bytes.getData();
 		
 		if (input.bytesAvailable == 0) { input.clear();}
 		var oldpos:Int = input.position;
@@ -466,7 +435,6 @@ class PeoteJointSocket extends PeoteSocket
 							
 							var data_chunk:ByteArray = new ByteArray(); // TODO: PERFORMANCE!! (auslagern damit nicht immer neu erstellt wird)
 							var avail:UInt = input.bytesAvailable;
-							//if (input.bytesAvailable >= bytes_left) // wenn chunk schon vollstaendig da ist
 							if (avail >= bytes_left) // wenn chunk schon vollstaendig da ist
 							{								
 								try { input.readBytes(data_chunk, 0, bytes_left);} catch (unknown : Dynamic) { trace("ERROR: input.readBytes(data_chunk, 0, bytes_left) :"+ unknown); }
@@ -475,10 +443,8 @@ class PeoteJointSocket extends PeoteSocket
 							}
 							else // chunk abziehen und ausgeben was bereits vorhanden ist
 							{
-								//input.readBytes(data_chunk, 0, input.bytesAvailable);
 								try { input.readBytes(data_chunk, 0, avail);} catch (unknown : Dynamic) { trace("ERROR: input.readBytes(data_chunk, 0, avail) :"+ unknown); }
 								ownJointDataCallback.get(joint_nr - 128)(joint_nr-128, user_nr, Bytes.ofData(data_chunk));
-								//bytes_left -= input.bytesAvailable;
 								bytes_left -= avail;
 							}
 							//trace("Data OWN: left="+bytes_left);
@@ -491,7 +457,6 @@ class PeoteJointSocket extends PeoteSocket
 					{
 						var data_chunk:ByteArray = new ByteArray(); // TODO: PERFORMANCE!! (auslagern damit nicht immer neu erstellt wird)
 						var avail:UInt = input.bytesAvailable;
-						//if (input.bytesAvailable >= bytes_left) // wenn chunk schon vollstaendig da ist
 						if (avail >= bytes_left) // wenn chunk schon vollstaendig da ist
 						{	//trace("Daten an IN JOINT : chunk vollstaendig geladen");							
 							try { input.readBytes(data_chunk, 0, bytes_left);} catch (unknown : Dynamic) { trace("ERROR: input.readBytes(data_chunk, 0, bytes_left) :"+ unknown); }
@@ -500,7 +465,6 @@ class PeoteJointSocket extends PeoteSocket
 						}
 						else // chunk abziehen und ausgeben was bereits vorhanden ist
 						{	//trace("Daten an IN JOINT : chunk "+avail+" bytes geladen");
-							//input.readBytes(data_chunk, 0, input.bytesAvailable);
 							try { input.readBytes(data_chunk, 0, avail);} catch (unknown : Dynamic) { trace("ERROR: input.readBytes(data_chunk, 0, avail) :"+ unknown); }
 							inJointDataCallback.get(joint_nr)(joint_nr, Bytes.ofData(data_chunk));
 							//bytes_left -= input.bytesAvailable;
@@ -523,9 +487,6 @@ class PeoteJointSocket extends PeoteSocket
 
 	public function sendStringToJointIn(joint_nr:Int, msg:String):Void
 	{
-		//var ba:ByteArray = new ByteArray();
-		//ba.writeUTFBytes(msg); //	ba.writeMultiByte(msg + "\n", "UTF-8");
-		//sendDataToJointIn(joint_nr, ba);
 		sendDataToJointIn(joint_nr, Bytes.ofString(msg));
 	}
 	
@@ -540,18 +501,6 @@ class PeoteJointSocket extends PeoteSocket
 		}
 		else
 		{
-			/*var tmp_ba:ByteArray = new ByteArray(); // TODO: optimieren und global machen
-			ba.position = 0;
-			while (ba.position < ba.length)
-			{	
-				tmp_ba.clear();
-				ba.readBytes(tmp_ba, 0, ((ba.length - ba.position < 32767 - 2) ? ba.length - ba.position : 32767 - 2));
-				writeChunkSize(tmp_ba.length+1);
-				writeByte(joint_nr);
-				writeBytes(tmp_ba);
-				flush();
-			}
-			*/
 			var pos:Int = 0;
 			var len:Int;
 			while (pos < ba.length)
@@ -570,8 +519,6 @@ class PeoteJointSocket extends PeoteSocket
 	
 	public function sendStringToJointOwn(joint_nr:Int, user_nr:Int, msg:String):Void
 	{
-		//var ba:ByteArray = new ByteArray();
-		//ba.writeUTFBytes(msg); //	ba.writeMultiByte(msg + "\n", "UTF-8");
 		sendDataToJointOwn(joint_nr, user_nr, Bytes.ofString(msg));
 	}
 	
@@ -587,20 +534,6 @@ class PeoteJointSocket extends PeoteSocket
 		}
 		else
 		{
-			/*
-			var tmp_ba:ByteArray = new ByteArray(); // TODO: optimieren und global machen
-			ba.position = 0;
-			while (ba.position < ba.length)
-			{	
-				tmp_ba.clear();
-				ba.readBytes(tmp_ba, 0, ((ba.length - ba.position < 32767 - 2) ? ba.length - ba.position : 32767 - 2));
-				writeChunkSize(tmp_ba.length+2);
-				writeByte(joint_nr+128);
-				writeByte(user_nr);
-				writeBytes(tmp_ba);
-				flush();
-			}
-			*/
 			var pos:Int = 0;
 			var len:Int;
 			while (pos < ba.length)

@@ -52,9 +52,12 @@ class ChannelList extends Sprite
 	public function removeChannel(channelName:String):Void 
 	{
 		var channel:ui.Button = channels.get(channelName);
-		removeChild(channel);
-		channels.remove(channelName);
-		reArrange();
+		if (channel != null)
+		{
+			removeChild(channel);
+			channels.remove(channelName);
+			reArrange();
+		}
 	}
 	
 	public function reArrange():Void 

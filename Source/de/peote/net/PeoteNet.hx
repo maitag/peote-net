@@ -10,7 +10,7 @@ import de.peote.net.flash.PeoteJointSocket;
 
 /**
  * ...
- * @author semmi
+ * @author Sylvio Sell
  */
 
 /* datenstruktur:
@@ -87,12 +87,17 @@ class PeoteNet
 			if (p.isConnected)
 			{
 				trace(key + " socket schon verbunden");
-				p.peoteJointSocket.createOwnJoint(jointId,
-				    function (jointNr:Int):Void { obj.onCreateJoint(p.peoteJointSocket, jointNr); },
-				                                  obj.onData, obj.onUserConnect,
-				                                  obj.onUserDisconnect,
-					function (errorNr:Int):Void { PeoteNet.onCreateJointError(key, obj, errorNr); }
-				);
+				if (p.addServerJoint(obj, jointId))
+				{
+					p.peoteJointSocket.createOwnJoint(jointId,
+						function (jointNr:Int):Void { obj.onCreateJoint(p.peoteJointSocket, jointNr); },
+						obj.onData,
+						obj.onUserConnect,
+						obj.onUserDisconnect,
+						function (errorNr:Int):Void { PeoteNet.onCreateJointError(key, obj, errorNr); }
+					);
+				}
+				else obj.onCreateJointError(-1);
 			}
 			else
 			{
@@ -108,8 +113,7 @@ class PeoteNet
 			
 			p.peoteJointSocket = new PeoteJointSocket(
 				server, port,
-				function (isConnected:Bool, msg:String):Void
-				                           { PeoteNet.onConnect(key, isConnected, msg); },
+				function (isConnected:Bool, msg:String):Void { PeoteNet.onConnect(key, isConnected, msg); },
 				function (msg:String):Void { PeoteNet.onClose(key, msg); },
 				function (msg:String):Void { PeoteNet.onError(key, msg); }
 			);
@@ -134,11 +138,16 @@ class PeoteNet
 			if (p.isConnected)
 			{
 				trace(key + " socket schon verbunden");
-				p.peoteJointSocket.enterInJoint(jointId,
-				    function (jointNr:Int):Void { obj.onEnterJoint(p.peoteJointSocket, jointNr); },
-				                                  obj.onData, obj.onDisconnect,
-					function (errorNr:Int):Void { PeoteNet.onEnterJointError(key, obj, errorNr); }
-				);
+				if (p.addClientJoint(obj, jointId))
+				{
+					p.peoteJointSocket.enterInJoint(jointId,
+						function (jointNr:Int):Void { obj.onEnterJoint(p.peoteJointSocket, jointNr); },
+						obj.onData,
+						//obj.onDisconnect,
+						function (jointNr:Int, reason:Int):Void { PeoteNet.onDisconnect(key, obj, jointNr, reason); },
+						function (errorNr:Int):Void { PeoteNet.onEnterJointError(key, obj, errorNr); }
+					);
+				} else obj.onEnterJointError(-1);
 			}
 			else
 			{
@@ -237,6 +246,22 @@ class PeoteNet
 		obj.onEnterJointError(errorNr);
 	}
 	
+	public static function onDisconnect(key:String, obj:PeoteClient, jointNr:Int, reason:Int):Void
+	{
+		if (sockets.exists(key))
+		{
+			var p:PeoteNetSocket = sockets.get(key);
+			p.clients.remove(obj);
+			if (Lambda.count(p.server) == 0 && Lambda.count(p.clients) == 0 )
+			{
+				trace("Peote-Server: " + key + " leave last -> Close:    -----------");
+				p.peoteJointSocket.close();
+				sockets.remove(key);
+			}
+		}
+		obj.onDisconnect(jointNr, reason);
+	}
+	
 	// -----------------------------------------------------------------------------------
 	//  Server NETWORK CONNECTION --------------------------------------------------------
 	// -----------------------------------------------------------------------------------
@@ -265,7 +290,9 @@ class PeoteNet
 			{
 				p.peoteJointSocket.createOwnJoint(p.server.get(obj),
 				    function (jointNr:Int):Void { obj.onCreateJoint(p.peoteJointSocket, jointNr); },
-				                                  obj.onData, obj.onUserConnect, obj.onUserDisconnect,
+				    obj.onData,
+					obj.onUserConnect,
+					obj.onUserDisconnect,
 					function (errorNr:Int):Void { PeoteNet.onCreateJointError(key, obj, errorNr); }
 				);
 			}
@@ -273,7 +300,9 @@ class PeoteNet
 			{
 				p.peoteJointSocket.enterInJoint(p.clients.get(obj),
 				    function (jointNr:Int):Void { obj.onEnterJoint(p.peoteJointSocket, jointNr); },
-				                                  obj.onData, obj.onDisconnect,
+				    obj.onData,
+					//obj.onDisconnect,
+					function (jointNr:Int, reason:Int):Void { PeoteNet.onDisconnect(key, obj, jointNr, reason); },
 					function (errorNr:Int):Void { PeoteNet.onEnterJointError(key, obj, errorNr); }
 				);
 			}

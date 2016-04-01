@@ -38,27 +38,16 @@ class PeoteChat extends Sprite {
 	public function new () {
 		
 		super ();
-		/*
-		var output:PeoteBytesOutput = new PeoteBytesOutput(); // TODO: optimize
-		output.writeString("Бвг");
-		output.writeString("Бвг");
-		//output.writeString("abc");
-		var input:PeoteBytesInput = new PeoteBytesInput(output.getBytes());
-		var test:String = input.readString();
-		var test1:String = input.readString();
-		*/
-		
 		channels = new Map();
 		
 		// server adress and port number of peote-server (perl proxy with peote-net protocol)
-		var server:String = "maitag.de";
+		var server:String = "localhost";
 		var port:Int = 7680;
 		
 		
 		// -------------------------- input user name ---------------------
 		
 		input_username = new ui.InputText("Enter Name", 160, 3, 140, 32,
-		//input_username = new InputTextField("'"+test+test1+"'", 160, 3, 140, 32,
 		
 			function(input:TextField) // on Send Message
 			{
@@ -89,7 +78,32 @@ class PeoteChat extends Sprite {
 						addChild(send_message);
 					}
 					
-					active = new ServerChannel( server, port, input.text, username );
+					active = new ServerChannel( server, port, input.text, username,
+						
+						function(channel:ServerChannel) // onCloseConnection
+						{ 
+							channel_list.removeChannel(channel.channelName);
+							channels.remove(channel.channelName);
+							if (channel == active)
+							{
+								active = channels.iterator().next();
+								
+								if (active != null)
+								{
+									swapChildren( cast channel, cast active );
+									channel_list.setSelector(active.channelName);
+								}
+								else
+								{
+									removeChild(send_message);
+									removeChild(close_button);
+									channel_list.hideSelector();
+								}
+							}
+							removeChild( cast channel );
+						}
+					);
+					
 					channels.set( input.text, active );
 					
 					addChild( cast active);
@@ -115,7 +129,32 @@ class PeoteChat extends Sprite {
 						addChild(send_message);
 					}
 					
-					active = new ClientChannel( server, port, input.text, username );
+					active = new ClientChannel( server, port, input.text, username,
+						
+						function(channel:ClientChannel) // onCloseConnection
+						{ 
+							channel_list.removeChannel(channel.channelName);
+							channels.remove(channel.channelName);
+							if (channel == active)
+							{
+								active = channels.iterator().next();
+								
+								if (active != null)
+								{
+									swapChildren( cast channel, cast active );
+									channel_list.setSelector(active.channelName);
+								}
+								else
+								{
+									removeChild(send_message);
+									removeChild(close_button);
+									channel_list.hideSelector();
+								}
+							}
+							removeChild( cast channel );
+						}
+					);
+					
 					channels.set( input.text, active );
 					
 					addChild( cast active);
@@ -138,7 +177,7 @@ class PeoteChat extends Sprite {
 					active.send(input.text);
 					
 					input.text = "";
-					stage.focus = input; // work on js target ?
+					stage.focus = input; // did not work on js and cpp target
 				}
 			}
 		);

@@ -30,7 +30,7 @@ ApplicationMain.create = function() {
 	ApplicationMain.preloader.load(urls,types);
 };
 ApplicationMain.main = function() {
-	ApplicationMain.config = { build : "27", company : "Sylvio Sell - maitag", file : "PeoteServerTest", fps : 60, name : "PeoteNetTest", orientation : "", packageName : "de.peote.net", version : "0.3.0", windows : [{ antialiasing : 0, background : 16777215, borderless : false, depthBuffer : false, display : 0, fullscreen : false, hardware : true, height : 0, parameters : "{}", resizable : true, stencilBuffer : false, title : "PeoteNetTest", vsync : false, width : 0, x : null, y : null}]};
+	ApplicationMain.config = { build : "33", company : "Sylvio Sell - maitag", file : "PeoteServerTest", fps : 60, name : "PeoteNetTest", orientation : "", packageName : "de.peote.net", version : "0.3.0", windows : [{ antialiasing : 0, background : 16777215, borderless : false, depthBuffer : false, display : 0, fullscreen : false, hardware : true, height : 0, parameters : "{}", resizable : true, stencilBuffer : false, title : "PeoteNetTest", vsync : false, width : 0, x : null, y : null}]};
 };
 ApplicationMain.start = function() {
 	var result = ApplicationMain.app.exec();

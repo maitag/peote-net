@@ -45,7 +45,7 @@ ApplicationMain.init = function() {
 	if(total == 0) ApplicationMain.start();
 };
 ApplicationMain.main = function() {
-	ApplicationMain.config = { build : "462", company : "OpenFL", file : "peote-chat", fps : 60, name : "PeoteChat", orientation : "", packageName : "de.peote", version : "0.1.0", windows : [{ antialiasing : 0, background : 16777215, borderless : false, depthBuffer : false, display : 0, fullscreen : false, hardware : false, height : 0, parameters : "{}", resizable : true, stencilBuffer : true, title : "PeoteChat", vsync : false, width : 0, x : null, y : null}]};
+	ApplicationMain.config = { build : "53", company : "OpenFL", file : "peote-chat", fps : 60, name : "PeoteChat", orientation : "", packageName : "de.peote", version : "0.1.0", windows : [{ antialiasing : 0, background : 16777215, borderless : false, depthBuffer : false, display : 0, fullscreen : false, hardware : false, height : 0, parameters : "{}", resizable : true, stencilBuffer : true, title : "PeoteChat", vsync : false, width : 0, x : null, y : null}]};
 };
 ApplicationMain.start = function() {
 	var hasMain = false;
@@ -1361,7 +1361,7 @@ var PeoteChat = function() {
 	this.channels = new haxe_ds_StringMap();
 	var server = "localhost";
 	var port = 7680;
-	this.input_username = new InputText("Enter Name",160,3,140,32,function(input) {
+	this.input_username = new ui_InputText("Enter Name",160,3,140,32,function(input) {
 		if(input.get_text() != "") {
 			_g.username = input.get_text();
 			_g.removeChild(_g.input_username);
@@ -1373,7 +1373,7 @@ var PeoteChat = function() {
 	});
 	this.addChild(this.input_username);
 	this.input_username.focus();
-	this.create_channel = new InputText("Create Channel",160,3,140,32,function(input1) {
+	this.create_channel = new ui_InputText("Create Channel",160,3,140,32,function(input1) {
 		if(input1.get_text() != "" && !(function($this) {
 			var $r;
 			var key = input1.get_text();
@@ -1384,7 +1384,22 @@ var PeoteChat = function() {
 				_g.addChild(_g.close_button);
 				_g.addChild(_g.send_message);
 			}
-			_g.active = new ServerChannel(server,port,input1.get_text(),_g.username);
+			_g.active = new ServerChannel(server,port,input1.get_text(),_g.username,function(channel) {
+				_g.channel_list.removeChannel(channel.channelName);
+				_g.channels.remove(channel.channelName);
+				if(channel == _g.active) {
+					_g.active = _g.channels.iterator().next();
+					if(_g.active != null) {
+						_g.swapChildren(channel,_g.active);
+						_g.channel_list.setSelector(_g.active.channelName);
+					} else {
+						_g.removeChild(_g.send_message);
+						_g.removeChild(_g.close_button);
+						_g.channel_list.hideSelector();
+					}
+				}
+				_g.removeChild(channel);
+			});
 			var key1 = input1.get_text();
 			_g.channels.set(key1,_g.active);
 			_g.addChild(_g.active);
@@ -1393,7 +1408,7 @@ var PeoteChat = function() {
 		}
 		_g.create_channel.focus();
 	});
-	this.enter_channel = new InputText("Enter Channel",480,3,140,32,function(input2) {
+	this.enter_channel = new ui_InputText("Enter Channel",480,3,140,32,function(input2) {
 		if(input2.get_text() != "" && !(function($this) {
 			var $r;
 			var key2 = input2.get_text();
@@ -1404,7 +1419,22 @@ var PeoteChat = function() {
 				_g.addChild(_g.close_button);
 				_g.addChild(_g.send_message);
 			}
-			_g.active = new ClientChannel(server,port,input2.get_text(),_g.username);
+			_g.active = new ClientChannel(server,port,input2.get_text(),_g.username,function(channel1) {
+				_g.channel_list.removeChannel(channel1.channelName);
+				_g.channels.remove(channel1.channelName);
+				if(channel1 == _g.active) {
+					_g.active = _g.channels.iterator().next();
+					if(_g.active != null) {
+						_g.swapChildren(channel1,_g.active);
+						_g.channel_list.setSelector(_g.active.channelName);
+					} else {
+						_g.removeChild(_g.send_message);
+						_g.removeChild(_g.close_button);
+						_g.channel_list.hideSelector();
+					}
+				}
+				_g.removeChild(channel1);
+			});
 			var key3 = input2.get_text();
 			_g.channels.set(key3,_g.active);
 			_g.addChild(_g.active);
@@ -1413,18 +1443,18 @@ var PeoteChat = function() {
 		}
 		_g.enter_channel.focus();
 	});
-	this.send_message = new InputText("Send",160,560,460,32,function(input3) {
+	this.send_message = new ui_InputText("Send",160,560,460,32,function(input3) {
 		if(input3.get_text() != "") {
 			_g.active.send(input3.get_text());
 			input3.set_text("");
 			_g.stage.set_focus(input3);
 		}
 	});
-	this.channel_list = new ChannelList(function(name) {
+	this.channel_list = new ui_ChannelList(function(name) {
 		_g.swapChildren(_g.channels.get(name),_g.active);
 		_g.active = _g.channels.get(name);
 	});
-	this.close_button = new Button("close",744,44,50,32,function(_) {
+	this.close_button = new ui_Button("close",744,44,50,32,function(_) {
 		_g.active.close();
 		_g.channel_list.removeChannel(_g.active.channelName);
 		_g.channels.remove(_g.active.channelName);
@@ -1458,96 +1488,19 @@ DocumentClass.__super__ = PeoteChat;
 DocumentClass.prototype = $extend(PeoteChat.prototype,{
 	__class__: DocumentClass
 });
-var Button = function(label,x,y,w,h,onClick,selectable) {
-	if(selectable == null) selectable = false;
-	openfl_display_Sprite.call(this);
-	this.set_x(x);
-	this.set_y(y);
-	this.get_graphics().beginFill(13421772);
-	this.get_graphics().drawRoundRect(0,0,w,h,16,16);
-	this.get_graphics().endFill();
-	var format = new openfl_text_TextFormat();
-	format.align = 0;
-	format.size = Math.floor(h / 2);
-	this.text = new openfl_text_TextField();
-	this.text.set_defaultTextFormat(format);
-	this.text.set_selectable(selectable);
-	this.text.set_y(Math.floor(h / 8));
-	this.text.set_width(w);
-	this.text.set_height(h);
-	this.text.set_text(label);
-	this.addChild(this.text);
-	this.addEventListener("click",onClick);
-};
-$hxClasses["Button"] = Button;
-Button.__name__ = ["Button"];
-Button.__super__ = openfl_display_Sprite;
-Button.prototype = $extend(openfl_display_Sprite.prototype,{
-	__class__: Button
-});
-var ChannelList = function(onSelect) {
-	this.y_bottom = 44;
-	openfl_display_Sprite.call(this);
-	this.onSelectCallback = onSelect;
-	this.channels = new haxe_ds_StringMap();
-	this.selector = new openfl_display_Sprite();
-	this.selector.get_graphics().lineStyle(4,5592405);
-	this.selector.get_graphics().drawRoundRect(0,0,150,32,16,16);
-	this.selector.set_x(5);
-	this.hideSelector();
-	this.addChild(this.selector);
-};
-$hxClasses["ChannelList"] = ChannelList;
-ChannelList.__name__ = ["ChannelList"];
-ChannelList.__super__ = openfl_display_Sprite;
-ChannelList.prototype = $extend(openfl_display_Sprite.prototype,{
-	addChannel: function(channelName) {
-		var _g = this;
-		var channel = new Button(channelName,5,this.y_bottom,150,32,function(_) {
-			_g.onSelectCallback(channelName);
-			_g.setSelector(channelName);
-		},true);
-		this.channels.set(channelName,channel);
-		this.addChild(channel);
-		this.selector.set_y(this.y_bottom);
-		this.y_bottom += 34;
-	}
-	,removeChannel: function(channelName) {
-		var channel = this.channels.get(channelName);
-		this.removeChild(channel);
-		this.channels.remove(channelName);
-		this.reArrange();
-	}
-	,reArrange: function() {
-		this.y_bottom = 44;
-		var $it0 = this.channels.keys();
-		while( $it0.hasNext() ) {
-			var channelName = $it0.next();
-			this.channels.get(channelName).set_y(this.y_bottom);
-			this.y_bottom += 34;
-		}
-	}
-	,setSelector: function(channelName) {
-		this.selector.set_y(this.channels.get(channelName).get_y());
-	}
-	,hideSelector: function() {
-		this.selector.set_y(-1000);
-	}
-	,__class__: ChannelList
-});
 var I_$Channel = function() { };
 $hxClasses["I_Channel"] = I_$Channel;
 I_$Channel.__name__ = ["I_Channel"];
 I_$Channel.prototype = {
 	__class__: I_$Channel
 };
-var ClientChannel = function(server,port,channelName,username) {
+var ClientChannel = function(server,port,channelName,username,onCloseConnection) {
 	this.chunk_size = 0;
 	var _g = this;
 	openfl_display_Sprite.call(this);
 	this.channelName = channelName;
 	this.username = username;
-	this.output = new OutputText(160,45,582,510);
+	this.output = new ui_OutputText(160,45,582,510);
 	this.addChild(this.output);
 	this.outputAppend("connecting..");
 	this.inputBuffer = new de_peote_io_js_PeoteBytesInput();
@@ -1556,8 +1509,12 @@ var ClientChannel = function(server,port,channelName,username) {
 		_g.send(username);
 	}, onEnterJointError : function(errorNr) {
 		_g.outputAppend("can't enter channel \"" + channelName + "\" - error-code:" + errorNr);
+		haxe_Timer.delay(function() {
+			onCloseConnection(_g);
+		},1000);
 	}, onDisconnect : function(jointNr1,reason) {
 		_g.outputAppend("disconnect channel (" + jointNr1 + ") \"" + channelName + "\", reason: " + reason);
+		onCloseConnection(_g);
 	}, onData : $bind(this,this.onData)});
 	this.peoteClient.enterJoint(server,port,channelName);
 };
@@ -1862,43 +1819,6 @@ HxOverrides.iter = function(a) {
 		return this.arr[this.cur++];
 	}};
 };
-var InputText = function(label,x,y,w,h,callback) {
-	var _g = this;
-	openfl_display_Sprite.call(this);
-	var enter_button = new Button(label,x + w + 2,y,120,h,function(_) {
-		callback(_g.input);
-	});
-	this.addChild(enter_button);
-	var textFormat = new openfl_text_TextFormat();
-	textFormat.leftMargin = 5;
-	textFormat.rightMargin = 5;
-	textFormat.size = Math.floor(h / 2);
-	this.input = new openfl_text_TextField();
-	this.input.set_defaultTextFormat(textFormat);
-	this.input.set_type(1);
-	this.input.set_border(true);
-	this.input.set_multiline(false);
-	this.input.set_wordWrap(true);
-	this.input.set_background(true);
-	this.input.set_backgroundColor(15658734);
-	this.input.set_x(x);
-	this.input.set_y(y);
-	this.input.set_width(w);
-	this.input.set_height(h - 1);
-	this.addChild(this.input);
-	this.input.addEventListener("keyUp",function(event) {
-		if(event.keyCode == 13) callback(_g.input);
-	});
-};
-$hxClasses["InputText"] = InputText;
-InputText.__name__ = ["InputText"];
-InputText.__super__ = openfl_display_Sprite;
-InputText.prototype = $extend(openfl_display_Sprite.prototype,{
-	focus: function() {
-		this.stage.set_focus(this.input);
-	}
-	,__class__: InputText
-});
 var List = function() {
 	this.length = 0;
 };
@@ -1977,32 +1897,6 @@ NMEPreloader.prototype = $extend(openfl_display_Sprite.prototype,{
 	}
 	,__class__: NMEPreloader
 });
-var OutputText = function(x,y,w,h) {
-	openfl_display_Sprite.call(this);
-	var textFormat = new openfl_text_TextFormat();
-	textFormat.leftMargin = 5;
-	textFormat.rightMargin = 5;
-	textFormat.size = 16;
-	this.output = new openfl_text_TextField();
-	this.output.set_defaultTextFormat(textFormat);
-	this.output.set_type(0);
-	this.output.set_border(true);
-	this.output.set_multiline(true);
-	this.output.set_wordWrap(true);
-	this.output.set_background(true);
-	this.output.set_backgroundColor(16119285);
-	this.output.set_x(x);
-	this.output.set_y(y);
-	this.output.set_width(w);
-	this.output.set_height(h);
-	this.addChild(this.output);
-};
-$hxClasses["OutputText"] = OutputText;
-OutputText.__name__ = ["OutputText"];
-OutputText.__super__ = openfl_display_Sprite;
-OutputText.prototype = $extend(openfl_display_Sprite.prototype,{
-	__class__: OutputText
-});
 var Reflect = function() { };
 $hxClasses["Reflect"] = Reflect;
 Reflect.__name__ = ["Reflect"];
@@ -2057,14 +1951,14 @@ Reflect.makeVarArgs = function(f) {
 		return f(a);
 	};
 };
-var ServerChannel = function(server,port,channelName,username) {
+var ServerChannel = function(server,port,channelName,username,onCloseConnection) {
 	this.chunk_size = 0;
 	var _g = this;
 	openfl_display_Sprite.call(this);
 	this.channelName = channelName;
 	this.username = username;
 	this.user = new haxe_ds_IntMap();
-	this.output = new OutputText(160,45,582,510);
+	this.output = new ui_OutputText(160,45,582,510);
 	this.addChild(this.output);
 	this.outputAppend("connect..");
 	this.outputAppend("create new Channel " + channelName);
@@ -2073,6 +1967,9 @@ var ServerChannel = function(server,port,channelName,username) {
 		_g.outputAppend("create new channel (" + jointNr + "): \"" + channelName + "\"");
 	}, onCreateJointError : function(errorNr) {
 		_g.outputAppend("can't create channel \"" + channelName + "\" - error-code:" + errorNr);
+		haxe_Timer.delay(function() {
+			onCloseConnection(_g);
+		},1000);
 	}, onUserConnect : function(jointNr1,userNr) {
 		_g.user.h[userNr] = "";
 	}, onUserDisconnect : function(jointNr2,userNr1,reason) {
@@ -36107,6 +36004,148 @@ haxe_lang_Iterable.__name__ = ["haxe","lang","Iterable"];
 haxe_lang_Iterable.prototype = {
 	__class__: haxe_lang_Iterable
 };
+var ui_Button = function(label,x,y,w,h,onClick,selectable) {
+	if(selectable == null) selectable = false;
+	openfl_display_Sprite.call(this);
+	this.set_x(x);
+	this.set_y(y);
+	this.get_graphics().beginFill(13421772);
+	this.get_graphics().drawRoundRect(0,0,w,h,16,16);
+	this.get_graphics().endFill();
+	var format = new openfl_text_TextFormat();
+	format.align = 0;
+	format.size = Math.floor(h / 2);
+	this.text = new openfl_text_TextField();
+	this.text.set_defaultTextFormat(format);
+	this.text.set_selectable(selectable);
+	this.text.set_y(Math.floor(h / 8));
+	this.text.set_width(w);
+	this.text.set_height(h);
+	this.text.set_text(label);
+	this.addChild(this.text);
+	this.addEventListener("click",onClick);
+};
+$hxClasses["ui.Button"] = ui_Button;
+ui_Button.__name__ = ["ui","Button"];
+ui_Button.__super__ = openfl_display_Sprite;
+ui_Button.prototype = $extend(openfl_display_Sprite.prototype,{
+	__class__: ui_Button
+});
+var ui_ChannelList = function(onSelect) {
+	this.y_bottom = 44;
+	openfl_display_Sprite.call(this);
+	this.onSelectCallback = onSelect;
+	this.channels = new haxe_ds_StringMap();
+	this.selector = new openfl_display_Sprite();
+	this.selector.get_graphics().lineStyle(4,5592405);
+	this.selector.get_graphics().drawRoundRect(0,0,150,32,16,16);
+	this.selector.set_x(5);
+	this.hideSelector();
+	this.addChild(this.selector);
+};
+$hxClasses["ui.ChannelList"] = ui_ChannelList;
+ui_ChannelList.__name__ = ["ui","ChannelList"];
+ui_ChannelList.__super__ = openfl_display_Sprite;
+ui_ChannelList.prototype = $extend(openfl_display_Sprite.prototype,{
+	addChannel: function(channelName) {
+		var _g = this;
+		var channel = new ui_Button(channelName,5,this.y_bottom,150,32,function(_) {
+			_g.onSelectCallback(channelName);
+			_g.setSelector(channelName);
+		},true);
+		this.channels.set(channelName,channel);
+		this.addChild(channel);
+		this.selector.set_y(this.y_bottom);
+		this.y_bottom += 34;
+	}
+	,removeChannel: function(channelName) {
+		var channel = this.channels.get(channelName);
+		if(channel != null) {
+			this.removeChild(channel);
+			this.channels.remove(channelName);
+			this.reArrange();
+		}
+	}
+	,reArrange: function() {
+		this.y_bottom = 44;
+		var $it0 = this.channels.keys();
+		while( $it0.hasNext() ) {
+			var channelName = $it0.next();
+			this.channels.get(channelName).set_y(this.y_bottom);
+			this.y_bottom += 34;
+		}
+	}
+	,setSelector: function(channelName) {
+		this.selector.set_y(this.channels.get(channelName).get_y());
+	}
+	,hideSelector: function() {
+		this.selector.set_y(-1000);
+	}
+	,__class__: ui_ChannelList
+});
+var ui_InputText = function(label,x,y,w,h,callback) {
+	var _g = this;
+	openfl_display_Sprite.call(this);
+	var enter_button = new ui_Button(label,x + w + 2,y,120,h,function(_) {
+		callback(_g.input);
+	});
+	this.addChild(enter_button);
+	var textFormat = new openfl_text_TextFormat();
+	textFormat.leftMargin = 5;
+	textFormat.rightMargin = 5;
+	textFormat.size = Math.floor(h / 2);
+	this.input = new openfl_text_TextField();
+	this.input.set_defaultTextFormat(textFormat);
+	this.input.set_type(1);
+	this.input.set_border(true);
+	this.input.set_multiline(false);
+	this.input.set_wordWrap(true);
+	this.input.set_background(true);
+	this.input.set_backgroundColor(15658734);
+	this.input.set_x(x);
+	this.input.set_y(y);
+	this.input.set_width(w);
+	this.input.set_height(h - 1);
+	this.addChild(this.input);
+	this.input.addEventListener("keyUp",function(event) {
+		if(event.keyCode == 13) callback(_g.input);
+	});
+};
+$hxClasses["ui.InputText"] = ui_InputText;
+ui_InputText.__name__ = ["ui","InputText"];
+ui_InputText.__super__ = openfl_display_Sprite;
+ui_InputText.prototype = $extend(openfl_display_Sprite.prototype,{
+	focus: function() {
+		this.stage.set_focus(this.input);
+	}
+	,__class__: ui_InputText
+});
+var ui_OutputText = function(x,y,w,h) {
+	openfl_display_Sprite.call(this);
+	var textFormat = new openfl_text_TextFormat();
+	textFormat.leftMargin = 5;
+	textFormat.rightMargin = 5;
+	textFormat.size = 16;
+	this.output = new openfl_text_TextField();
+	this.output.set_defaultTextFormat(textFormat);
+	this.output.set_type(0);
+	this.output.set_border(true);
+	this.output.set_multiline(true);
+	this.output.set_wordWrap(true);
+	this.output.set_background(true);
+	this.output.set_backgroundColor(16119285);
+	this.output.set_x(x);
+	this.output.set_y(y);
+	this.output.set_width(w);
+	this.output.set_height(h);
+	this.addChild(this.output);
+};
+$hxClasses["ui.OutputText"] = ui_OutputText;
+ui_OutputText.__name__ = ["ui","OutputText"];
+ui_OutputText.__super__ = openfl_display_Sprite;
+ui_OutputText.prototype = $extend(openfl_display_Sprite.prototype,{
+	__class__: ui_OutputText
+});
 var $_, $fid = 0;
 function $bind(o,m) { if( m == null ) return null; if( m.__id__ == null ) m.__id__ = $fid++; var f; if( o.hx__closures__ == null ) o.hx__closures__ = {}; else f = o.hx__closures__[m.__id__]; if( f == null ) { f = function(){ return f.method.apply(f.scope, arguments); }; f.scope = o; f.method = m; o.hx__closures__[m.__id__] = f; } return f; }
 if(Array.prototype.indexOf) HxOverrides.indexOf = function(a,o,i) {

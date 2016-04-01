@@ -1,7 +1,9 @@
 package;
 
 import haxe.ds.IntMap;
+import haxe.Timer;
 import openfl.display.Sprite;
+
 import ui.OutputText;
 
 import de.peote.net.PeoteServer;
@@ -30,7 +32,7 @@ class ServerChannel extends Sprite implements I_Channel
 	public var channelName:String;
 
 	
-	public function new( server:String, port:Int, channelName:String, username:String ) 
+	public function new( server:String, port:Int, channelName:String, username:String, onCloseConnection:ServerChannel->Void ) 
 	{
 		super();
 		
@@ -54,7 +56,8 @@ class ServerChannel extends Sprite implements I_Channel
 			},
 			
 			onCreateJointError: function(errorNr:Int) {
-				outputAppend('can\'t create channel "$channelName" - error-code:'+errorNr);
+				outputAppend('can\'t create channel "$channelName" - error-code:' + errorNr);
+				Timer.delay( function() { onCloseConnection(this); } , 1000);
 			},
 			
 			onUserConnect: function( jointNr:Int, userNr:Int ) {

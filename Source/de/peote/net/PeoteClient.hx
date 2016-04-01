@@ -12,7 +12,7 @@ import de.peote.net.flash.PeoteJointSocket;
 
 /**
  * ...
- * @author semmi
+ * @author Sylvio Sell
  */
 
 #if js
@@ -69,7 +69,6 @@ class PeoteClient
 
 	public function send(bytes:Bytes):Void
 	{	
-		//this.peoteJointSocket.sendStringToJointIn(this.jointNr, msg );
 		this.peoteJointSocket.sendDataToJointIn(this.jointNr, bytes );
 	}
 
