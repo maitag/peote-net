@@ -130,30 +130,34 @@ class PeoteJointSocket extends PeoteSocket
 												userDisconnectCallback:Int -> Int -> Int -> Void,
 												errorCallback:Int -> Void = null):Void 
 	{
-		// TODO: if ( connected ) ...
-		
-		var nr:Int = addCommandCallback(255, function(command_chunk:ByteArray):Void 
-						{ onCreateOwnJoint(command_chunk, commandCallback, dataCallback,
-														userConnectCallback, userDisconnectCallback,
-														errorCallback);
-						}
-						);
-		
-		if (nr != -1)
+		var bytes:Bytes = Bytes.ofString(joint_id);
+		if (bytes.length <= 255)
 		{
-			writeByte(0); // 0 leitet command ein (das waere sonst die chunk-size, die kann aber niemals 1 sein)
+			var nr:Int = addCommandCallback(255, function(command_chunk:ByteArray):Void 
+							{ onCreateOwnJoint(command_chunk, commandCallback, dataCallback,
+															userConnectCallback, userDisconnectCallback,
+															errorCallback);
+							}
+							);
 			
-			writeByte(0); // create command
-			writeByte(nr); // command nummer fuer die spaetere antwort
-			
-			// ab hier alles fuer die ID in einen kleinen-CHUNK pressen
-			var ba:Bytes = Bytes.ofString(joint_id);
-			writeByte(ba.length); // TODO: SICHERSTELLEN das <= 255
-			writeBytes(ba);
-			
-			flush();
+			if (nr != -1)
+			{
+				writeByte(0); // 0 leitet command ein (das waere sonst die chunk-size, die kann aber niemals 1 sein)
+				
+				writeByte(0); // create command
+				writeByte(nr); // command nummer fuer die spaetere antwort
+				
+				// ab hier alles fuer die ID in einen kleinen-CHUNK pressen
+				writeByte(bytes.length);
+				writeBytes(bytes);
+				
+				flush();
+			} // TODO: else error for commandCallback overflow
 		}
-		
+		else
+		{
+			if (errorCallback != null) errorCallback(-3); // joint_id to long
+		}
 	}
 	
 	private function onCreateOwnJoint(command_chunk:ByteArray, commandCallback:Int -> Void,
@@ -224,28 +228,32 @@ class PeoteJointSocket extends PeoteSocket
 												disconnectCallback:Int -> Int -> Void,
 												errorCallback:Int -> Void = null):Void 
 	{
-		// TODO: if ( connected ) ...
-		
-		//var nr:Int = addCommandCallback(255, commandCallback);
-		var nr:Int = addCommandCallback(255, function(command_chunk:ByteArray):Void 
-						{ onEnterInJoint(command_chunk, commandCallback, dataCallback, disconnectCallback, errorCallback);
-						}
-						);
-		
-		if (nr != -1)
+		var bytes:Bytes = Bytes.ofString(joint_id);
+		if (bytes.length <= 255)
 		{
-			writeByte(0); // 0 leitet command ein (das waere sonst die chunk-size, die kann aber niemals 1 sein)
+			var nr:Int = addCommandCallback(255, function(command_chunk:ByteArray):Void 
+							{ onEnterInJoint(command_chunk, commandCallback, dataCallback, disconnectCallback, errorCallback);
+							}
+							);
 			
-			writeByte(1); // enter_in command
-			writeByte(nr); // command nummer fuer die spaetere antwort
-			
-			// ab hier alles fuer die ID in einen kleinen-CHUNK pressen
-			var ba:Bytes = Bytes.ofString(joint_id);
-			writeByte(ba.length); // TODO: SICHERSTELLEN das <= 255
-			writeBytes(ba);
-			
-			flush();
+			if (nr != -1)
+			{
+				writeByte(0); // 0 leitet command ein (das waere sonst die chunk-size, die kann aber niemals 1 sein)
+				
+				writeByte(1); // enter_in command
+				writeByte(nr); // command nummer fuer die spaetere antwort
+				
+				// ab hier alles fuer die ID in einen kleinen-CHUNK pressen
+				writeByte(bytes.length);
+				writeBytes(bytes);
+				
+				flush();
+			} // TODO: else error for commandCallback overflow
 		}
+		else
+		{
+			if (errorCallback != null) errorCallback(-3); // joint_id to long
+		}		
 	}
 	
 	private function onEnterInJoint(command_chunk:ByteArray, commandCallback:Int -> Void,
