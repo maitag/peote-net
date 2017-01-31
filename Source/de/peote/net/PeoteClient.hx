@@ -2,29 +2,10 @@ package de.peote.net;
 
 import haxe.io.Bytes;
 
-#if cpp
-import de.peote.net.cpp.PeoteJointSocket;
-#end
-
-#if flash
-import de.peote.net.flash.PeoteJointSocket;
-#end
-
 /**
  * ...
  * @author Sylvio Sell
  */
-
-#if js
-@:native('PeoteClient') extern class PeoteClient
-{
-	public function new (param:Dynamic) {}
-
-	public function enterJoint(server:String, port:Int, jointId:String):Void {}
-	public function leaveJoint():Void {}
-	public function send(data:Array<Int>):Void {}
-}
-#else
 
 class PeoteClient
 {
@@ -106,4 +87,3 @@ class PeoteClient
 
 
 }
-#end

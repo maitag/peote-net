@@ -1,11 +1,5 @@
-Export/flash/haxe
-Export/flash/obj
-Export/flash/bin/assets
+Export/flash
 Export/windows
 Export/android
-Export/html5/haxe
-Export/html5/bin/lib
-Export/html5/bin/index.html
-Export/html5/bin/manifest
-Export/html5/bin/assets
+Export/html5
 .build

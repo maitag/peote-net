@@ -2,29 +2,10 @@ package de.peote.net;
 
 import haxe.io.Bytes;
 
-#if cpp
-import de.peote.net.cpp.PeoteJointSocket;
-#end
-
-#if flash
-import de.peote.net.flash.PeoteJointSocket;
-#end
-
 /**
- * ...
- * @author semmi
+ *  /\/\/\                     ~^
+ * @author Sylvio Sell - maitag
  */
-
-#if js
-@:native('PeoteServer') extern class PeoteServer
-{
-	public function new (param:Dynamic) {}
-
-	public function createJoint(server:String, port:Int, jointId:String):Void {}
-	public function deleteJoint():Void {}
-	public function send(userNr:Int, data:Array<Int>):Void {}
-}
-#else
 
 class PeoteServer
 {
@@ -79,10 +60,6 @@ class PeoteServer
 	// -----------------------------------------------------------------------------------
 	// SEND DATA TO USER -----------------------------------------------------------------
 
-	/*public function send(userNr:Int, msg:String):Void
-	{
-		this.peoteJointSocket.sendStringToJointOwn(this.jointNr, userNr, msg);
-	}*/
 	public function send(userNr:Int, bytes:Bytes):Void
 	{
 		this.peoteJointSocket.sendDataToJointOwn(this.jointNr, userNr, bytes);
@@ -98,6 +75,8 @@ class PeoteServer
 		trace("createJoint() CONNECTED");
 		_onCreateJoint(this.jointNr);
 	}
+	
+	// to wrap more around
 	/*
 	public function onCreateJointError(errorNr:Int):Void
 	{
@@ -124,4 +103,3 @@ class PeoteServer
 	}
 	*/
 }
-#end

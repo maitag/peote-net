@@ -7,10 +7,10 @@ import haxe.Timer;
 import haxe.io.Bytes;
 
 import de.peote.net.PeoteServer;
-import de.peote.io.PeoteBytes;
+import haxe.io.Bytes;
 import de.peote.io.PeoteBytesOutput;
 import de.peote.io.PeoteBytesInput;
-
+import bridge.PeoteSocketBridge;
 
 class PeoteServerTest extends Application {
 	
@@ -19,8 +19,30 @@ class PeoteServerTest extends Application {
 	public var inputBuffer:PeoteBytesInput; // stores not fully readed chunk
 	public var chunk_size:Int = 0;
 	
-	public function new () {
+	public function new ()
+	{
 		super();
+		// provides adresses for peote-proxy server that handles flashpolicy and websockets
+		// only relevant for js or flash targets
+		// (cpp will ignore this and opens directly tcp socket immediatly)
+		PeoteSocketBridge.load( {
+			onload: openSocket,
+			prefareWebsockets: true,
+			proxys: {
+				proxyServerWS:"localhost",  // js websockets
+				//proxyServerWS:"192.168.1.81",
+				proxyPortWS  : 3211,
+				
+				proxyServerSWF:"localhost", // js throught peoteSocketBridge.swf
+				//proxyServerSWF:"192.168.1.81",
+				proxyPortSWF  :7680,
+			},
+			onfail: function() { trace("Browser doesn't support flash- or websockets"); }
+		});
+	}
+	
+	public function openSocket():Void
+	{
 
 		inputBuffer = new PeoteBytesInput();
 		
@@ -41,7 +63,7 @@ class PeoteServerTest extends Application {
 				onData: onData
 			});
 			
-		peoteServer.createJoint("maitag.de", 7680, "testserver");
+		peoteServer.createJoint("localhost", 7680, "testserver");
 		
 	}
 
@@ -80,9 +102,9 @@ class PeoteServerTest extends Application {
 	
 	
 	// read full chunk
-	public function onData(jointNr:Int, userNr:Int, peoteBytes:PeoteBytes ):Void 
+	public function onData(jointNr:Int, userNr:Int, bytes:Bytes ):Void 
 	{
-		inputBuffer.append( peoteBytes );
+		inputBuffer.append( bytes );
 		trace('inputBuffer size: ${inputBuffer.length}');
 		
 		if (chunk_size == 0 && inputBuffer.bytesLeft() >=2 ) {

@@ -1,13 +1,5 @@
 package de.peote.net;
 
-#if cpp
-import de.peote.net.cpp.PeoteJointSocket;
-#end
-
-#if flash
-import de.peote.net.flash.PeoteJointSocket;
-#end
-
 /**
  * ...
  * @author Sylvio Sell
@@ -349,15 +341,5 @@ class PeoteNet
 		}
 	}	
 
-	
-
-	
-
 
 }
-
-
-
-
-
-

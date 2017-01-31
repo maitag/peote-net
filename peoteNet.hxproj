@@ -4,32 +4,30 @@
   <output>
     <movie outputType="CustomBuild" />
     <movie input="" />
-    <movie path="peoteNetBridge.xml" />
+    <movie path="peoteNet.lime" />
     <movie fps="30" />
     <movie width="800" />
     <movie height="600" />
-    <movie version="1" />
+    <movie version="0" />
     <movie minorVersion="0" />
     <movie platform="Lime" />
     <movie background="FFFFFF" />
   </output>
   <!-- Other classes to be compiled into your SWF -->
   <classpaths>
-    <class path="D:\Programme\coding\haxe\haxe\lib\openfl\3,6,0" />
-    <class path="D:\Programme\coding\haxe\haxe\lib\lime\2,9,0" />
+    <class path="C:\HaxeToolkit\haxe\lib\lime\3,7,2" />
     <class path="Source" />
     <class path="..\PeoteSocket\Source" />
-    <class path="D:\Programme\coding\haxe\haxe\lib\openfl\3,6,0\extern" />
-    <class path="Export\flash\haxe" />
+    <class path="Export\html5\release\haxe" />
   </classpaths>
   <!-- Build options -->
   <build>
-    <option directives="openfl=3.6.0&#xA;lime=2.9.0&#xA;no-traces&#xA;openfl-next&#xA;tools=2.9.0&#xA;no-compilation&#xA;openfl-flash&#xA;web&#xA;display" />
+    <option directives="lime=3.7.2&#xA;tools=3.7.2&#xA;howlerjs&#xA;no-compilation&#xA;lime-html5&#xA;source-map-content&#xA;html5&#xA;web&#xA;html5&#xA;html&#xA;display" />
     <option flashStrict="False" />
     <option noInlineOnDebug="False" />
     <option mainClass="ApplicationMain" />
     <option enabledebug="False" />
-    <option additional="-dce full&#xA;-swf-version 11.2" />
+    <option additional="--macro lime.Lib.extraParams()" />
   </build>
   <!-- haxelib libraries -->
   <haxelib>
@@ -37,7 +35,7 @@
   </haxelib>
   <!-- Class files to compile (other referenced classes will automatically be included) -->
   <compileTargets>
-    <compile path="Source\PeoteNetBridge.hx" />
+    <compile path="Source\PeoteNetTest.hx" />
   </compileTargets>
   <!-- Paths to exclude from the Project Explorer tree -->
   <hiddenPaths>
