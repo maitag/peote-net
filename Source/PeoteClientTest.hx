@@ -21,21 +21,12 @@ class PeoteClientTest extends Application {
 	public function new ()
 	{
 		super();
-		// provides adresses for peote-proxy server that handles flashpolicy and websockets
+		// Fallback for swf-bridge or websockets
 		// only relevant for js or flash targets
 		// (cpp will ignore this and opens directly tcp socket immediatly)
 		PeoteSocketBridge.load( {
 			onload: openSocket,
 			prefareWebsockets: true,
-			proxys: {
-				proxyServerWS:"localhost",  // js websockets
-				//proxyServerWS:"192.168.1.81",
-				proxyPortWS  : 3211,
-				
-				proxyServerSWF:"localhost", // js throught peoteSocketBridge.swf
-				//proxyServerSWF:"192.168.1.81",
-				proxyPortSWF  :7680,
-			},
 			onfail: function() { trace("Browser doesn't support flash- or websockets"); }
 		});
 	}

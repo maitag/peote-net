@@ -1,5 +1,5 @@
 ### peote-net
-[Haxe](http://haxe.org) library with api to use joint-protocol of [peote-server](https://github.com/maitag/peote-server)
+[Haxe](http://haxe.org) library api to use joint-protocol of [peote-server](https://github.com/maitag/peote-server)
 
 
 ####How To Create a Server
@@ -56,22 +56,14 @@ peoteClient.enterJoint("localhost", 7680, "testserver");
 This depends on [peote-socket](https://github.com/maitag/peote-socket) haxe-library to get  
 more platform independent TCP-Sockets in haxe.  
   
-For html5 or flash-targets you can set proxy-address before creating new Server or Client  
+For html5 you have fallback-support between websockets or swf-bridge  
 ( for cpp this will be ignored and it calls onload directly ):  
 ```
 PeoteSocketBridge.load( {
 	onload: openSocket,       // callback if swfbridges is loaded or websockets available
 	prefareWebsockets: true,  // trying websockets first and fallback to flash
-	proxys: {
-		proxyServerWS:"localhost",  // proxy for websocket
-		proxyPortWS  : 3211,
-		
-		proxyServerSWF:"localhost", // proxy for peoteSocketBridge.swf
-		proxyPortSWF  :3211,
-	},
 	onfail: function() { trace("Browser doesn't support flash-raw-sockets or websockets"); }
 });
-
 
 function openSocket() { 
 	// create Server or Client here ...
@@ -84,11 +76,10 @@ function openSocket() {
 [peote-socket](https://github.com/maitag/peote-socket)  haxe library
 
 
-####Proxy Servers
-For testing you need to run a Perl TCP Server that supports joint-protocol:  
+####Peote Server
+For testing you need to run a Perl TCP Server that supports the "joint"-protocol:  
 [peote-server](https://github.com/maitag/peote-server)
 
-To wrap around Websockets here is little proxy: [peote-proxy](https://github.com/maitag/peote-proxy)  
 
 use with care ;)=  
 
