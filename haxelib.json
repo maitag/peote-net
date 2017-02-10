@@ -1,14 +1,14 @@
 {
-	"name": "peote-socket",
+	"name": "peote-net",
 	"url": "https://github.com/maitag/peote-net",
 	"license": "MIT",
 	"tags": ["peote", "socket", "tcp", "networking"],
 	"description": "Library to write TCP-Networking Applications",
-	"version": "0.5.0",
+	"version": "0.5.1",
 	"classPath": "Source/",
 	"releasenote": "",
 	"contributors": ["maitag"],
 	"dependencies": {
-		"peote-socket": "0.7.0"
+		"peote-socket": ""
 	}
 }

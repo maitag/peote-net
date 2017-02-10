@@ -5,9 +5,9 @@ import haxe.Timer;
 
 import haxe.io.Bytes;
 
-import de.peote.net.PeoteClient;
-import de.peote.io.PeoteBytesOutput;
-import de.peote.io.PeoteBytesInput;
+import peote.net.PeoteClient;
+import peote.io.PeoteBytesOutput;
+import peote.io.PeoteBytesInput;
 import bridge.PeoteSocketBridge;
 
 

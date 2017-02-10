@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <project>
 	
-	<meta title="PeoteNetTest" package="de.peote.net" version="0.5.0" company="Sylvio Sell - maitag" />
+	<meta title="PeoteNetTest" package="peote.net" version="0.5.1" company="Sylvio Sell - maitag" />
 	
 	<app main="PeoteServerTest" path="Export" file="PeoteServerTest" />
 	<!--<app main="PeoteClientTest" path="Export" file="PeoteClientTest" />-->
@@ -11,7 +11,7 @@
 	<haxelib name="lime" />
 	<haxelib name="peote-socket" />
 	
-	<dependency path="./../peote-socket/dependencies/swfobject-2.3.js" if="html5" />	
-	<assets path="./../peote-socket/Export/flash/release/bin/peoteSocketBridge.swf" rename="peoteSocketBridge.swf" embed="false" if="html5" />
+	<dependency path="dependencies/swfobject-2.3.js" if="html5" />	
+	<assets path="dependencies/peoteSocketBridge.swf" rename="peoteSocketBridge.swf" embed="false" if="html5" />
 	
 </project>

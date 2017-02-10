@@ -1,4 +1,4 @@
-package de.peote.net;
+package peote.net;
 
 /**
  * ...

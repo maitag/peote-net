@@ -6,10 +6,9 @@ import haxe.Timer;
 
 import haxe.io.Bytes;
 
-import de.peote.net.PeoteServer;
-import haxe.io.Bytes;
-import de.peote.io.PeoteBytesOutput;
-import de.peote.io.PeoteBytesInput;
+import peote.net.PeoteServer;
+import peote.io.PeoteBytesOutput;
+import peote.io.PeoteBytesInput;
 import bridge.PeoteSocketBridge;
 
 class PeoteServerTest extends Application {
@@ -27,7 +26,7 @@ class PeoteServerTest extends Application {
 		// (cpp will ignore this and opens directly tcp socket immediatly)
 		PeoteSocketBridge.load( {
 			onload: openSocket,
-			prefareWebsockets: true,
+			//prefareWebsockets: true,
 			onfail: function() { trace("Browser doesn't support flash- or websockets"); }
 		});
 	}

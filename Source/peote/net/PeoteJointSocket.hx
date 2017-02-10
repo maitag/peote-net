@@ -1,4 +1,4 @@
-package de.peote.net;
+package peote.net;
 
 import haxe.io.Bytes;
 
@@ -7,7 +7,7 @@ import haxe.io.Bytes;
  * @author Sylvio Sell
  */
 
-import de.peote.socket.PeoteSocket;
+import peote.socket.PeoteSocket;
 
 class PeoteJointSocket
 {

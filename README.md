@@ -10,8 +10,8 @@ Inside webbrowser it gives fallback-support (websocket or swf-socket-bridge) and
 
 ####Installation:
 ```
-haxelib git https://github.com/maitag/peote-socket
-haxelib git https://github.com/maitag/peote-net
+haxelib git peote-socket https://github.com/maitag/peote-socket
+haxelib git peote-net https://github.com/maitag/peote-net
 ```
 
 ####How To Create a Server
