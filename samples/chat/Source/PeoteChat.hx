@@ -13,7 +13,7 @@ import openfl.text.TextFormat;
 import openfl.text.TextFormatAlign;
 import openfl.events.MouseEvent;
 
-import bridge.PeoteSocketBridge;
+import peote.bridge.PeoteSocketBridge;
 
 class PeoteChat extends Sprite {
 	
