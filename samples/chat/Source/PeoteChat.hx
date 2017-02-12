@@ -1,8 +1,6 @@
 package;
 
 
-import de.peote.io.PeoteBytesInput;
-import de.peote.io.PeoteBytesOutput;
 import haxe.ds.IntMap;
 import haxe.io.StringInput;
 import ui.Button;
@@ -15,8 +13,7 @@ import openfl.text.TextFormat;
 import openfl.text.TextFormatAlign;
 import openfl.events.MouseEvent;
 
-import de.peote.net.PeoteClient;
-import de.peote.io.PeoteBytes;
+import bridge.PeoteSocketBridge;
 
 class PeoteChat extends Sprite {
 	
@@ -40,10 +37,18 @@ class PeoteChat extends Sprite {
 		super ();
 		channels = new Map();
 		
+		PeoteSocketBridge.load( {
+			onload: onLoadSocketBridge,
+			//prefareWebsockets: true,
+			onfail: function() { trace("Browser doesn't support flash- or websockets"); }
+		});
+	}
+	
+	public function onLoadSocketBridge():Void
+	{
 		// server adress and port number of peote-server (perl proxy with peote-net protocol)
 		var server:String = "localhost";
 		var port:Int = 7680;
-		
 		
 		// -------------------------- input user name ---------------------
 		

@@ -2,14 +2,14 @@ package;
 
 import haxe.ds.IntMap;
 import haxe.Timer;
+import haxe.io.Bytes;
 import openfl.display.Sprite;
 
 import ui.OutputText;
 
-import de.peote.net.PeoteServer;
-import de.peote.io.PeoteBytes;
-import de.peote.io.PeoteBytesOutput;
-import de.peote.io.PeoteBytesInput;
+import peote.net.PeoteServer;
+import peote.io.PeoteBytesOutput;
+import peote.io.PeoteBytesInput;
 
 /**
  * ...
@@ -122,9 +122,9 @@ class ServerChannel extends Sprite implements I_Channel
 	// ------------------ Data Input ------------------------------------------------
 	// ------------------------------------------------------------------------------
 	
-	public function onData( jointNr:Int, userNr:Int, peoteBytes:PeoteBytes ):Void 
+	public function onData( jointNr:Int, userNr:Int, bytes:Bytes ):Void 
 	{
-		inputBuffer.append( peoteBytes );
+		inputBuffer.append( bytes );
 		
 		if (chunk_size == 0 && inputBuffer.bytesLeft() >=2 ) {
 			chunk_size = inputBuffer.readUInt16(); // read chunk size

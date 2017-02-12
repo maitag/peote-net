@@ -97,6 +97,5 @@ use with care ;)=
 
 
 ####TODO:
-- fixing the old chat sample
 - testscripts for performance/stability
 - more samples

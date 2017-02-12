@@ -1,15 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
 <project>
 	
-	<meta title="PeoteChat" package="de.peote" version="0.1.0" company="OpenFL" />
-	<app main="PeoteChat" path="Export" file="peote-chat" />
+	<meta title="PeoteChat" package="peote.chat" version="0.1.5" company="Sylvio Sell - maitag" />
+	<app main="PeoteChat" path="Export" file="PeoteChat" />
 	
 	<source path="Source" />
-	<source path="../../Source" />
-	<source path="../../../PeoteSocket/Source" />
 	
 	<haxelib name="openfl" />
 	
-	<!--<assets path="Assets" rename="assets" />-->
+	<haxelib name="peote-socket" />
+	<haxelib name="peote-net" />
 	
+	<!--<haxedef name="dom" />-->
+	
+	<!--
+	<haxeflag name="-dce" value="full" />
+	<haxedef name="no-traces" />
+	-->
+
+	<dependency path="../../dependencies/swfobject-2.3.js" if="html5" />	
+	<assets path="../../dependencies/peoteSocketBridge.swf" rename="peoteSocketBridge.swf" embed="false" if="html5" />
+
+	<assets path="Assets" rename="assets" exclude="*.svg" />
+	<icon path="Assets/openfl.svg" />
 </project>
