@@ -73,7 +73,7 @@ For html5 you have fallback-support between websockets or swf-bridge
 ```
 PeoteSocketBridge.load( {
 	onload: openSocket,       // callback if swfbridges is loaded or websockets available
-	prefareWebsockets: true,  // trying websockets first and fallback to flash
+	prefereWebsockets: true,  // trying websockets first and fallback to flash
 	onfail: function() { trace("Browser doesn't support flash-raw-sockets or websockets"); }
 });
 
