@@ -8,7 +8,7 @@ import haxe.io.Bytes;
 import peote.net.PeoteClient;
 import peote.io.PeoteBytesOutput;
 import peote.io.PeoteBytesInput;
-import bridge.PeoteSocketBridge;
+import peote.bridge.PeoteSocketBridge;
 
 
 class PeoteClientTest extends Application {
