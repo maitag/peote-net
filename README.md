@@ -2,7 +2,7 @@
 [Haxe](http://haxe.org) library api to use joint-protocol of [peote-server](https://github.com/maitag/peote-server)
 
 This Library is written in [Haxe](http://haxe.org) to provide simple Client/Server Networking-API  
-for multiple targets (cpp, android, html5, flash). 
+for multiple targets (cpp, neko, android, html5, flash). 
 
 Inside webbrowser it gives fallback-support (websocket or swf-socket-bridge) and on server side  
 [peote-server](https://github.com/maitag/peote-server) redirect TCP-Packets with simple and fast protocol.  
@@ -97,5 +97,6 @@ use with care ;)=
 
 
 ####TODO:
-- testscripts for performance/stability
-- more samples
+- stresstests to check stability and performance
+- direct connection from peoteClient to peoteServer without going through remote proxy
+

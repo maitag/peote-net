@@ -1,9 +1,6 @@
 package;
 
 import lime.app.Application;
-import haxe.Timer;
-
-import haxe.io.Bytes;
 
 import peote.net.PeoteClient;
 import peote.io.PeoteBytesOutput;
@@ -16,7 +13,7 @@ class PeoteClientTest extends Application {
 	public var peoteClient:PeoteClient;
 	
 	var inputBuffer:PeoteBytesInput; // stores not fully readed chunk
-	public var chunk_size:Int = 0;
+	//public var chunk_size:Int = 0;
 	
 	public function new ()
 	{
@@ -35,23 +32,37 @@ class PeoteClientTest extends Application {
 	{
 		
 		inputBuffer = new PeoteBytesInput();
-		
+
 		peoteClient = new PeoteClient({
 				onEnterJoint: function(jointNr:Int) {
-					trace("onEnterJoint: jointNr=" + jointNr);
+					trace('onEnterJoint: Joint number $jointNr entered');
 					sendTestData();
 				},
 				onEnterJointError: function(errorNr:Int) {
-					trace("onEnterJointError:"+errorNr);
+					switch(errorNr) {
+						case 1:  trace("can't enter joint");
+						case -2: trace("can't connect to peote-server");
+						case -1: trace("disconnected from peote-server");
+						default: trace("onEnterJointError:"+errorNr);
+					}					
 				},
 				onDisconnect: function(jointNr:Int, reason:Int) {
-					trace("onDisconnect: jointNr="+jointNr+", reason="+reason);
+					trace("onDisconnect: jointNr="+jointNr);
+					switch (reason) {
+						case 0: trace(" joint-owner closed joint!");
+						case 1: trace(" joint-owner was disconnected!");
+						case 2: trace(" you was kicked by joint-owner!"); // TODO ?
+						default: trace("reason="+reason);
+					}
 				},
-				onData: onData
+				onDataChunk: onDataChunk
+				//onData: onData
 			});
 			
+		trace("trying to connect to peote-server...");
 		peoteClient.enterJoint("localhost", 7680, "testserver");
 		
+		// TODO: multiple joints without new instance
 	}
 	
 	// ---------------------------------------------------------
@@ -73,7 +84,7 @@ class PeoteClientTest extends Application {
 		output.writeFloat(1.2345678);
 		output.writeDouble(1.2345678901234567890123456789);
 		
-		sendChunk(output);
+		peoteClient.sendChunk(output);
 		
 		// -------- send another chunk -----------
 		
@@ -89,42 +100,14 @@ class PeoteClientTest extends Application {
 			fib_pre = fib - fib_pre;
 			output.writeInt32(fib);
 		}
-		sendChunk(output);
+		peoteClient.sendChunk(output);
 	}
 
-	public inline function sendChunk(output:PeoteBytesOutput):Void
-	{	
-		var chunksize:PeoteBytesOutput = new PeoteBytesOutput(); // TODO: optimize
-		chunksize.writeUInt16(output.length);
-		peoteClient.send( chunksize.getBytes() );
-		peoteClient.send( output.getBytes() );
-	}
 
 	// ---------------------------------------------------------
 	// -------------------- RECIEVE DATA -----------------------
 	// ---------------------------------------------------------
 	
-	
-	// read full chunk
-	public function onData(jointNr:Int, bytes:Bytes ):Void 
-	{	
-		inputBuffer.append( bytes );
-		trace('inputBuffer size: ${inputBuffer.length}');
-		
-		if (chunk_size == 0 && inputBuffer.bytesLeft() >=2 ) {
-			chunk_size = inputBuffer.readUInt16(); // read chunk size
-			trace('read chunk size: $chunk_size');
-		}
-		
-		trace('bytesLeft: ${inputBuffer.bytesLeft()}');
-		if ( chunk_size != 0 && inputBuffer.bytesLeft() >= chunk_size )
-		{
-			onDataChunk(jointNr, inputBuffer, chunk_size );
-			chunk_size = 0;
-		}
-	}
-	
-	// this will called if full chunk arrives
 	public inline function onDataChunk(jointNr:Int, input:PeoteBytesInput, chunk_size:Int):Void 
 	{
 		trace("onData: jointNr=" + jointNr);

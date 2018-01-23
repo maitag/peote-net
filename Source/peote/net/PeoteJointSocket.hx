@@ -3,8 +3,8 @@ package peote.net;
 import haxe.io.Bytes;
 
 /**
- * ...
- * @author Sylvio Sell
+ * by Sylvio Sell - Rostock 2015
+ *  --- joint protocol ---
  */
 
 import peote.socket.PeoteSocket;
@@ -319,7 +319,7 @@ class PeoteJointSocket
 					// zuerst die nr fuer entsprechenden callback
 					command_nr = input.get(input_pos++);
 					
-					trace("CONTROL COMMAND " + command_nr + " bytes_left="+bytes_left);
+					#if debugPeoteJoint trace("CONTROL COMMAND " + command_nr + " bytes_left="+bytes_left); #end
 						
 					if (command_nr > 0) // dann eine ANTWORT auf ein gesendetes Command
 					{	
@@ -429,7 +429,10 @@ class PeoteJointSocket
 						joint_nr = input.get(input_pos++);
 						bytes_left--;
 						//trace("joint_nr ist ermittelt :"+joint_nr);
-					} else trace("joint_nr cant be get now - bytesAvailable:"+(input_end - input_pos));
+					}
+					#if debugPeoteJoint 
+					else trace("joint_nr cant be get now - bytesAvailable:" + (input_end - input_pos));
+					#end
 					
 				}
 				else // chunk-size UND joint_nr wurden uebermittelt

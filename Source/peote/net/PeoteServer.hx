@@ -1,10 +1,12 @@
 package peote.net;
 
 import haxe.io.Bytes;
+import peote.io.PeoteBytesOutput;
+import peote.io.PeoteBytesInput;
 
 /**
  *  /\/\/\                     ~^
- * @author Sylvio Sell - maitag
+ * by Sylvio Sell - rostock 2015
  */
 
 class PeoteServer
@@ -14,19 +16,26 @@ class PeoteServer
 	var server:String = "";
 	var port:Int;
 
-	public var _onCreateJoint:Int -> Void;
+	public var onCreateJoint:Int -> Void;
 	public var onCreateJointError:Int -> Void;
 	public var onUserConnect:Int -> Int -> Void;
 	public var onUserDisconnect:Int -> Int -> Int -> Void;
 	public var onData:Int -> Int -> Bytes -> Void;
+	public var onDataChunk:Int -> Int -> PeoteBytesInput -> Int -> Void;
+	
+	var inputBuffer:PeoteBytesInput; // stores not fully readed chunk
+	var chunk_size:Int = 0;
 
 	public function new(param:Dynamic) 
 	{
-		_onCreateJoint = param.onCreateJoint;
+		onCreateJoint = param.onCreateJoint;
 		onCreateJointError = param.onCreateJointError;
 		onUserConnect = param.onUserConnect;
 		onUserDisconnect = param.onUserDisconnect;
 		onData = param.onData;
+		onDataChunk = param.onDataChunk;
+			
+		if (onDataChunk != null) inputBuffer = new PeoteBytesInput();
 	}
 	
 	// -----------------------------------------------------------------------------------
@@ -44,8 +53,7 @@ class PeoteServer
 		{
 			trace("Error: PeoteServer already connected");
 			onCreateJointError(255);
-		}
-		
+		}	
 	}
 
 	// -----------------------------------------------------------------------------------
@@ -65,15 +73,22 @@ class PeoteServer
 		this.peoteJointSocket.sendDataToJointOwn(this.jointNr, userNr, bytes);
 	}
 
+	public function sendChunk(userNr:Int, output:PeoteBytesOutput):Void
+	{	
+		var chunksize:PeoteBytesOutput = new PeoteBytesOutput(); // TODO: optimize
+		chunksize.writeUInt16(output.length);
+		send( userNr, chunksize.getBytes() );
+		send( userNr, output.getBytes() );
+	}
+	
 	// -----------------------------------------------------------------------------------
 	// CALLBACKS -------------------------------------------------------------------------
 
-	public function onCreateJoint(peoteJointSocket:PeoteJointSocket, jointNr:Int):Void
+	public function _onCreateJoint(peoteJointSocket:PeoteJointSocket, jointNr:Int):Void
 	{
 		this.peoteJointSocket = peoteJointSocket;
 		this.jointNr = jointNr;
-		trace("createJoint() CONNECTED");
-		_onCreateJoint(this.jointNr);
+		onCreateJoint(this.jointNr);
 	}
 	
 	// to wrap more around
@@ -96,10 +111,38 @@ class PeoteServer
 		
 	}
 	
-	public function onData(jointNr:Int, userNr:Int, myBA:ByteArray):Void
-	{
-		//trace("user " + userNr + ": DATA(" + myBA.readUTFBytes(myBA.length) + ")");
-		trace("user " + userNr + ": DATA " + myBA.length + " bytes");
-	}
 	*/
+	public function _onData(jointNr:Int, userNr:Int, bytes:Bytes):Void
+	{
+		if (onDataChunk != null) {
+			inputBuffer.append( bytes );
+			//trace('inputBuffer size: ${inputBuffer.length}');
+			
+			if (chunk_size == 0 && inputBuffer.bytesLeft() >=2 ) {
+				chunk_size = inputBuffer.readUInt16(); // read chunk size
+				//trace('read chunk size: $chunk_size');
+			}
+			
+			//trace('bytesLeft: ${inputBuffer.bytesLeft()}');
+			if ( chunk_size != 0 && inputBuffer.bytesLeft() >= chunk_size )
+			{
+				onDataChunk(jointNr, userNr, inputBuffer, chunk_size );
+				chunk_size = 0;
+			}
+		}
+		else onData(jointNr, userNr, bytes);
+	}
+	
+	public function getEventHandler():Dynamic
+	{
+		return {
+				"onCreateJoint": onCreateJoint,
+				"onCreateJointError": onCreateJointError,
+				"onUserConnect": onUserConnect,
+				"onUserDisconnect": onUserDisconnect,
+				"onData": onData
+		};	
+	}
+	
+	
 }
