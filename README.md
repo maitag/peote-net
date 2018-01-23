@@ -1,4 +1,4 @@
-### peote-net
+# peote-net
 [Haxe](http://haxe.org) library api to use joint-protocol of [peote-server](https://github.com/maitag/peote-server)
 
 This Library is written in [Haxe](http://haxe.org) to provide simple Client/Server Networking-API  
@@ -8,13 +8,13 @@ Inside webbrowser it gives fallback-support (websocket or swf-socket-bridge) and
 [peote-server](https://github.com/maitag/peote-server) redirect TCP-Packets with simple and fast protocol.  
 
 
-####Installation:
+##Installation:
 ```
 haxelib git peote-socket https://github.com/maitag/peote-socket
 haxelib git peote-net https://github.com/maitag/peote-net
 ```
 
-####How To Create a Server
+##How To Create a Server
 ```
 peoteServer = new PeoteServer({
 		onCreateJoint: function(jointNr:Int) {
@@ -41,7 +41,7 @@ peoteServer = new PeoteServer({
 peoteServer.createJoint("localhost", 7680, "testserver");
 ```
 
-####How To Create a Client
+##How To Create a Client
 ```
 peoteClient = new PeoteClient({
 		onEnterJoint: function(jointNr:Int) {
@@ -84,11 +84,11 @@ function openSocket() {
 ```
 
 
-####Depends on
+##Depends on
 [peote-socket](https://github.com/maitag/peote-socket)  haxe library
 
 
-####Peote Server
+##Peote Server
 For testing you need to run a Perl TCP Server that supports the "joint"-protocol:  
 [peote-server](https://github.com/maitag/peote-server)
 
@@ -96,7 +96,7 @@ For testing you need to run a Perl TCP Server that supports the "joint"-protocol
 use with care ;)=  
 
 
-####TODO:
+##TODO:
 - stresstests to check stability and performance
 - direct connection from peoteClient to peoteServer without going through remote proxy
 
