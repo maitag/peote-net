@@ -9,5 +9,6 @@
 	"releasenote": "",
 	"contributors": ["maitag"],
 	"dependencies": {
+		"peote-socket": ""
 	}
 }
