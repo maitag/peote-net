@@ -85,17 +85,17 @@ class PeoteNet
 					p.peoteJointSocket.createOwnJoint(jointId,
 						function (jointNr:Int):Void { obj._onCreateJoint(p.peoteJointSocket, jointNr); },
 						obj._onData,
-						obj.onUserConnect,
-						obj.onUserDisconnect,
+						obj._onUserConnect,
+						obj._onUserDisconnect,
 						function (errorNr:Int):Void { PeoteNet.onCreateJointError(key, obj, errorNr); }
 					);
 				}
-				else obj.onCreateJointError(-1);
+				else obj._onCreateJointError(-1);
 			}
 			else
 			{
 				#if debugPeoteNet trace(key + " socket is not connected yet"); #end
-				if (! p.addServerJoint(obj, jointId)) obj.onCreateJointError(-1);
+				if (! p.addServerJoint(obj, jointId)) obj._onCreateJointError(-1);
 			}
 		}
 		else
@@ -116,7 +116,7 @@ class PeoteNet
 				#if debugPeoteNet trace("Peote-Server: trying Connect "+server+":"+port+"..."); #end
 				p.peoteJointSocket.connect(server, port);
 			}
-			else obj.onCreateJointError(-1);
+			else obj._onCreateJointError(-1);
 		}
 	}
 	
@@ -220,7 +220,7 @@ class PeoteNet
 				sockets.remove(key);
 			}
 		}
-		obj.onCreateJointError(errorNr);
+		obj._onCreateJointError(errorNr);
 	}
 	
 	public static function onEnterJointError(key:String, obj:PeoteClient, errorNr:Int):Void
@@ -266,7 +266,7 @@ class PeoteNet
 			#if debugPeoteNet trace("Peote-Server: " + key + " cant connect: " + msg); #end
 			for (obj in p.server.keys() )
 			{
-				obj.onCreateJointError(-2);
+				obj._onCreateJointError(-2);
 				p.server.remove(obj); 
 			}
 			for (obj in p.clients.keys() )
@@ -284,8 +284,8 @@ class PeoteNet
 				p.peoteJointSocket.createOwnJoint(p.server.get(obj),
 				    function (jointNr:Int):Void { obj._onCreateJoint(p.peoteJointSocket, jointNr); },
 				    obj._onData,
-					obj.onUserConnect,
-					obj.onUserDisconnect,
+					obj._onUserConnect,
+					obj._onUserDisconnect,
 					function (errorNr:Int):Void { PeoteNet.onCreateJointError(key, obj, errorNr); }
 				);
 			}
@@ -310,7 +310,7 @@ class PeoteNet
 			var p:PeoteNetSocket = sockets.get(key);
 			for (obj in p.server.keys() )
 			{
-				obj.onCreateJointError(-1);
+				obj._onCreateJointError(-1);
 				p.server.remove(obj); 
 			}
 			for (obj in p.clients.keys() )
@@ -330,7 +330,7 @@ class PeoteNet
 			var p:PeoteNetSocket = sockets.get(key);
 			for (obj in p.server.keys() )
 			{
-				obj.onCreateJointError(-1);
+				obj._onCreateJointError(-1);
 				p.server.remove(obj); 
 			}
 			for (obj in p.clients.keys() )

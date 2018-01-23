@@ -3,13 +3,14 @@ package;
 import lime.app.Application;
 
 import peote.net.PeoteServer;
+import peote.net.PeoteServerFarm;
 import peote.io.PeoteBytesOutput;
 import peote.io.PeoteBytesInput;
 import peote.bridge.PeoteSocketBridge;
 
-class PeoteServerTest extends Application {
+class PeoteServerFarmTest extends Application {
 	
-	public var peoteServer:PeoteServer;
+	public var peoteServerFarm:PeoteServerFarm;
 		
 	public function new ()
 	{
@@ -26,11 +27,13 @@ class PeoteServerTest extends Application {
 	
 	public function openSocket():Void
 	{		
-		peoteServer = new PeoteServer({
-				onCreateJoint: function(jointNr:Int) {
+		peoteServerFarm = new PeoteServerFarm({
+				onCreateJoint: function(jointNr:Int, peoteServer:PeoteServer) {
 					trace('onCreateJoint: Joint number $jointNr created.');
+					// TODO : if (peoteServer.jointNr<5) oder peoteServerFarm.joints() < 5
+					// if (jointNr<5) peoteServerFarm.createJoint("localhost", 7680, "testserver"+(jointNr+1));
 				},
-				onCreateJointError: function(errorNr:Int) {
+				onCreateJointError: function(errorNr:Int, peoteServer:PeoteServer) {
 					trace("onCreateJointError:");
 					switch(errorNr) {
 						case -2: trace("can't connect to peote-server");
@@ -39,11 +42,11 @@ class PeoteServerTest extends Application {
 						default: trace(errorNr);
 					}					
 				},
-				onUserConnect: function(jointNr:Int, userNr:Int) {
+				onUserConnect: function(jointNr:Int, userNr:Int, peoteServer:PeoteServer) {
 					trace("onUserConnect: jointNr=" + jointNr + ", userNr=" + userNr);
-					sendTestData(userNr);
+					sendTestData(userNr, peoteServer);
 				},
-				onUserDisconnect: function(jointNr:Int, userNr:Int, reason:Int) {
+				onUserDisconnect: function(jointNr:Int, userNr:Int, reason:Int, peoteServer:PeoteServer) {
 					trace("onUserDisconnect: jointNr="+jointNr+", userNr="+userNr);
 					switch (reason) {
 						case 0: trace(" user closed joint!");
@@ -56,16 +59,21 @@ class PeoteServerTest extends Application {
 			});
 			
 		trace("trying to connect to peote-server...");
-		peoteServer.createJoint("localhost", 7680, "testserver");
+		var peoteServer:PeoteServer = peoteServerFarm.createJoint("localhost", 7680, "testserver");
+		var peoteServer0:PeoteServer = peoteServerFarm.createJoint("localhost", 7680, "testserver0");
 		
+		// TODO additional
+		// peoteServerFarm.deleteJoint("localhost", 7680, "testserver1");
+		// peoteServerFarm.sendAll();
 		
+
 	}
 
 	// ---------------------------------------------------------
 	// -------------------- SEND DATA --------------------------
 	// ---------------------------------------------------------
 
-	public function sendTestData(userNr:Int):Void
+	public function sendTestData(userNr:Int, peoteServer:PeoteServer):Void
 	{	
 		var output:PeoteBytesOutput = new PeoteBytesOutput();
 		output.writeString("Hello Client " + userNr);
@@ -85,7 +93,7 @@ class PeoteServerTest extends Application {
 	// -------------------- RECIEVE DATA -----------------------
 	// ---------------------------------------------------------
 		
-	public function onDataChunk(jointNr:Int, userNr:Int, input:PeoteBytesInput, chunk_size:Int ):Void 
+	public function onDataChunk(jointNr:Int, userNr:Int, input:PeoteBytesInput, chunk_size:Int, peoteServer:PeoteServer ):Void 
 	{
 		var chunk_end:Int = input.bytesLeft() - chunk_size;
 		trace('Chunk arrives from joint $jointNr - chunk size is $chunk_size'); // never read less or more that chunksize!

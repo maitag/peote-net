@@ -16,12 +16,12 @@ class PeoteServer
 	var server:String = "";
 	var port:Int;
 
-	public var onCreateJoint:Int -> Void;
-	public var onCreateJointError:Int -> Void;
-	public var onUserConnect:Int -> Int -> Void;
-	public var onUserDisconnect:Int -> Int -> Int -> Void;
-	public var onData:Int -> Int -> Bytes -> Void;
-	public var onDataChunk:Int -> Int -> PeoteBytesInput -> Int -> Void;
+	public var onCreateJoint:Int -> PeoteServer -> Void;
+	public var onCreateJointError:Int -> PeoteServer -> Void;
+	public var onUserConnect:Int -> Int -> PeoteServer -> Void;
+	public var onUserDisconnect:Int -> Int -> Int -> PeoteServer -> Void;
+	public var onData:Int -> Int -> Bytes -> PeoteServer -> Void;
+	public var onDataChunk:Int -> Int -> PeoteBytesInput -> Int -> PeoteServer -> Void;
 	
 	var inputBuffer:PeoteBytesInput; // stores not fully readed chunk
 	var chunk_size:Int = 0;
@@ -41,7 +41,7 @@ class PeoteServer
 	// -----------------------------------------------------------------------------------
 	// CREATE NEW JOINT ------------------------------------------------------------------
 	
-	public function createJoint(server:String, port:Int, jointId:String):Void 
+	public function createJoint(server:String, port:Int, jointId:String):Void
 	{
 		if (this.server == "")
 		{
@@ -52,7 +52,7 @@ class PeoteServer
 		else
 		{
 			trace("Error: PeoteServer already connected");
-			onCreateJointError(255);
+			onCreateJointError(255, this);
 		}	
 	}
 
@@ -68,7 +68,7 @@ class PeoteServer
 	// -----------------------------------------------------------------------------------
 	// SEND DATA TO USER -----------------------------------------------------------------
 
-	public function send(userNr:Int, bytes:Bytes):Void
+	public inline function send(userNr:Int, bytes:Bytes):Void
 	{
 		this.peoteJointSocket.sendDataToJointOwn(this.jointNr, userNr, bytes);
 	}
@@ -84,35 +84,32 @@ class PeoteServer
 	// -----------------------------------------------------------------------------------
 	// CALLBACKS -------------------------------------------------------------------------
 
-	public function _onCreateJoint(peoteJointSocket:PeoteJointSocket, jointNr:Int):Void
+	public inline function _onCreateJoint(peoteJointSocket:PeoteJointSocket, jointNr:Int):Void
 	{
 		this.peoteJointSocket = peoteJointSocket;
 		this.jointNr = jointNr;
-		onCreateJoint(this.jointNr);
+		this.onCreateJoint(this.jointNr, this);
 	}
 	
 	// to wrap more around
-	/*
-	public function onCreateJointError(errorNr:Int):Void
+	
+	public inline function _onCreateJointError(errorNr:Int):Void
 	{
-		trace("createJoint() fails: errorNr = " + errorNr);
+		this.onCreateJointError(errorNr, this);
+		this.server = "";
 	}
 	
-	public function onUserConnect(jointNr:Int, userNr:Int):Void 
+	public inline function _onUserConnect(jointNr:Int, userNr:Int):Void 
 	{
-		trace("connected new user: " + userNr);
+		this.onUserConnect(jointNr, userNr, this);
 	}
 	
-	public function onUserDisconnect(jointNr:Int, userNr:Int, reason:Int):Void 
+	public inline function _onUserDisconnect(jointNr:Int, userNr:Int, reason:Int):Void 
 	{
-		trace("user: " + userNr + " disconnected, ");
-		if (reason == 0) trace(" user leaves joint!");
-		else if (reason == 1) trace(" user lost connection!");
-		
+		this.onUserDisconnect(jointNr, userNr, reason, this);	
 	}
 	
-	*/
-	public function _onData(jointNr:Int, userNr:Int, bytes:Bytes):Void
+	public inline function _onData(jointNr:Int, userNr:Int, bytes:Bytes):Void
 	{
 		if (onDataChunk != null) {
 			inputBuffer.append( bytes );
@@ -126,23 +123,12 @@ class PeoteServer
 			//trace('bytesLeft: ${inputBuffer.bytesLeft()}');
 			if ( chunk_size != 0 && inputBuffer.bytesLeft() >= chunk_size )
 			{
-				onDataChunk(jointNr, userNr, inputBuffer, chunk_size );
+				this.onDataChunk(jointNr, userNr, inputBuffer, chunk_size, this );
 				chunk_size = 0;
 			}
 		}
-		else onData(jointNr, userNr, bytes);
+		else this.onData(jointNr, userNr, bytes, this);
 	}
-	
-	public function getEventHandler():Dynamic
-	{
-		return {
-				"onCreateJoint": onCreateJoint,
-				"onCreateJointError": onCreateJointError,
-				"onUserConnect": onUserConnect,
-				"onUserDisconnect": onUserDisconnect,
-				"onData": onData
-		};	
-	}
-	
+
 	
 }

@@ -23,7 +23,7 @@ class PeoteClientTest extends Application {
 		// (cpp will ignore this and opens directly tcp socket immediatly)
 		PeoteSocketBridge.load( {
 			onload: openSocket,
-			//preferWebsockets: true,
+			preferWebsockets: true,
 			onfail: function() { trace("Browser doesn't support flash- or websockets"); }
 		});
 	}
