@@ -2,9 +2,9 @@
 Crossplatform library that provides a simple Client/Server TCP-Networking-API  
 for multiple [Haxe](http://haxe.org) targets (cpp, neko, html5, flash, android).  
 
-Inside webbrowser it supports fallback-solution to use websockets or flash-sockets(bridged).  
+Inside webbrowser it supports fallback-solution to use websockets or bridged flash-sockets.  
 On serverside the TCP-packets will be redirected with simple and fast protocol  
-using this tool: [peote-server](https://github.com/maitag/peote-server).  
+by this tool: [peote-server](https://github.com/maitag/peote-server).  
 
 
 ## Installation:
@@ -46,7 +46,7 @@ peoteServer = new PeoteServer({
 		//onData: function(server:PeoteServer, userNr:Int, bytes:Bytes ) {
 		//	trace('User $userNr sends some bytes on channel ${server.jointNr}');
 		//},
-		onDataChunk: function(server:PeoteServer, userNr:Int, input:PeoteBytesInput, chunkSize:Int ) {
+		onDataChunk: function(server:PeoteServer, userNr:Int, input:PeoteBytesInput, chunkSize:Int) {
 			trace( input.readString() ); // Hello Server
 		}
 	});
@@ -95,7 +95,7 @@ peoteClient.enterJoint("localhost", 7680, "testserver");
 ## Depends on
 [peote-socket](https://github.com/maitag/peote-socket) library that handle multiplatform TCP-Sockets.  
   
-For html5 or flash-targets you can set a proxy-address before creating a new PeoteSocket,  
+For __html5__ or __flash-targets__ you can set a proxy-address before creating a new PeoteSocket,  
 cpp-targets will ignore this and calls the onload-callback directly.  
 ```
 PeoteSocketBridge.load( {
@@ -120,8 +120,8 @@ function openSocket() {
 
 
 ## Peote Server
-To let it run, you need a Server that supports the `joint-protocol` for package forwarding.  
-Use this: [peote-server](https://github.com/maitag/peote-server) (written in [Perl](https://www.perl.org/)) with care ;)=  
+To let it run, you need a standalone-server that supports the `joint-protocol` for package forwarding.  
+Use [peote-server](https://github.com/maitag/peote-server) (written in [Perl](https://www.perl.org/)) for this (with care ;)=  
 
 
 ## TODO:
