@@ -1,9 +1,10 @@
 # peote-net
-Crossplatform [Haxe](http://haxe.org) library to use `joint-protocol` of [peote-server](https://github.com/maitag/peote-server)  
-to provide simple Client/Server Networking-API for multiple targets (cpp, neko, html5, flash, android).  
+Crossplatform library that provides a simple Client/Server TCP-Networking-API  
+for multiple [Haxe](http://haxe.org) targets (cpp, neko, html5, flash, android).  
 
-Inside webbrowser it gives fallback-support (to websocket or swf-socket-bridge) and on server side  
-[peote-server](https://github.com/maitag/peote-server) it redirects TCP-Packets with simple and fast protocol.  
+Inside webbrowser it supports fallback-solution to use websockets or flash-sockets(bridged).  
+On serverside the TCP-packets will be redirected with simple and fast protocol  
+using this tool: [peote-server](https://github.com/maitag/peote-server).  
 
 
 ## Installation:
@@ -119,9 +120,8 @@ function openSocket() {
 
 
 ## Peote Server
-To let it run you need a Server that supports the `joint-protocol` for package forwarding.  
-Here is a Server:[peote-server](https://github.com/maitag/peote-server) written in [Perl](https://www.perl.org/),  
-please use it with care `;)=`.  
+To let it run, you need a Server that supports the `joint-protocol` for package forwarding.  
+Use this: [peote-server](https://github.com/maitag/peote-server) (written in [Perl](https://www.perl.org/)) with care ;)=  
 
 
 ## TODO:
