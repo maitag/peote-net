@@ -39,7 +39,7 @@ class PeoteChat extends Sprite {
 		
 		PeoteSocketBridge.load( {
 			onload: onLoadSocketBridge,
-			//prefareWebsockets: true,
+			//prefereWebsockets: true,
 			onfail: function() { trace("Browser doesn't support flash- or websockets"); }
 		});
 	}

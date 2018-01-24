@@ -15,23 +15,17 @@
   </output>
   <!-- Other classes to be compiled into your SWF -->
   <classpaths>
-    <class path="C:\HaxeToolkit\haxe\lib\openfl\4,7,3" />
-    <class path="C:\HaxeToolkit\haxe\lib\lime\3,7,2" />
-    <class path="C:\HaxeToolkit\haxe\lib\peote-socket\git\Source" />
-    <class path="C:\HaxeToolkit\haxe\lib\peote-net\git\Source" />
     <class path="Source" />
-    <class path="C:\HaxeToolkit\haxe\lib\openfl\4,7,3\externs\core\openfl" />
-    <class path="C:\HaxeToolkit\haxe\lib\openfl\4,7,3\externs\extras" />
-    <class path="Export\html5\release\haxe" />
+    <class path="Export\neko\haxe" />
   </classpaths>
   <!-- Build options -->
   <build>
-    <option directives="openfl=4.7.3&#xA;lime=3.7.2&#xA;peote-socket=0.7.1&#xA;peote-net=0.5.1&#xA;tools=3.7.2&#xA;howlerjs&#xA;no-compilation&#xA;openfl-html5&#xA;lime-html5&#xA;html5&#xA;web&#xA;html5&#xA;display" />
+    <option directives="openfl=7.0.0&#xA;lime=6.0.1&#xA;peote-net=0.5.2&#xA;peote-socket=0.7.2&#xA;tools=6.0.1&#xA;no-compilation&#xA;native&#xA;lime-native&#xA;lime-vorbis&#xA;openfl-native&#xA;lime-cffi&#xA;windows&#xA;desktop&#xA;display" />
     <option flashStrict="False" />
     <option noInlineOnDebug="False" />
     <option mainClass="ApplicationMain" />
     <option enabledebug="False" />
-    <option additional="--macro openfl._internal.utils.ExtraParams.include()&#xA;--macro lime.Lib.extraParams()&#xA;--remap flash:openfl" />
+    <option additional="--macro openfl._internal.utils.ExtraParams.include()&#xA;--macro lime.Lib.extraParams()&#xA;--remap flash:openfl&#xA;-dce full" />
   </build>
   <!-- haxelib libraries -->
   <haxelib>

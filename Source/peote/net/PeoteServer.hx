@@ -5,37 +5,27 @@ import peote.io.PeoteBytesOutput;
 import peote.io.PeoteBytesInput;
 
 /**
- *  /\/\/\                     ~^
  * by Sylvio Sell - rostock 2015
  */
 
+
 class PeoteServer
 {
-	var jointNr:Int;
-	var peoteJointSocket:PeoteJointSocket;
-	var server:String = "";
-	var port:Int;
+	public var events:PeoteServerEvents;
+	
+	public var jointNr(default, null):Int;
+	public var server(default, null):String = "";
+	public var port(default, null):Int;
 
-	public var onCreateJoint:Int -> PeoteServer -> Void;
-	public var onCreateJointError:Int -> PeoteServer -> Void;
-	public var onUserConnect:Int -> Int -> PeoteServer -> Void;
-	public var onUserDisconnect:Int -> Int -> Int -> PeoteServer -> Void;
-	public var onData:Int -> Int -> Bytes -> PeoteServer -> Void;
-	public var onDataChunk:Int -> Int -> PeoteBytesInput -> Int -> PeoteServer -> Void;
+	var peoteJointSocket:PeoteJointSocket;
 	
 	var inputBuffer:PeoteBytesInput; // stores not fully readed chunk
 	var chunk_size:Int = 0;
 
-	public function new(param:Dynamic) 
+	public function new(events:PeoteServerEvents) 
 	{
-		onCreateJoint = param.onCreateJoint;
-		onCreateJointError = param.onCreateJointError;
-		onUserConnect = param.onUserConnect;
-		onUserDisconnect = param.onUserDisconnect;
-		onData = param.onData;
-		onDataChunk = param.onDataChunk;
-			
-		if (onDataChunk != null) inputBuffer = new PeoteBytesInput();
+		this.events = events;
+		if (events.onDataChunk != null) inputBuffer = new PeoteBytesInput();
 	}
 	
 	// -----------------------------------------------------------------------------------
@@ -51,8 +41,8 @@ class PeoteServer
 		}
 		else
 		{
-			trace("Error: PeoteServer already connected");
-			onCreateJointError(255, this);
+			throw("Error: PeoteServer already connected");
+			events.onCreateJointError(this, 255); // TODO
 		}	
 	}
 
@@ -88,46 +78,41 @@ class PeoteServer
 	{
 		this.peoteJointSocket = peoteJointSocket;
 		this.jointNr = jointNr;
-		this.onCreateJoint(this.jointNr, this);
+		events.onCreateJoint(this);
 	}
-	
-	// to wrap more around
 	
 	public inline function _onCreateJointError(errorNr:Int):Void
 	{
-		this.onCreateJointError(errorNr, this);
 		this.server = "";
+		events.onCreateJointError(this, errorNr );
 	}
 	
 	public inline function _onUserConnect(jointNr:Int, userNr:Int):Void 
 	{
-		this.onUserConnect(jointNr, userNr, this);
+		events.onUserConnect(this, userNr);
 	}
 	
 	public inline function _onUserDisconnect(jointNr:Int, userNr:Int, reason:Int):Void 
 	{
-		this.onUserDisconnect(jointNr, userNr, reason, this);	
+		events.onUserDisconnect(this, userNr, reason);
 	}
 	
 	public inline function _onData(jointNr:Int, userNr:Int, bytes:Bytes):Void
 	{
-		if (onDataChunk != null) {
+		if (events.onDataChunk != null) {
 			inputBuffer.append( bytes );
-			//trace('inputBuffer size: ${inputBuffer.length}');
 			
 			if (chunk_size == 0 && inputBuffer.bytesLeft() >=2 ) {
 				chunk_size = inputBuffer.readUInt16(); // read chunk size
-				//trace('read chunk size: $chunk_size');
 			}
 			
-			//trace('bytesLeft: ${inputBuffer.bytesLeft()}');
 			if ( chunk_size != 0 && inputBuffer.bytesLeft() >= chunk_size )
 			{
-				this.onDataChunk(jointNr, userNr, inputBuffer, chunk_size, this );
+				events.onDataChunk(this, userNr, inputBuffer, chunk_size );
 				chunk_size = 0;
 			}
 		}
-		else this.onData(jointNr, userNr, bytes, this);
+		else events.onData(this, userNr, bytes);
 	}
 
 	

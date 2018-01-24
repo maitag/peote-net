@@ -5,35 +5,26 @@ import peote.io.PeoteBytesInput;
 import peote.io.PeoteBytesOutput;
 
 /**
- * ...
- * @author Sylvio Sell
+ * by Sylvio Sell - rostock 2015
  */
 
 class PeoteClient
 {
-	var jointNr:Int;
-	var peoteJointSocket:PeoteJointSocket;
-	var server:String = "";
-	var port:Int;
+	public var events:PeoteClientEvents;
 	
-	public var onEnterJoint:Int -> Void;
-	public var onEnterJointError:Int -> Void;
-	public var onDisconnect:Int -> Int -> Void;
-	public var onData:Int -> Bytes -> Void;
-	public var onDataChunk:Int -> PeoteBytesInput -> Int -> Void;
+	public var jointNr(default, null):Int;
+	public var server(default, null):String = "";
+	public var port(default, null):Int;
+
+	var peoteJointSocket:PeoteJointSocket;
 	
 	var inputBuffer:PeoteBytesInput; // stores not fully readed chunk
 	var chunk_size:Int = 0;
 
-	public function new(param:Dynamic) 
+	public function new(events:PeoteClientEvents) 
 	{
-		onEnterJoint = param.onEnterJoint;
-		onEnterJointError = param.onEnterJointError;
-		onDisconnect = param.onDisconnect;
-		onData = param.onData;
-		onDataChunk = param.onDataChunk;
-		
-		if (onDataChunk != null) inputBuffer = new PeoteBytesInput();
+		this.events = events;
+		if (events.onDataChunk != null) inputBuffer = new PeoteBytesInput();
 	}
 
 	// -----------------------------------------------------------------------------------
@@ -49,8 +40,8 @@ class PeoteClient
 		}
 		else
 		{
-			trace("Error: PeoteClient already connected");
-			onEnterJointError(255);
+			throw("Error: PeoteClient already connected");
+			events.onEnterJointError(this, 255); // TODO
 		}
 	}
 
@@ -86,54 +77,39 @@ class PeoteClient
 	{
 		this.peoteJointSocket = peoteJointSocket;
 		this.jointNr = jointNr;
-		onEnterJoint(jointNr);
- 	}
-	/*
-	public function onEnterJointError(errorNr:Int):Void // bei FEHLER
-	{
-		trace("enterJoint() fails: errorNr = " + errorNr);
+		events.onEnterJoint(this);
  	}
 	
-	public function onDisconnect(jointNr:Int, reason:Int):Void 
+	public function _onEnterJointError(errorNr:Int):Void // bei FEHLER
 	{
-		trace(" disconnected from joint: " + jointNr + ", ");
-		if (reason == 0) trace(" joint-owner closed joint!");
-		else if (reason == 1) trace(" joint-owner was disconnected!");
-		else if (reason == 2) trace(" you was kicked by joint-owner!");
+		this.server = "";
+		events.onEnterJointError(this, errorNr );
  	}
-	*/
+	
+	public function _onDisconnect(jointNr:Int, reason:Int):Void 
+	{
+		events.onDisconnect(this, reason);	
+ 	}
+	
 	
 	public function _onData(jointNr:Int, bytes:Bytes):Void
 	{
-		if (onDataChunk != null) {
+		if (events.onDataChunk != null) {
 			inputBuffer.append( bytes );
-			//trace('inputBuffer size: ${inputBuffer.length}');
 			
 			if (chunk_size == 0 && inputBuffer.bytesLeft() >=2 ) {
 				chunk_size = inputBuffer.readUInt16(); // read chunk size
-				//trace('read chunk size: $chunk_size');
 			}
 			
-			//trace('bytesLeft: ${inputBuffer.bytesLeft()}');
 			if ( chunk_size != 0 && inputBuffer.bytesLeft() >= chunk_size )
 			{
-				onDataChunk(jointNr, inputBuffer, chunk_size );
+				events.onDataChunk(this, inputBuffer, chunk_size );
 				chunk_size = 0;
 			}
 		}
-		else onData(jointNr, bytes);
+		else events.onData(this, bytes);
 	}
 
-	
-	public function getEventHandler():Dynamic
-	{
-		return {
-				"onEnterJoint": onEnterJoint,
-				"onEnterJointError": onEnterJointError,
-				"onDisconnect": onDisconnect,
-				"onData": onData
-		};	
-	}
 
 
 }

@@ -17,18 +17,11 @@ import peote.io.PeoteBytesInput;
 
 class ClientChannel extends Sprite implements I_Channel
 {
-
-	var inputBuffer:PeoteBytesInput; // stores not fully readed chunk
-	var chunk_size:Int = 0;
-	
-	var output:ui.OutputText;
-	
-	var peoteClient:PeoteClient;
-	
+	var output:ui.OutputText;	
+	var peoteClient:PeoteClient;	
 	var username:String;
 	
 	public var channelName:String;
-
 	
 	public function new( server:String, port:Int, channelName:String, username:String, onCloseConnection:ClientChannel->Void ) 
 	{
@@ -42,26 +35,24 @@ class ClientChannel extends Sprite implements I_Channel
 		outputAppend("connecting..");
 		
 		
-		inputBuffer = new PeoteBytesInput();
-		
 		peoteClient = new PeoteClient( {
 			
-			onEnterJoint: function(jointNr:Int) {
-				outputAppend('enter channel ($jointNr) "$channelName"');
+			onEnterJoint: function(client:PeoteClient) {
+				outputAppend('enter channel (${client.jointNr}) "$channelName"');
 				send(username); // send username first
 			},
 			
-			onEnterJointError: function(errorNr:Int) {
+			onEnterJointError: function(client:PeoteClient, errorNr:Int) {
 				outputAppend('can\'t enter channel "$channelName" - error-code:' + errorNr);
 				Timer.delay( function() { onCloseConnection(this); } , 1000);
 			},
 			
-			onDisconnect: function(jointNr:Int, reason:Int) {
-				outputAppend('disconnect channel ($jointNr) "$channelName", reason: $reason');
+			onDisconnect: function(client:PeoteClient, reason:Int) {
+				outputAppend('disconnect channel (${client.jointNr}) "$channelName", reason: $reason');
 				onCloseConnection(this);
 			},
 			
-			onData: onData
+			onDataChunk: onDataChunk
 			
 		});
 		
@@ -84,47 +75,19 @@ class ClientChannel extends Sprite implements I_Channel
 	{
 		var bytes:PeoteBytesOutput = new PeoteBytesOutput();
 		bytes.writeString(message);
-		sendChunk(bytes);
+		peoteClient.sendChunk(bytes);
 	}
 
 	public function close():Void
 	{
-		// close Connection
 		peoteClient.leaveJoint();
 	}
 	
 	// ------------------------------------------------------------------------------
-	
-	public function sendChunk(output:PeoteBytesOutput):Void
-	{	
-		var chunksize:PeoteBytesOutput = new PeoteBytesOutput();
-		chunksize.writeUInt16(output.length);
-		peoteClient.send( chunksize.getBytes() );
-		peoteClient.send( output.getBytes() );
-	}
-
-	
-	// ------------------------------------------------------------------------------
-	// ------------------ Data Input ------------------------------------------------
+	// ------------------ Data Chunk arrives ----------------------------------------
 	// ------------------------------------------------------------------------------
 	
-	public function onData( jointNr:Int, bytes:Bytes ):Void 
-	{
-		inputBuffer.append( bytes );
-		
-		if (chunk_size == 0 && inputBuffer.bytesLeft() >=2 ) {
-			chunk_size = inputBuffer.readUInt16(); // read chunk size
-		}
-		
-		if ( chunk_size != 0 && inputBuffer.bytesLeft() >= chunk_size )
-		{
-			onDataChunk( inputBuffer, chunk_size );
-			chunk_size = 0;
-		}
-	}
-
-	// this will called if full chunk arrives
-	public function onDataChunk( input:PeoteBytesInput, chunk_size:Int ):Void 
+	public function onDataChunk( client:PeoteClient, input:PeoteBytesInput, chunk_size:Int ):Void 
 	{
 		outputAppend( input.readString() );
 	}

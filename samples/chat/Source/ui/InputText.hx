@@ -41,7 +41,7 @@ class InputText extends Sprite
 		input.type = TextFieldType.INPUT;
 		input.border = true;
 		input.multiline = false;
-		input.wordWrap = true;
+		//input.wordWrap = true;
 		input.background = true;
 		input.backgroundColor = 0xeeeeee;
 		

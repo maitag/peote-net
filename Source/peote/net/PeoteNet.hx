@@ -140,12 +140,12 @@ class PeoteNet
 						function (jointNr:Int, reason:Int):Void { PeoteNet.onDisconnect(key, obj, jointNr, reason); },
 						function (errorNr:Int):Void { PeoteNet.onEnterJointError(key, obj, errorNr); }
 					);
-				} else obj.onEnterJointError(-1);
+				} else obj._onEnterJointError(-1);
 			}
 			else
 			{
 				#if debugPeoteNet trace(key + " socket is not connected yet"); #end
-				if ( ! p.addClientJoint(obj, jointId) ) obj.onEnterJointError(-1);
+				if ( ! p.addClientJoint(obj, jointId) ) obj._onEnterJointError(-1);
 			}
 		}
 		else
@@ -167,7 +167,7 @@ class PeoteNet
 				#if debugPeoteNet trace("Peote-Server: trying Connect "+server+":"+port+"..."); #end
 				p.peoteJointSocket.connect(server, port);
 			}
-			else obj.onEnterJointError(-1);
+			else obj._onEnterJointError(-1);
 		}
 	}
 	
@@ -236,7 +236,7 @@ class PeoteNet
 				sockets.remove(key);
 			}
 		}
-		obj.onEnterJointError(errorNr);
+		obj._onEnterJointError(errorNr);
 	}
 	
 	public static function onDisconnect(key:String, obj:PeoteClient, jointNr:Int, reason:Int):Void
@@ -252,7 +252,7 @@ class PeoteNet
 				sockets.remove(key);
 			}
 		}
-		obj.onDisconnect(jointNr, reason);
+		obj._onDisconnect(jointNr, reason);
 	}
 	
 	// -----------------------------------------------------------------------------------
@@ -271,7 +271,7 @@ class PeoteNet
 			}
 			for (obj in p.clients.keys() )
 			{
-				obj.onEnterJointError(-2);
+				obj._onEnterJointError(-2);
 				p.clients.remove(obj);
 			}
 			sockets.remove(key);
@@ -315,7 +315,7 @@ class PeoteNet
 			}
 			for (obj in p.clients.keys() )
 			{
-				obj.onEnterJointError(-1);
+				obj._onEnterJointError(-1);
 				p.clients.remove(obj);
 			}
 			sockets.remove(key);
@@ -335,7 +335,7 @@ class PeoteNet
 			}
 			for (obj in p.clients.keys() )
 			{
-				obj.onEnterJointError(-1);
+				obj._onEnterJointError(-1);
 				p.clients.remove(obj);
 			}
 			sockets.remove(key);

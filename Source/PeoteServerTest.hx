@@ -9,8 +9,6 @@ import peote.bridge.PeoteSocketBridge;
 
 class PeoteServerTest extends Application {
 	
-	public var peoteServer:PeoteServer;
-		
 	public function new ()
 	{
 		super();
@@ -26,29 +24,29 @@ class PeoteServerTest extends Application {
 	
 	public function openSocket():Void
 	{		
-		peoteServer = new PeoteServer({
-				onCreateJoint: function(jointNr:Int) {
-					trace('onCreateJoint: Joint number $jointNr created.');
+		var peoteServer = new PeoteServer({
+				onCreateJoint: function(server:PeoteServer) {
+					trace('onCreateJoint: Channel ${server.jointNr} created.');
 				},
-				onCreateJointError: function(errorNr:Int) {
+				onCreateJointError: function(server:PeoteServer, error:Int) {
 					trace("onCreateJointError:");
-					switch(errorNr) {
-						case -2: trace("can't connect to peote-server");
-						case -1: trace("disconnected from peote-server");
-						case  2: trace("another joint with same id");
-						default: trace(errorNr);
-					}					
+					switch(error) {
+						case -2: trace("Can't connect to peote-server.");
+						case -1: trace("Disconnected from peote-server.");
+						case  2: trace("Another joint with same id exists.");
+						default: trace(error);
+					}
 				},
-				onUserConnect: function(jointNr:Int, userNr:Int) {
-					trace("onUserConnect: jointNr=" + jointNr + ", userNr=" + userNr);
-					sendTestData(userNr);
+				onUserConnect: function(server:PeoteServer, userNr:Int) {
+					trace('onUserConnect: jointNr:${server.jointNr}, userNr:$userNr');
+					sendTestData(server, userNr);
 				},
-				onUserDisconnect: function(jointNr:Int, userNr:Int, reason:Int) {
-					trace("onUserDisconnect: jointNr="+jointNr+", userNr="+userNr);
+				onUserDisconnect: function(server:PeoteServer, userNr:Int, reason:Int) {
+					trace('onUserDisconnect: jointNr:${server.jointNr}, userNr:$userNr');
 					switch (reason) {
-						case 0: trace(" user closed joint!");
-						case 1: trace(" user was disconnected!");
-						default: trace("reason="+reason);
+						case 0: trace("User leaves channel.");
+						case 1: trace("User was disconnected.");
+						default: trace('Reason: $reason');
 					}
 				},
 				//onData: onData
@@ -65,7 +63,7 @@ class PeoteServerTest extends Application {
 	// -------------------- SEND DATA --------------------------
 	// ---------------------------------------------------------
 
-	public function sendTestData(userNr:Int):Void
+	public function sendTestData(server:PeoteServer, userNr:Int):Void
 	{	
 		var output:PeoteBytesOutput = new PeoteBytesOutput();
 		output.writeString("Hello Client " + userNr);
@@ -78,17 +76,17 @@ class PeoteServerTest extends Application {
 		output.writeFloat(1.2345678);
 		output.writeDouble(1.2345678901234567890123456789);
 		
-		peoteServer.sendChunk(userNr, output);
+		server.sendChunk(userNr, output);
 	}
 		
 	// ---------------------------------------------------------
 	// -------------------- RECIEVE DATA -----------------------
 	// ---------------------------------------------------------
 		
-	public function onDataChunk(jointNr:Int, userNr:Int, input:PeoteBytesInput, chunk_size:Int ):Void 
+	public function onDataChunk(server:PeoteServer, userNr:Int, input:PeoteBytesInput, chunkSize:Int ):Void 
 	{
-		var chunk_end:Int = input.bytesLeft() - chunk_size;
-		trace('Chunk arrives from joint $jointNr - chunk size is $chunk_size'); // never read less or more that chunksize!
+		var chunkEnd:Int = input.bytesLeft() - chunkSize;
+		trace('Chunk arrives from joint ${server.jointNr} - chunk size is $chunkSize'); // never read less or more that chunksize!
 
 		var command:String = input.readString();
 		trace('-- Command chunk: "$command" ------');
@@ -107,7 +105,7 @@ class PeoteServerTest extends Application {
 				trace('double     : '+input.readDouble());
 				
 			case "FIBONACCI":
-				while (input.bytesLeft() > chunk_end)
+				while (input.bytesLeft() > chunkEnd)
 				{
 					trace(input.readInt32());
 				}

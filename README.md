@@ -1,11 +1,9 @@
 # peote-net
-[Haxe](http://haxe.org) library api to use joint-protocol of [peote-server](https://github.com/maitag/peote-server)
+Crossplatform [Haxe](http://haxe.org) library to use `joint-protocol` of [peote-server](https://github.com/maitag/peote-server)  
+to provide simple Client/Server Networking-API for multiple targets (cpp, neko, html5, flash, android).  
 
-This Library is written in [Haxe](http://haxe.org) to provide simple Client/Server Networking-API  
-for multiple targets (cpp, neko, android, html5, flash). 
-
-Inside webbrowser it gives fallback-support (websocket or swf-socket-bridge) and on server side  
-[peote-server](https://github.com/maitag/peote-server) redirect TCP-Packets with simple and fast protocol.  
+Inside webbrowser it gives fallback-support (to websocket or swf-socket-bridge) and on server side  
+[peote-server](https://github.com/maitag/peote-server) it redirects TCP-Packets with simple and fast protocol.  
 
 
 ## Installation:
@@ -17,24 +15,38 @@ haxelib git peote-net https://github.com/maitag/peote-net
 ## How To Create a Server
 ```
 peoteServer = new PeoteServer({
-		onCreateJoint: function(jointNr:Int) {
-			trace("new channel " + jointNr + "created");
+		onCreateJoint: function(server:PeoteServer) {
+			trace('Channel ${server.jointNr} created.');
 		},
-		onCreateJointError: function(errorNr:Int) {
-			trace("can´t create channel. error:" + errorNr);
+		onCreateJointError: function(server:PeoteServer, error:Int) {
+			switch(error) {
+				case -2: trace("Can't connect to peote-server.");
+				case -1: trace("Disconnected from peote-server.");
+				case  2: trace("Another joint with same id exists.");
+				default: trace('Error: $error');
+			}
 		},
-		onUserConnect: function(jointNr:Int, userNr:Int) {
-			trace("onUserConnect: jointNr=" + jointNr + ", userNr=" + userNr);
+		onUserConnect: function(server:PeoteServer, userNr:Int) {
+			trace('New user connects: jointNr:${server.jointNr}, userNr=$userNr');
 			// send something to client
 			var output:PeoteBytesOutput = new PeoteBytesOutput();
-			output.writeString("Hello Client " + userNr);
-			peoteServer.send(userNr, output.getBytes() );
+			output.writeString('Hello Client $userNr');
+			server.sendChunk( userNr, output.getBytes() );
 		},
-		onUserDisconnect: function(jointNr:Int, userNr:Int, reason:Int) {
-			trace("onUserDisconnect: jointNr="+jointNr+", userNr="+userNr+", reason="+reason);
+		onUserDisconnect: function(server:PeoteServer, userNr:Int, reason:Int) {
+			trace('User disconnects: jointNr=${server.jointNr}, userNr=$userNr');
+			switch (reason) {
+				case 0: trace("User leaves channel.");
+				case 1: trace("User was disconnected.");
+				default: trace('Reason: $reason');
+			}
 		},
-		onData: function(jointNr:Int, userNr:Int, bytes:Bytes ) {
-			trace("User " + userNr + "sends some bytes on channel " + jointNr);
+		//choose between onData or onDataChunk
+		//onData: function(server:PeoteServer, userNr:Int, bytes:Bytes ) {
+		//	trace('User $userNr sends some bytes on channel ${server.jointNr}');
+		//},
+		onDataChunk: function(server:PeoteServer, userNr:Int, input:PeoteBytesInput, chunkSize:Int ) {
+			trace( input.readString() ); // Hello Server
 		}
 	});
 	
@@ -44,59 +56,76 @@ peoteServer.createJoint("localhost", 7680, "testserver");
 ## How To Create a Client
 ```
 peoteClient = new PeoteClient({
-		onEnterJoint: function(jointNr:Int) {
-			trace("onEnterJoint: jointNr=" + jointNr);
+		onEnterJoint: function(client:PeoteClient) {
+			trace('Connect: Channel ${client.jointNr} entered');
 			// send something to server
 			var output:PeoteBytesOutput = new PeoteBytesOutput();
-			output.writeString("Hello Server on channel " + jointNr);
-			peoteClient.send( output.getBytes() );
+			output.writeString("Hello Server");
+			client.sendChunk( output.getBytes() );
 		},
-		onEnterJointError: function(errorNr:Int) {
-			trace("onEnterJointError:"+errorNr);
+		onEnterJointError: function(client:PeoteClient, error:Int) {
+			switch(error) {
+				case 1:  trace("can't enter channel");
+				case -2: trace("can't connect to peote-server");
+				case -1: trace("disconnected from peote-server");
+				default: trace('Error:$error');
+			}
+		onDisconnect: function(client:PeoteClient, reason:Int) {
+			trace('Disconnect: jointNr:${client.jointNr}');
+			switch (reason) {
+				case 0: trace("Channel closed by owner");
+				case 1: trace("Channel-owner disconnected");
+				default: trace('Reason:$reason');
+			}
 		},
-		onDisconnect: function(jointNr:Int, reason:Int) {
-			trace("onDisconnect: jointNr="+jointNr+", reason="+reason);
-		},
-		onData: function(jointNr:Int, bytes:Bytes ) {
-			trace("Server sends some bytes on channel " + jointNr);
+		//choose between onData or onDataChunk
+		//onData: function(client:PeoteClient, bytes:Bytes) {
+		//	trace('Server sends some bytes on channel ${client.jointNr}');
+		//},
+		onDataChunk: function(client:PeoteClient, input:PeoteBytesInput, chunk_size:Int) {
+			trace( input.readString() ); // Hello Client ..
 		}
 	});
-	
+
 peoteClient.enterJoint("localhost", 7680, "testserver");
 ```
+
+
+## Depends on
+[peote-socket](https://github.com/maitag/peote-socket) library that handle multiplatform TCP-Sockets.  
   
-This depends on [peote-socket](https://github.com/maitag/peote-socket) haxe-library to get  
-more platform independent TCP-Sockets in haxe.  
-  
-For html5 you have fallback-support between websockets or swf-bridge  
-( for cpp this will be ignored and it calls onload directly ):  
+For html5 or flash-targets you can set a proxy-address before creating a new PeoteSocket,  
+cpp-targets will ignore this and calls the onload-callback directly.  
 ```
 PeoteSocketBridge.load( {
-	onload: openSocket,       // callback if swfbridges is loaded or websockets available
-	preferWebsockets: true,  // trying websockets first and fallback to flash
+	onload: openSocket,      // callback if swfbridges is loaded or websockets available
+	preferWebsockets: true,  // trying websockets first and fallback to flash (html5)
+	proxys: {
+		proxyServerWS:"localhost",  // proxy for websocket
+		proxyPortWS  : 3211,
+		proxyServerSWF:"localhost", // proxy for peoteSocketBridge.swf
+		proxyPortSWF  :3211,
+	},
 	onfail: function() { trace("Browser doesn't support flash-raw-sockets or websockets"); }
 });
 
+
 function openSocket() { 
-	// create Server or Client here ...
+	peoteSocket = new PeoteSocket({
+	...
 }
 
 ```
 
 
-## Depends on
-[peote-socket](https://github.com/maitag/peote-socket)  haxe library
-
-
 ## Peote Server
-For testing you need to run a Perl TCP Server that supports the "joint"-protocol:  
-[peote-server](https://github.com/maitag/peote-server)
-
-
-use with care ;)=  
+To let it run you need a Server that supports the `joint-protocol` for package forwarding.  
+Here is a Server:[peote-server](https://github.com/maitag/peote-server) written in [Perl](https://www.perl.org/),  
+please use it with care `;)=`.  
 
 
 ## TODO:
-- stresstests to check stability and performance
-- direct connection from peoteClient to peoteServer without going through remote proxy
-
+- more tests to check stability and performance
+- hardening to make it more robust
+- better implementation/documentation of the network-protocol
+- total rewrite of the Perl Peote-Server in haxe

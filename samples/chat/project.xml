@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <project>
 	
-	<meta title="PeoteChat" package="peote.chat" version="0.1.5" company="Sylvio Sell - maitag" />
+	<meta title="PeoteChat" package="peote.chat" version="0.1.6" company="Sylvio Sell - maitag" />
 	<app main="PeoteChat" path="Export" file="PeoteChat" />
 	
 	<source path="Source" />
@@ -13,9 +13,9 @@
 	
 	<!--<haxedef name="dom" />-->
 	
-	<!--
+	
 	<haxeflag name="-dce" value="full" />
-	<haxedef name="no-traces" />
+	<!--<haxedef name="no-traces" />
 	-->
 
 	<dependency path="../../dependencies/swfobject-2.3.js" if="html5" />	

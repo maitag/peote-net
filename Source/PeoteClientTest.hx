@@ -12,9 +12,6 @@ class PeoteClientTest extends Application {
 	
 	public var peoteClient:PeoteClient;
 	
-	var inputBuffer:PeoteBytesInput; // stores not fully readed chunk
-	//public var chunk_size:Int = 0;
-	
 	public function new ()
 	{
 		super();
@@ -31,28 +28,26 @@ class PeoteClientTest extends Application {
 	public function openSocket():Void
 	{
 		
-		inputBuffer = new PeoteBytesInput();
-
 		peoteClient = new PeoteClient({
-				onEnterJoint: function(jointNr:Int) {
-					trace('onEnterJoint: Joint number $jointNr entered');
+				onEnterJoint: function(client:PeoteClient) {
+					trace('onEnterJoint: Joint number ${client.jointNr} entered');
 					sendTestData();
 				},
-				onEnterJointError: function(errorNr:Int) {
-					switch(errorNr) {
-						case 1:  trace("can't enter joint");
+				onEnterJointError: function(client:PeoteClient, error:Int) {
+					switch(error) {
+						case 1:  trace("can't enter channel");
 						case -2: trace("can't connect to peote-server");
 						case -1: trace("disconnected from peote-server");
-						default: trace("onEnterJointError:"+errorNr);
-					}					
+						default: trace('onEnterJointError:$error');
+					}
 				},
-				onDisconnect: function(jointNr:Int, reason:Int) {
-					trace("onDisconnect: jointNr="+jointNr);
+				onDisconnect: function(client:PeoteClient, reason:Int) {
+					trace('onDisconnect: jointNr=${client.jointNr}');
 					switch (reason) {
-						case 0: trace(" joint-owner closed joint!");
-						case 1: trace(" joint-owner was disconnected!");
-						case 2: trace(" you was kicked by joint-owner!"); // TODO ?
-						default: trace("reason="+reason);
+						case 0: trace("channel closed by owner");
+						case 1: trace("channel-owner disconnected!");
+						case 2: trace("kicked by channel-owner!"); // TODO ?
+						default: trace('reason:$reason');
 					}
 				},
 				onDataChunk: onDataChunk
@@ -108,9 +103,9 @@ class PeoteClientTest extends Application {
 	// -------------------- RECIEVE DATA -----------------------
 	// ---------------------------------------------------------
 	
-	public inline function onDataChunk(jointNr:Int, input:PeoteBytesInput, chunk_size:Int):Void 
+	public inline function onDataChunk(client:PeoteClient, input:PeoteBytesInput, chunk_size:Int):Void 
 	{
-		trace("onData: jointNr=" + jointNr);
+		trace('onData: jointNr=${client.jointNr}');
 		
 		trace('string     : '+input.readString());
 		trace('max Byte   : '+input.readByte());
