@@ -32,7 +32,7 @@ peoteServer = new PeoteServer({
 			// send something to client
 			var output:PeoteBytesOutput = new PeoteBytesOutput();
 			output.writeString('Hello Client $userNr');
-			server.sendChunk( userNr, output.getBytes() );
+			server.sendChunk( userNr, output );
 		},
 		onUserDisconnect: function(server:PeoteServer, userNr:Int, reason:Int) {
 			trace('User disconnects: jointNr=${server.jointNr}, userNr=$userNr');
@@ -62,7 +62,7 @@ peoteClient = new PeoteClient({
 			// send something to server
 			var output:PeoteBytesOutput = new PeoteBytesOutput();
 			output.writeString("Hello Server");
-			client.sendChunk( output.getBytes() );
+			client.sendChunk( output );
 		},
 		onEnterJointError: function(client:PeoteClient, error:Int) {
 			switch(error) {
@@ -71,6 +71,7 @@ peoteClient = new PeoteClient({
 				case -1: trace("disconnected from peote-server");
 				default: trace('Error:$error');
 			}
+		},
 		onDisconnect: function(client:PeoteClient, reason:Int) {
 			trace('Disconnect: jointNr:${client.jointNr}');
 			switch (reason) {
