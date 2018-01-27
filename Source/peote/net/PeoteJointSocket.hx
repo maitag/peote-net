@@ -291,7 +291,7 @@ class PeoteJointSocket
 	private function onInDisconnect(disconnectCallback:Int -> Int -> Void, joint_nr:Int, command_chunk:Bytes):Void
 	{
 		inJointDataCallback.remove(joint_nr);
-		disconnectCallback(joint_nr, command_chunk.get(2));
+		disconnectCallback(joint_nr, command_chunk.get(0));
 	}
 
 	private function onData(bytes:Bytes):Void
@@ -354,7 +354,7 @@ class PeoteJointSocket
 							ownUserDisconnectCallback.get(j_nr)(command_chunk);
 						}
 						else if (server_command == 2)
-						{
+						{	
 							inDisconnectCallback.get(j_nr)(command_chunk);
 						}
 						//else if (server_command == 255)// keepalive

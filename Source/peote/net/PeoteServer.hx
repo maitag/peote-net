@@ -14,6 +14,7 @@ class PeoteServer
 	public var events:PeoteServerEvents;
 	
 	public var jointNr(default, null):Int;
+	public var jointId(default, null):String;
 	public var server(default, null):String = "";
 	public var port(default, null):Int;
 
@@ -37,6 +38,7 @@ class PeoteServer
 		{
 			this.server = server;
 			this.port = port;
+			this.jointId = jointId;
 			PeoteNet.createJoint(this, server, port, jointId);
 		}
 		else

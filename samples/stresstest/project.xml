@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<project>
+	
+	<meta title="StressTest" package="peote.stresstest" version="0.1.0" company="Sylvio Sell - maitag" />
+	<app main="StressTest" path="Export" file="stresstest" />
+	
+	<source path="Source" />
+	
+	<haxelib name="openfl" />
+	
+	<haxelib name="peote-socket" />
+	<haxelib name="peote-net" />
+	
+	<!--<haxedef name="dom" />-->
+	
+	
+	<!--<haxeflag name="-dce" value="full" />
+	<haxedef name="no-traces" />
+	-->
+
+	<dependency path="../../dependencies/swfobject-2.3.js" if="html5" />	
+	<assets path="../../dependencies/peoteSocketBridge.swf" rename="peoteSocketBridge.swf" embed="false" if="html5" />
+
+	<assets path="Assets" rename="assets" exclude="*.svg" />
+	<icon path="Assets/openfl.svg" />
+</project>
