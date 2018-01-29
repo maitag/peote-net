@@ -49,7 +49,6 @@ class OutputText extends Sprite
 	public function log(s:String) {
 		if (output.numLines > 200) {
 			output.text = ~/^(.*\n){0,100}/g.replace(output.text, '');
-			trace(output.numLines);
 		}
 		output.appendText(s + "\n");
 		output.scrollV = output.maxScrollV-1;
