@@ -88,10 +88,10 @@ class ServerChannel extends Sprite implements I_Channel
 	
 	public function sendToAll(message:String):Void
 	{
-		var bytes:PeoteBytesOutput = new PeoteBytesOutput();
-		bytes.writeString(message);
+		var out:PeoteBytesOutput = new PeoteBytesOutput();
+		out.writeString(message);
 		
-		for ( userNr in user.keys() ) peoteServer.sendChunk(userNr, bytes);
+		for ( userNr in user.keys() ) peoteServer.sendChunk(userNr, out.getBytes());
 		
 		outputAppend(message);
 	}
@@ -105,8 +105,9 @@ class ServerChannel extends Sprite implements I_Channel
 	// ------------------ Data Chunk arrives ----------------------------------------
 	// ------------------------------------------------------------------------------
 	
-	public function onDataChunk( server:PeoteServer,  userNr:Int, input:PeoteBytesInput, chunk_size:Int ):Void 
+	public function onDataChunk( server:PeoteServer,  userNr:Int, bytes:Bytes ):Void 
 	{
+		var input:PeoteBytesInput = new PeoteBytesInput(bytes);
 		if ( user.get(userNr) == "" ) // first incomming message is username
 		{
 			user.set( userNr, input.readString() );

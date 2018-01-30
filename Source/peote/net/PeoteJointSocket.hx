@@ -50,8 +50,7 @@ class PeoteJointSocket
 		this.onCloseCallback = onCloseCallback;
 		this.onErrorCallback = onErrorCallback;
 		
-		//input = Bytes.alloc(32767*2+4); // TODO !!!
-		input = Bytes.alloc(32767); // TODO !!!
+		input = Bytes.alloc(32767*2+4); // TODO !!!
 		
 		ownJointDataCallback = new Map<Int,Int -> Int -> Bytes -> Void>();
 		inJointDataCallback  = new Map<Int,Int -> Bytes -> Void>();
@@ -453,13 +452,11 @@ class PeoteJointSocket
 						else // user_nr ist uebermittelt
 						{
 							
-							var debugOut = "";
-							for (i in input_pos...input_pos+bytes_left) debugOut += input.get(i) + " ";
-							trace("inputData:" + debugOut);		
+							//var debugOut = ""; for (i in input_pos...input_pos+bytes_left) debugOut += input.get(i) + " "; trace("inputData:" + debugOut);		
 		
 							var avail:Int = input_end - input_pos;
 							if (avail >= bytes_left) // wenn chunk schon vollstaendig da ist
-							{	trace("Daten an OWN JOINT : chunk vollstaendig geladen");
+							{	//trace("Daten an OWN JOINT : chunk vollstaendig geladen");
 								var data_chunk:Bytes = Bytes.alloc(bytes_left);
 								data_chunk.blit(0, input, input_pos, bytes_left );
 								input_pos += bytes_left;
@@ -468,7 +465,7 @@ class PeoteJointSocket
 								ownJointDataCallback.get(joint_nr - 128)(joint_nr-128, user_nr, data_chunk);
 							}
 							else // chunk abziehen und ausgeben was bereits vorhanden ist
-							{	trace("Daten an OWN JOINT : chunk "+avail+" bytes geladen");
+							{	//trace("Daten an OWN JOINT : chunk "+avail+" bytes geladen");
 								var data_chunk:Bytes = Bytes.alloc(avail);
 								data_chunk.blit(0, input, input_pos, avail );
 								input_pos += avail;
@@ -484,13 +481,11 @@ class PeoteJointSocket
 					}
 					else  // Daten an IN JOINT -----------------------------
 					{
-						var debugOut = "";
-						for (i in input_pos...input_pos+bytes_left) debugOut += input.get(i) + " ";
-						trace("inputData:" + debugOut);		
+						//var debugOut = ""; for (i in input_pos...input_pos+bytes_left) debugOut += input.get(i) + " "; trace("inputData:" + debugOut);		
 		
 						var avail:Int = input_end - input_pos;
 						if (avail >= bytes_left) // wenn chunk schon vollstaendig da ist
-						{	trace("Daten an IN JOINT : chunk vollstaendig geladen");						
+						{	//trace("Daten an IN JOINT : chunk vollstaendig geladen");						
 							var data_chunk:Bytes = Bytes.alloc(bytes_left);
 							data_chunk.blit(0, input, input_pos, bytes_left );
 							input_pos += bytes_left;
@@ -499,7 +494,7 @@ class PeoteJointSocket
 							inJointDataCallback.get(joint_nr)(joint_nr, data_chunk);
 						}
 						else // chunk abziehen und ausgeben was bereits vorhanden ist
-						{	trace("Daten an IN JOINT : chunk "+avail+" bytes geladen");
+						{	//trace("Daten an IN JOINT : chunk "+avail+" bytes geladen");
 							var data_chunk:Bytes = Bytes.alloc(avail);
 							data_chunk.blit(0, input, input_pos, avail );
 							input_pos += avail;
@@ -529,7 +524,7 @@ class PeoteJointSocket
 	
 	public function sendDataToJointIn(joint_nr:Int, ba:Bytes):Void
 	{
-		trace("send chunk to IN joint, length="+ba.length);
+		//trace("send chunk to IN joint, length="+ba.length);
 		if (ba.length <= 32767 - 2)
 		{
 			writeChunkSize(ba.length+1);
@@ -561,7 +556,7 @@ class PeoteJointSocket
 	}
 	
 	public function sendDataToJointOwn(joint_nr:Int, user_nr:Int, ba:Bytes):Void
-	{	trace("send chunk trought OWN joint, length="+ba.length+ " to user:"+user_nr);
+	{	//trace("send chunk trought OWN joint, length="+ba.length+ " to user:"+user_nr);
 		if (ba.length <= 32767 - 2)
 		{
 			writeChunkSize(ba.length+2);

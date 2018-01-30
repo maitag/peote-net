@@ -1,2 +1,0 @@
-- messages for error-codes from peote-server
-- copy paste on cpp target (windows) not work

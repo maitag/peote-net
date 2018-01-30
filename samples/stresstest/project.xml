@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <project>
 	
-	<meta title="StressTest" package="peote.stresstest" version="0.1.0" company="Sylvio Sell - maitag" />
+	<meta title="StressTest" package="peote.stresstest" version="0.1.1" company="Sylvio Sell - maitag" />
 	<app main="StressTest" path="Export" file="stresstest" />
+	<window width="574" height="560" />
 	
 	<source path="Source" />
 	
@@ -13,9 +14,10 @@
 	
 	<!--<haxedef name="dom" />-->
 	
+	<!--<haxedef name="debugPeoteJoint" />-->
 	
-	<!--<haxeflag name="-dce" value="full" />
-	<haxedef name="no-traces" />
+	<haxeflag name="-dce" value="full" />
+	<!--<haxedef name="no-traces" />
 	-->
 
 	<dependency path="../../dependencies/swfobject-2.3.js" if="html5" />	

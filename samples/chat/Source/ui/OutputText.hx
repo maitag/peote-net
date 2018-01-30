@@ -1,7 +1,6 @@
 package ui;
 
 import openfl.display.Sprite;
-import openfl.text.Font;
 import openfl.text.TextField;
 import openfl.text.TextFieldType;
 import openfl.text.TextFormat;

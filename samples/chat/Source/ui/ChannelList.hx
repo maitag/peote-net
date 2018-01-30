@@ -1,6 +1,5 @@
 package ui;
 
-import haxe.ds.IntMap;
 import flash.display.Sprite;
 import ui.Button;
 

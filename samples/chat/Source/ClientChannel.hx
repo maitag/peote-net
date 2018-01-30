@@ -73,9 +73,9 @@ class ClientChannel extends Sprite implements I_Channel
 
 	public function send(message:String):Void
 	{
-		var bytes:PeoteBytesOutput = new PeoteBytesOutput();
-		bytes.writeString(message);
-		peoteClient.sendChunk(bytes);
+		var out:PeoteBytesOutput = new PeoteBytesOutput();
+		out.writeString(message);
+		peoteClient.sendChunk(out.getBytes());
 	}
 
 	public function close():Void
@@ -87,8 +87,9 @@ class ClientChannel extends Sprite implements I_Channel
 	// ------------------ Data Chunk arrives ----------------------------------------
 	// ------------------------------------------------------------------------------
 	
-	public function onDataChunk( client:PeoteClient, input:PeoteBytesInput, chunk_size:Int ):Void 
+	public function onDataChunk( client:PeoteClient, bytes:Bytes ):Void 
 	{
+		var input:PeoteBytesInput = new PeoteBytesInput(bytes);
 		outputAppend( input.readString() );
 	}
 	

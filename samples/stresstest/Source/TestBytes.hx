@@ -12,8 +12,7 @@ class TestBytes extends Bytes
 		var bytes:Bytes = Bytes.alloc(len);
 		
 		for (i in 0...len) {
-			//var r:Int = Math.floor(Math.random() * 256);
-			var r = i + 65;
+			var r:Int = Math.floor(Math.random() * 256);
 			bytes.set(i, r);
 		}
 		

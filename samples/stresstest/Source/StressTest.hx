@@ -16,6 +16,9 @@ import peote.bridge.PeoteSocketBridge;
 
 class StressTest extends Sprite {
 	
+	var host:String = "localhost";
+	var port:Int = 7680;
+	
 	var logServer:OutputText;
 	var logClient:OutputText;
 	
@@ -25,7 +28,7 @@ class StressTest extends Sprite {
 	var maxChannel:Int = 10;
 	
 	var maxServers:Int = 1;
-	var maxClients:Int = 1;
+	var maxClients:Int = 2;
 	
 	var activeServers:Int = 0;
 	var activeClients:Int = 0;
@@ -36,10 +39,10 @@ class StressTest extends Sprite {
 		
 		super ();
 		
-		logServer = new OutputText(5, 5, 350, 600);
+		logServer = new OutputText(3, 3, 280, 550);
 		addChild(logServer);
 		
-		logClient = new OutputText(360, 5, 350, 600);
+		logClient = new OutputText(290, 5, 280, 550);
 		addChild(logClient);
 		
 		PeoteSocketBridge.load( {
@@ -61,7 +64,7 @@ class StressTest extends Sprite {
 			onCreateJointError: function(server:PeoteServer, error:Int) {
 				switch(error) {
 					case -2: logServer.log("Can't connect to peote-server.");
-					case -1: logServer.log("Disconnected from peote-server.");
+					case -1: logServer.log("Disconnected from peote-server. "+error);
 					case  2: //logServer.log("Another joint with same id exists.");
 					default: logServer.log('Error: $error');
 				}
@@ -81,7 +84,7 @@ class StressTest extends Sprite {
 			},
 			onDataChunk: function(server:PeoteServer, userNr:Int, bytes:Bytes) {
 				// echo: send data back
-				logServer.log('send ${bytes.length} Bytes back '+bytes.get(0)+","+bytes.get(1)+","+bytes.get(2));
+				logServer.log('Send ${bytes.length} Bytes back');
 				server.sendChunk(userNr, bytes);
 			}
 		};
@@ -89,7 +92,7 @@ class StressTest extends Sprite {
 		clientEvents = {
 			onEnterJoint: function(client:PeoteClient) {
 				logClient.log('Connect: Channel ${client.jointNr} entered ("testserver${client.jointId}")');
-				Timer.delay(enterNext, 500);
+				Timer.delay(enterNext, 100);
 				sendRandomBytes(client);
 			},
 			onEnterJointError: function(client:PeoteClient, error:Int) {
@@ -115,21 +118,13 @@ class StressTest extends Sprite {
 			},
 			onDataChunk: function(client:PeoteClient, bytes:Bytes) {
 				// check if data is same as send before
-				logClient.log('recieve ${bytes.length} Bytes'+bytes.get(0)+","+bytes.get(1)+","+bytes.get(2));
-				//var diff:Int = bytes.compare( lastSendedBytes.get(client));
-				var diff = -1;
-				for (i in 0...bytes.length) {
-					if (bytes.get(i) != lastSendedBytes.get(client).get(i)) {
-						diff = i;
-						break;
-					}
+				var diff:Int = bytes.compare( lastSendedBytes.get(client));
+				if ( diff == 0 ) {
+					logClient.log('Successfully recieve ${bytes.length} Bytes');
+					Timer.delay(function() {sendRandomBytes(client); }, 100);
+					//sendRandomBytes(client);
 				}
-				if ( diff == -1 ) {
-					logClient.log('OK');
-					//Timer.delay(function() {sendRandomBytes(client); }, 1000);
-					sendRandomBytes(client);
-				}
-				else logClient.log('ERROR: data not consistent at $diff :');
+				else logClient.log('ERROR: recieve data (${bytes.length} Bytes) not consistent ($diff) :');
 			}
 		};
 
@@ -140,7 +135,7 @@ class StressTest extends Sprite {
 	var created:Int = -1;
 	public function createNext():Void {
 		if (activeServers < maxServers) {
-			new PeoteServer(serverEvents).createJoint("localhost", 7680, "testserver" + (++created % maxChannel));
+			new PeoteServer(serverEvents).createJoint(host, port, "testserver" + (++created % maxChannel));
 			activeServers++;
 		}
 	}
@@ -148,15 +143,14 @@ class StressTest extends Sprite {
 	var entered:Int = -1;
 	public function enterNext():Void {
 		if (activeClients < maxClients) {
-			new PeoteClient(clientEvents).enterJoint("localhost", 7680, "testserver" + (++entered % maxChannel));
+			new PeoteClient(clientEvents).enterJoint(host, port, "testserver" + (++entered % maxChannel));
 			activeClients++;
 		}
 	}
 	
 	public function sendRandomBytes(client:PeoteClient):Void {
-		//var bytes:Bytes = TestBytes.ofRandom(9000+Std.int(Math.random()*1000));
-		var bytes:Bytes = TestBytes.ofRandom(3);
-		logClient.log('send ${bytes.length} Bytes: '+bytes.get(0)+","+bytes.get(1)+","+bytes.get(2));
+		var bytes:Bytes = TestBytes.ofRandom(Std.int(1+Math.random()*3000)); // todo: 30 000 get out of bonds in buffers
+		logClient.log('Send ${bytes.length} Bytes');
 		lastSendedBytes.set(client, bytes);
 		client.sendChunk( bytes );
 	}

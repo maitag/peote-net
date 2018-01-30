@@ -1,5 +1,6 @@
 package;
 
+import haxe.io.Bytes;
 import lime.app.Application;
 
 import peote.net.PeoteServer;
@@ -76,17 +77,18 @@ class PeoteServerTest extends Application {
 		output.writeFloat(1.2345678);
 		output.writeDouble(1.2345678901234567890123456789);
 		
-		server.sendChunk(userNr, output);
+		server.sendChunk(userNr, output.getBytes());
 	}
 		
 	// ---------------------------------------------------------
 	// -------------------- RECIEVE DATA -----------------------
 	// ---------------------------------------------------------
 		
-	public function onDataChunk(server:PeoteServer, userNr:Int, input:PeoteBytesInput, chunkSize:Int ):Void 
+	public function onDataChunk(server:PeoteServer, userNr:Int, bytes:Bytes ):Void 
 	{
-		var chunkEnd:Int = input.bytesLeft() - chunkSize;
-		trace('Chunk arrives from joint ${server.jointNr} - chunk size is $chunkSize'); // never read less or more that chunksize!
+		var input:PeoteBytesInput = new PeoteBytesInput(bytes);
+		var chunkEnd:Int = input.bytesLeft() - bytes.length;
+		trace('Chunk arrives from joint ${server.jointNr} - chunk size is ${bytes.length}'); // never read less or more that chunksize!
 
 		var command:String = input.readString();
 		trace('-- Command chunk: "$command" ------');

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <project>
 	
-	<meta title="PeoteChat" package="peote.chat" version="0.1.6" company="Sylvio Sell - maitag" />
+	<meta title="PeoteChat" package="peote.chat" version="0.1.7" company="Sylvio Sell - maitag" />
 	<app main="PeoteChat" path="Export" file="PeoteChat" />
 	
 	<source path="Source" />

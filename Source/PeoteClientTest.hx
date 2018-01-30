@@ -1,5 +1,6 @@
 package;
 
+import haxe.io.Bytes;
 import lime.app.Application;
 
 import peote.net.PeoteClient;
@@ -79,7 +80,7 @@ class PeoteClientTest extends Application {
 		output.writeFloat(1.2345678);
 		output.writeDouble(1.2345678901234567890123456789);
 		
-		peoteClient.sendChunk(output);
+		peoteClient.sendChunk(output.getBytes());
 		
 		// -------- send another chunk -----------
 		
@@ -95,7 +96,7 @@ class PeoteClientTest extends Application {
 			fib_pre = fib - fib_pre;
 			output.writeInt32(fib);
 		}
-		peoteClient.sendChunk(output);
+		peoteClient.sendChunk(output.getBytes());
 	}
 
 
@@ -103,8 +104,9 @@ class PeoteClientTest extends Application {
 	// -------------------- RECIEVE DATA -----------------------
 	// ---------------------------------------------------------
 	
-	public inline function onDataChunk(client:PeoteClient, input:PeoteBytesInput, chunk_size:Int):Void 
+	public inline function onDataChunk(client:PeoteClient, bytes:Bytes):Void 
 	{
+		var input:PeoteBytesInput = new PeoteBytesInput(bytes);
 		trace('onData: jointNr=${client.jointNr}');
 		
 		trace('string     : '+input.readString());

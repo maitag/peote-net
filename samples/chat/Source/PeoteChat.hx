@@ -1,17 +1,11 @@
 package;
 
-
-import haxe.ds.IntMap;
-import haxe.io.StringInput;
 import ui.Button;
 import ui.ChannelList;
 import ui.InputText;
 
 import openfl.display.Sprite;
 import openfl.text.TextField;
-import openfl.text.TextFormat;
-import openfl.text.TextFormatAlign;
-import openfl.events.MouseEvent;
 
 import peote.bridge.PeoteSocketBridge;
 
@@ -39,7 +33,7 @@ class PeoteChat extends Sprite {
 		
 		PeoteSocketBridge.load( {
 			onload: onLoadSocketBridge,
-			//prefereWebsockets: true,
+			preferWebsockets: true,
 			onfail: function() { trace("Browser doesn't support flash- or websockets"); }
 		});
 	}
