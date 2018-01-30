@@ -128,7 +128,7 @@ Use [peote-server](https://github.com/maitag/peote-server) (written in [Perl](ht
 
 
 ## TODO:
-- bugfixing for websockets, android-testing
+- bugfixing for websockets
 - better errorhandling and avoiding buffer-outbounds
 - console-tests to check stability and performance
 - hardening to make it more robust against flooding
