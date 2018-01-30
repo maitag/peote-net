@@ -32,7 +32,7 @@ peoteServer = new PeoteServer({
 			// send something to client
 			var output:PeoteBytesOutput = new PeoteBytesOutput();
 			output.writeString('Hello Client $userNr');
-			server.sendChunk( userNr, output );
+			server.sendChunk( userNr, output.getBytes() );
 		},
 		onUserDisconnect: function(server:PeoteServer, userNr:Int, reason:Int) {
 			trace('User disconnects: jointNr=${server.jointNr}, userNr=$userNr');
@@ -46,7 +46,8 @@ peoteServer = new PeoteServer({
 		//onData: function(server:PeoteServer, userNr:Int, bytes:Bytes ) {
 		//	trace('User $userNr sends some bytes on channel ${server.jointNr}');
 		//},
-		onDataChunk: function(server:PeoteServer, userNr:Int, input:PeoteBytesInput, chunkSize:Int) {
+		onDataChunk: function(server:PeoteServer, userNr:Int, bytes:Bytes) {
+			var input = new PeoteBytesInput(bytes);
 			trace( input.readString() ); // Hello Server
 		}
 	});
@@ -62,7 +63,7 @@ peoteClient = new PeoteClient({
 			// send something to server
 			var output:PeoteBytesOutput = new PeoteBytesOutput();
 			output.writeString("Hello Server");
-			client.sendChunk( output );
+			client.sendChunk( output.getBytes() );
 		},
 		onEnterJointError: function(client:PeoteClient, error:Int) {
 			switch(error) {
@@ -84,7 +85,8 @@ peoteClient = new PeoteClient({
 		//onData: function(client:PeoteClient, bytes:Bytes) {
 		//	trace('Server sends some bytes on channel ${client.jointNr}');
 		//},
-		onDataChunk: function(client:PeoteClient, input:PeoteBytesInput, chunk_size:Int) {
+		onDataChunk: function(client:PeoteClient, bytes:Bytes) {
+			var input = new PeoteBytesInput(bytes);
 			trace( input.readString() ); // Hello Client ..
 		}
 	});

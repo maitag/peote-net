@@ -2,10 +2,9 @@ package;
 
 
 import haxe.Timer;
+import haxe.io.Bytes;
 import openfl.display.Sprite;
 
-import peote.io.PeoteBytesInput;
-import peote.io.PeoteBytesOutput;
 import peote.net.PeoteServer;
 import peote.net.PeoteClient;
 import peote.net.PeoteServerEvents;
@@ -31,7 +30,7 @@ class StressTest extends Sprite {
 	var activeServers:Int = 0;
 	var activeClients:Int = 0;
 	
-	var randomDataSend:Map<PeoteClient, RandomOutput>;
+	var lastSendedBytes:Map<PeoteClient, Bytes>;
 	
 	public function new () {
 		
@@ -52,12 +51,12 @@ class StressTest extends Sprite {
 	
 	public function onLoadSocketBridge():Void
 	{
-		randomDataSend = new Map<PeoteClient, RandomOutput>();
+		lastSendedBytes = new Map<PeoteClient, Bytes>();
 		
 		serverEvents = {
 			onCreateJoint: function(server:PeoteServer) {
 				logServer.log('Channel ${server.jointNr} created. ("testserver${server.jointId}")');
-				Timer.delay(createNext, 500);
+				Timer.delay(createNext, 100);
 			},
 			onCreateJointError: function(server:PeoteServer, error:Int) {
 				switch(error) {
@@ -67,14 +66,10 @@ class StressTest extends Sprite {
 					default: logServer.log('Error: $error');
 				}
 				activeServers--;
-				Timer.delay(createNext, 500);
+				Timer.delay(createNext, 100);
 			},
 			onUserConnect: function(server:PeoteServer, userNr:Int) {
 				logServer.log('New user connects: jointNr:${server.jointNr}, userNr=$userNr');
-				// send something to client
-				//var output:PeoteBytesOutput = new PeoteBytesOutput();
-				//output.writeString('Hello Client $userNr');
-				//server.sendChunk( userNr, output );
 			},
 			onUserDisconnect: function(server:PeoteServer, userNr:Int, reason:Int) {
 				logServer.log('User disconnects: jointNr=${server.jointNr}, userNr=$userNr');
@@ -84,14 +79,10 @@ class StressTest extends Sprite {
 					default: logServer.log('Reason: $reason');
 				}
 			},
-			onDataChunk: function(server:PeoteServer, userNr:Int, input:PeoteBytesInput, chunkSize:Int) {
-				//trace( input.readString() );
+			onDataChunk: function(server:PeoteServer, userNr:Int, bytes:Bytes) {
 				// echo: send data back
-				var output:PeoteBytesOutput =  new PeoteBytesOutput();
-				while (input.bytesLeft() > 0)
-					output.writeByte( input.readByte() );
-				logServer.log('send ${output.length} Bytes back');
-				server.sendChunk(userNr, output);
+				logServer.log('send ${bytes.length} Bytes back '+bytes.get(0)+","+bytes.get(1)+","+bytes.get(2));
+				server.sendChunk(userNr, bytes);
 			}
 		};
 		// --------------------------------------------------------------------------
@@ -99,7 +90,6 @@ class StressTest extends Sprite {
 			onEnterJoint: function(client:PeoteClient) {
 				logClient.log('Connect: Channel ${client.jointNr} entered ("testserver${client.jointId}")');
 				Timer.delay(enterNext, 500);
-				
 				sendRandomBytes(client);
 			},
 			onEnterJointError: function(client:PeoteClient, error:Int) {
@@ -111,7 +101,7 @@ class StressTest extends Sprite {
 					default: logClient.log('Error:$error');
 				}
 				activeClients--;
-				Timer.delay(enterNext, 500);
+				Timer.delay(enterNext, 100);
 			},
 			onDisconnect: function(client:PeoteClient, reason:Int) {
 				logClient.log('Disconnect: jointNr:${client.jointNr}');
@@ -121,19 +111,25 @@ class StressTest extends Sprite {
 					default: logClient.log('Reason:$reason');
 				}
 				activeClients--;
-				Timer.delay(enterNext, 500);
+				Timer.delay(enterNext, 100);
 			},
-			onDataChunk: function(client:PeoteClient, input:PeoteBytesInput, chunk_size:Int) {
-				//trace( input.readString() );
-				//logClient.log('ondata');
+			onDataChunk: function(client:PeoteClient, bytes:Bytes) {
 				// check if data is same as send before
-				trace(input.length, chunk_size);
-				if ( randomDataSend.get(client).match(input, chunk_size) ) {
+				logClient.log('recieve ${bytes.length} Bytes'+bytes.get(0)+","+bytes.get(1)+","+bytes.get(2));
+				//var diff:Int = bytes.compare( lastSendedBytes.get(client));
+				var diff = -1;
+				for (i in 0...bytes.length) {
+					if (bytes.get(i) != lastSendedBytes.get(client).get(i)) {
+						diff = i;
+						break;
+					}
+				}
+				if ( diff == -1 ) {
 					logClient.log('OK');
 					//Timer.delay(function() {sendRandomBytes(client); }, 1000);
 					sendRandomBytes(client);
 				}
-				else logClient.log('ERROR: data not consistent (${input.length})');
+				else logClient.log('ERROR: data not consistent at $diff :');
 			}
 		};
 
@@ -158,11 +154,11 @@ class StressTest extends Sprite {
 	}
 	
 	public function sendRandomBytes(client:PeoteClient):Void {
-		//var output:RandomOutput = new RandomOutput(10000+Std.int(Math.random()*1000));
-		var output:RandomOutput = new RandomOutput(11000);
-		logClient.log('send ${output.length} Bytes');
-		randomDataSend.set(client, output);
-		client.sendChunk( output.output );
+		//var bytes:Bytes = TestBytes.ofRandom(9000+Std.int(Math.random()*1000));
+		var bytes:Bytes = TestBytes.ofRandom(3);
+		logClient.log('send ${bytes.length} Bytes: '+bytes.get(0)+","+bytes.get(1)+","+bytes.get(2));
+		lastSendedBytes.set(client, bytes);
+		client.sendChunk( bytes );
 	}
 	
 

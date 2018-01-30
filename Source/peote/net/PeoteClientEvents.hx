@@ -1,7 +1,6 @@
 package peote.net;
 
 import haxe.io.Bytes;
-import peote.io.PeoteBytesInput;
 
 /**
  * by Sylvio Sell - rostock 2015
@@ -12,5 +11,5 @@ typedef PeoteClientEvents = {
 	onEnterJointError:PeoteClient -> Int -> Void,
 	onDisconnect:PeoteClient -> Int -> Void,
 	?onData:PeoteClient -> Bytes -> Void,
-	?onDataChunk:PeoteClient -> PeoteBytesInput -> Int -> Void
+	?onDataChunk:PeoteClient -> Bytes -> Void
 }
