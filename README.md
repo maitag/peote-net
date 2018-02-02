@@ -128,9 +128,8 @@ Use [peote-server](https://github.com/maitag/peote-server) (written in [Perl](ht
 
 
 ## TODO:
-- bugfixing for websockets
+- cli-tools to tests stability and performance
 - better errorhandling and avoiding buffer-outbounds
-- console-tests to check stability and performance
 - hardening to make it more robust against flooding
 - better implementation/documentation of the network-protocol
 - total rewrite of the Perl Peote-Server in haxe

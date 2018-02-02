@@ -108,6 +108,7 @@ class PeoteServer
 			if (input_pos == input_end) { input_pos = input_end = 0; }
 
 			//var debugOut = "";for (i in 0...bytes.length) debugOut += bytes.get(i) + " ";trace("data:" + debugOut);		
+			if (input_end + bytes.length > input.length) trace("ERROR Server: out of BOUNDS");
 			input.blit(input_end, bytes, 0, bytes.length );
 
 			input_end += bytes.length;

@@ -300,6 +300,7 @@ class PeoteJointSocket
 		if (input_pos == input_end) { input_pos = input_end = 0; }
 		
 		//input.blit(input_pos, bytes, 0, bytes.length );
+		if (input_end + bytes.length > input.length) trace("ERROR PeoteJointSocket: out of BOUNDS");
 		input.blit(input_end, bytes, 0, bytes.length ); // <---TODO !!!!!!!!!!!
 		
 		input_end += bytes.length;

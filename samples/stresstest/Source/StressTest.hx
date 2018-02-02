@@ -4,6 +4,7 @@ package;
 import haxe.Timer;
 import haxe.io.Bytes;
 import openfl.display.Sprite;
+import openfl.events.Event;
 
 import peote.net.PeoteServer;
 import peote.net.PeoteClient;
@@ -27,8 +28,16 @@ class StressTest extends Sprite {
 	
 	var maxChannel:Int = 10;
 	
+	#if server
 	var maxServers:Int = 1;
-	var maxClients:Int = 2;
+	var maxClients:Int = 0;
+	#elseif client
+	var maxServers:Int = 0;
+	var maxClients:Int = 1;
+	#else
+	var maxServers:Int = 1;
+	var maxClients:Int = 1;
+	#end
 	
 	var activeServers:Int = 0;
 	var activeClients:Int = 0;
@@ -44,6 +53,8 @@ class StressTest extends Sprite {
 		
 		logClient = new OutputText(290, 5, 280, 550);
 		addChild(logClient);
+		
+		stage.addEventListener (Event.RESIZE, stageOnResize);
 		
 		PeoteSocketBridge.load( {
 			onload: onLoadSocketBridge,
@@ -64,7 +75,7 @@ class StressTest extends Sprite {
 			onCreateJointError: function(server:PeoteServer, error:Int) {
 				switch(error) {
 					case -2: logServer.log("Can't connect to peote-server.");
-					case -1: logServer.log("Disconnected from peote-server. "+error);
+					case -1: logServer.log("Disconnected from peote-server. ");
 					case  2: //logServer.log("Another joint with same id exists.");
 					default: logServer.log('Error: $error');
 				}
@@ -149,11 +160,31 @@ class StressTest extends Sprite {
 	}
 	
 	public function sendRandomBytes(client:PeoteClient):Void {
-		var bytes:Bytes = TestBytes.ofRandom(Std.int(1+Math.random()*3000)); // todo: 30 000 get out of bonds in buffers
+		var bytes:Bytes = TestBytes.ofRandom(Std.int(1+Math.random()*5000)); // todo: 30 000 get out of bonds in buffers
+		//var bytes:Bytes = TestBytes.ofRandom(1); // todo: 30 000 get out of bonds in buffers
 		logClient.log('Send ${bytes.length} Bytes');
 		lastSendedBytes.set(client, bytes);
 		client.sendChunk( bytes );
 	}
 	
 
+	private function stageOnResize (event:Event):Void {
+	
+		var contentWidth = 574;
+		var contentHeight = 560;
+		
+		var maxScaleX = stage.stageWidth / contentWidth;
+		var maxScaleY = stage.stageHeight / contentHeight;
+		var scale;
+		
+		if (maxScaleX < maxScaleY)
+			scale = maxScaleX;
+		else scale = maxScaleY;
+		
+		scaleX = scale;
+		scaleY = scale;
+		x = stage.stageWidth / 2 - (contentWidth * scale) / 2;
+		y = stage.stageHeight / 2 - (contentHeight * scale) / 2;
+	
+	}
 }
