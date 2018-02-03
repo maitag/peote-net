@@ -1,0 +1,9 @@
+-lib peote-net tink_cli
+-main MainCli
+-cp Source
+-neko bin/neko/stresstest.n
+
+-dce full
+
+# TODO:
+#-cpp bin/cpp

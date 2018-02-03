@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <project>
 	
-	<meta title="StressTest" package="peote.stresstest" version="0.1.1" company="Sylvio Sell - maitag" />
-	<app main="StressTest" path="Export" file="stresstest" />
+	<meta title="testing peote-net framework" package="peote.test" version="0.2.0" company="Sylvio Sell - maitag" />
+	<app main="MainOpenfl" path="Export" file="peote-net-test" />
+	
 	<window width="574" height="560" />
+	<window if="mobile" orientation="portrait" fullscreen="true" width="0" height="0" />
 	
 	<source path="Source" />
 	

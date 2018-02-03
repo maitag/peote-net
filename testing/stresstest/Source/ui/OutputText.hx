@@ -1,7 +1,6 @@
 package ui;
 
 import openfl.display.Sprite;
-import openfl.text.Font;
 import openfl.text.TextField;
 import openfl.text.TextFieldType;
 import openfl.text.TextFormat;
@@ -51,7 +50,8 @@ class OutputText extends Sprite
 			output.text = ~/^(.*\n){0,100}/g.replace(output.text, '');
 		}
 		output.appendText(s + "\n");
-		output.scrollV = output.maxScrollV-1;
+		output.scrollV = output.maxScrollV - 1;
+		//trace(s);
 	}
 	
 }
