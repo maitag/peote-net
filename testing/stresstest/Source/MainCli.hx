@@ -16,8 +16,7 @@ class MainCli
 	
 	static function main()
 	{
-		var test = new Stress("localhost", 7680, function(s:String, type:Int, nr:Int) {trace(s);}, 0, 1, "testserver", 10);
-		//Cli.process(Sys.args(), new PeoteNetTest()).handle(Cli.exit);
+		Cli.process(Sys.args(), new PeoteNetTest()).handle(function(o) {});
 	}
 	
 }
@@ -51,7 +50,7 @@ class PeoteNetTest {
 	}
 	
 	public function log(s:String, type:Int, nr:Int):Void {
-		trace(s);
+		Sys.println('$s');
 		// TODO: use good lib for colored output here
 	}
 
