@@ -128,7 +128,6 @@ Use [peote-server](https://github.com/maitag/peote-server) (written in [Perl](ht
 
 
 ## TODO:
-- cli-tools to tests stability and performance
 - better errorhandling and avoiding buffer-outbounds
 - hardening to make it more robust against flooding
 - better implementation/documentation of the network-protocol

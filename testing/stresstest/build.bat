@@ -1,2 +1,0 @@
-haxe cli.hxml
-pause

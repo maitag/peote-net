@@ -25,10 +25,10 @@ class MainCli
 class PeoteNetTest {
 	// ---------------- Commandline Parameters
 	@:flag('-s')
-	public var maxServers:Int;
+	public var maxServers:Int = 0;
 	
 	@:flag('-c')
-	public var maxClients:Int;
+	public var maxClients:Int = 0;
 	
 	// --------------------------------------
 	var host:String = "localhost";
@@ -45,7 +45,8 @@ class PeoteNetTest {
 		//Sys.println('maxClients: $maxClients');
 		//Sys.println('rest: $rest');
 		
-		// do it
+		if (maxServers == 0 && maxClients == 0) maxServers = 1;
+		
 		test = new Stress(host, port, log, maxServers, maxClients, channelName, maxChannel);
 	}
 	
