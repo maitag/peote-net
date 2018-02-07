@@ -50,7 +50,7 @@ class PeoteJointSocket
 		this.onCloseCallback = onCloseCallback;
 		this.onErrorCallback = onErrorCallback;
 		
-		input = Bytes.alloc(32767*2+4); // TODO !!!
+		input = Bytes.alloc((32767+2)*2); // TODO -> let grow dynamic!!!
 		
 		ownJointDataCallback = new Map<Int,Int -> Int -> Bytes -> Void>();
 		inJointDataCallback  = new Map<Int,Int -> Bytes -> Void>();
@@ -461,7 +461,6 @@ class PeoteJointSocket
 								var data_chunk:Bytes = Bytes.alloc(bytes_left);
 								data_chunk.blit(0, input, input_pos, bytes_left );
 								input_pos += bytes_left;
-								
 								bytes_left = 0;
 								ownJointDataCallback.get(joint_nr - 128)(joint_nr-128, user_nr, data_chunk);
 							}
@@ -470,7 +469,6 @@ class PeoteJointSocket
 								var data_chunk:Bytes = Bytes.alloc(avail);
 								data_chunk.blit(0, input, input_pos, avail );
 								input_pos += avail;
-								
 								bytes_left -= avail;
 								ownJointDataCallback.get(joint_nr - 128)(joint_nr-128, user_nr, data_chunk);
 							}
@@ -489,8 +487,7 @@ class PeoteJointSocket
 						{	//trace("Daten an IN JOINT : chunk vollstaendig geladen");						
 							var data_chunk:Bytes = Bytes.alloc(bytes_left);
 							data_chunk.blit(0, input, input_pos, bytes_left );
-							input_pos += bytes_left;
-							
+							input_pos += bytes_left;							
 							bytes_left = 0;
 							inJointDataCallback.get(joint_nr)(joint_nr, data_chunk);
 						}
@@ -498,8 +495,7 @@ class PeoteJointSocket
 						{	//trace("Daten an IN JOINT : chunk "+avail+" bytes geladen");
 							var data_chunk:Bytes = Bytes.alloc(avail);
 							data_chunk.blit(0, input, input_pos, avail );
-							input_pos += avail;
-								
+							input_pos += avail;								
 							bytes_left -= avail;
 							inJointDataCallback.get(joint_nr)(joint_nr, data_chunk);
 						}

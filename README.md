@@ -128,7 +128,9 @@ Use [peote-server](https://github.com/maitag/peote-server) (written in [Perl](ht
 
 
 ## TODO:
-- better errorhandling and avoiding buffer-outbounds
+- better errorhandling
+- more options to handle buffering (max users per server, payload, outbounds)
+- let server disconnect/block users
 - hardening to make it more robust against flooding
 - better implementation/documentation of the network-protocol
 - total rewrite of the Perl Peote-Server in haxe
