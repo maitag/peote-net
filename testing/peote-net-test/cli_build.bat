@@ -32,6 +32,7 @@ if not exist bin\client.bat (
   echo peote-net-test.exe -c 1
   echo pause
 ) > bin\client.bat
-@echo on
 
-pause
+if "%~1"=="" pause
+
+@echo on
