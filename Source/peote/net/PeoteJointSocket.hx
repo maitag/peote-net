@@ -50,7 +50,7 @@ class PeoteJointSocket
 		this.onCloseCallback = onCloseCallback;
 		this.onErrorCallback = onErrorCallback;
 		
-		input = Bytes.alloc((32767+2)*2); // TODO -> let grow dynamic!!!
+		input = Bytes.alloc((32767+2)*256); // TODO -> let grow dynamic!!!
 		
 		ownJointDataCallback = new Map<Int,Int -> Int -> Bytes -> Void>();
 		inJointDataCallback  = new Map<Int,Int -> Bytes -> Void>();
