@@ -30,6 +30,13 @@ class PeoteNetTest {
 	@:flag('-c')
 	public var maxClients:Int = 0;
 	
+	@:flag('-min')
+	public var minBytes:Int = 1;
+	//public var minBytes:Int = 65535;//-> TODO: why max 65536 not work ?
+	
+	@:flag('-max')
+	public var maxBytes:Int = 65535;//-> TODO: why max 65536 not work ?
+	
 	// --------------------------------------
 	var host:String = "localhost";
 	var port:Int = 7680;
@@ -41,13 +48,12 @@ class PeoteNetTest {
 
 	@:defaultCommand
 	public function run(rest:Rest<String>) {
-		//Sys.println('maxServers: $maxServers');
-		//Sys.println('maxClients: $maxClients');
+		//Sys.println('minBytes: $minBytes');
 		//Sys.println('rest: $rest');
 		
 		if (maxServers == 0 && maxClients == 0) maxServers = 1;
 		
-		test = new Stress(host, port, log, maxServers, maxClients, channelName, maxChannel);
+		test = new Stress(host, port, log, maxServers, maxClients, channelName, maxChannel, minBytes, maxBytes);
 	}
 	
 	public function log(s:String, type:Int, nr:Int):Void {

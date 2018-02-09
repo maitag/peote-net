@@ -30,11 +30,16 @@ class Stress
 	var activeServers:Int = 0;
 	var activeClients:Int = 0;
 	
+	var minBytes:Int;
+	var maxBytes:Int;
+
 	var lastSendedBytes:Map<PeoteClient, Bytes>;
 	
 	var log:String->Int->Int->Void;
 	
-	public function new(host:String, port:Int, log:String->Int->Int->Void, maxServers:Int, maxClients:Int, channelName:String, maxChannelToTryOut:Int) 
+	public function new(host:String, port:Int, log:String->Int->Int->Void,
+						maxServers:Int, maxClients:Int, channelName:String,
+						maxChannelToTryOut:Int, minBytes:Int, maxBytes:Int) 
 	{
 		this.host = host;
 		this.port = port;
@@ -42,6 +47,9 @@ class Stress
 		this.maxServers = maxServers;
 		this.maxClients = maxClients;
 		this.channelName = channelName;
+		this.minBytes = minBytes;
+		this.maxBytes = maxBytes;
+		
 		maxChannel = maxChannelToTryOut;
 		
 		lastSendedBytes = new Map<PeoteClient, Bytes>();
@@ -140,7 +148,7 @@ class Stress
 	}
 	
 	public function sendRandomBytes(client:PeoteClient):Void {
-		var bytes:Bytes = TestBytes.ofRandom(Std.int(1+Math.random()*5000)); // todo: 30 000 get out of bonds in buffers
+		var bytes:Bytes = TestBytes.ofRandom(Std.int(minBytes+Math.random()*(1+maxBytes-minBytes)));
 		//var bytes:Bytes = TestBytes.ofRandom(1); // todo: 30 000 get out of bonds in buffers
 		log('Send ${bytes.length} Bytes',1, client.jointNr);
 		lastSendedBytes.set(client, bytes);

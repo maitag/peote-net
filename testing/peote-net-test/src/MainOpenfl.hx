@@ -32,6 +32,9 @@ class MainOpenfl extends Sprite {
 	var maxClients:Int = 1;
 	#end
 	
+	var minBytes:Int = 1;
+	var maxBytes:Int = 65535;
+
 	var test:Stress;
 	
 	public function new () {
@@ -55,7 +58,7 @@ class MainOpenfl extends Sprite {
 	
 	public function onLoadSocketBridge():Void
 	{
-		test = new Stress(host, port, log, maxServers, maxClients, channelName, maxChannel);
+		test = new Stress(host, port, log, maxServers, maxClients, channelName, maxChannel, minBytes, maxBytes );
 	}
 	
 	public function log(s:String, type:Int, nr:Int):Void {

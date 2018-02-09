@@ -108,7 +108,7 @@ class PeoteJointSocket
 		if (onCloseCallback != null) onCloseCallback(msg);
 	}
 	private function onError(msg:String):Void
-	{	//trace("onError");
+	{	//trace("onError:"+msg);
 		connected = false;
 		if (onErrorCallback != null) onErrorCallback(msg);
 	}
@@ -522,7 +522,7 @@ class PeoteJointSocket
 	public function sendDataToJointIn(joint_nr:Int, ba:Bytes):Void
 	{
 		//trace("send chunk to IN joint, length="+ba.length);
-		if (ba.length <= 32767 - 2)
+		if (ba.length <= 32767 - 2) // not -1 because same chunk can not (so fast) transmitted by peote-server then
 		{
 			writeChunkSize(ba.length+1);
 			peoteSocket.writeByte(joint_nr);
@@ -536,7 +536,7 @@ class PeoteJointSocket
 			while (pos < ba.length)
 			{	
 				len =  (ba.length - pos < 32767 - 2) ? ba.length - pos : 32767 - 2;
-				
+				//trace("len", len);
 				writeChunkSize(len+1);
 				peoteSocket.writeByte(joint_nr);
 				writeFullBytes(ba, pos, len);
@@ -569,7 +569,7 @@ class PeoteJointSocket
 			while (pos < ba.length)
 			{	
 				len =  (ba.length - pos < 32767 - 2) ? ba.length - pos : 32767 - 2;
-				
+				//trace("len", len);
 				writeChunkSize(len+2);
 				peoteSocket.writeByte(joint_nr + 128);
 				peoteSocket.writeByte(user_nr);

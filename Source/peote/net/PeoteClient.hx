@@ -25,7 +25,7 @@ class PeoteClient
 	public function new(events:PeoteClientEvents) 
 	{
 		this.events = events;
-		if (events.onDataChunk != null) input = Bytes.alloc(32767*2); // TODO
+		if (events.onDataChunk != null) input = Bytes.alloc((65536+2)*2); // TODO
 	}
 
 	// -----------------------------------------------------------------------------------
