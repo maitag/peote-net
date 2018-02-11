@@ -66,11 +66,14 @@ class PeoteClient
 
 	public function sendChunk(bytes:Bytes):Void
 	{
-		// TODO: greater chunks ?
-		var chunksize:Bytes = Bytes.alloc(2);
-		chunksize.setUInt16(0, bytes.length);
-		send( chunksize );
-		send( bytes );
+		if (bytes.length <= 0) throw("Error(sendChunk): can't send zero length chunk");
+		else if (bytes.length > 65536)  throw("Error(sendChunk): max chunksize is 65536 Bytes");
+		else {
+			var chunksize:Bytes = Bytes.alloc(2);
+			chunksize.setUInt16(0, bytes.length-1);
+			send( chunksize );
+			send( bytes );			
+		}
 	}
 	
 	// -----------------------------------------------------------------------------------
@@ -109,7 +112,7 @@ class PeoteClient
 			input_end += bytes.length;
 			
 			if (chunk_size == 0 && input_end-input_pos >=2 ) {
-				chunk_size = input.getUInt16(input_pos); // read chunk size
+				chunk_size = input.getUInt16(input_pos) + 1; // read chunk size
 				//trace("chunksize readed:" + chunk_size, input.get(input_pos),input.get(input_pos+1));
 				input_pos += 2;
 			}

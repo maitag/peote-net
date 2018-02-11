@@ -12,7 +12,8 @@ import test.Stress;
 
 class MainOpenfl extends Sprite {
 	
-	var host:String = "localhost";
+	//var host:String = "localhost";
+	var host:String = "192.168.1.3";
 	var port:Int = 7680;
 	
 	var logServer:OutputText;
@@ -33,7 +34,7 @@ class MainOpenfl extends Sprite {
 	#end
 	
 	var minBytes:Int = 1;
-	var maxBytes:Int = 65535;
+	var maxBytes:Int = 65536;
 
 	var test:Stress;
 	

@@ -1,6 +1,6 @@
 # peote-net-test
 
-Little tool that spawns multiple server and clients for testing stability of peote-net.  
+Little tool that spawns multiple server and clients for testing stability of [peote-net](https://github.com/maitag/peote-server).  
   
 Clients tryes to connect a server to repetitive sending random bytes to it.  
 Server sends same data back to let the Client check for integrity.  
@@ -21,11 +21,16 @@ and use the script or build it manually with `haxe cli.hxml`.
   
 #### Examples for commandline parameters:
 
-to start one __Server__:  
-`peote-net-test -s 1`
+Without parameters the default behavior is to start one __Server__.
+You can also spawn more with `-s <amount>` option:  
+`peote-net-test -s 2`
 
-open another shell/console and start a __Client__:  
+open another shell/console and start one or more __Clients__ with `-c <amount>`:  
 `peote-net-test -c 1`
+
+With `-v` you can get verbose output of sended/recieved datachunks.  
+
+Use `-h` for help with other options.  
 
 
 ## Build with OpenFL
@@ -43,6 +48,6 @@ The folder `build/openfl/` will contain a build-directory for each compiled targ
 
 
 ## TODO:
-- more commandline-parameters
+- more different tests
 - better errorhandling
-- bandwidth-testing
+- bandwidth-output
