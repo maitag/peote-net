@@ -12,8 +12,7 @@ import test.Stress;
 
 class MainOpenfl extends Sprite {
 	
-	//var host:String = "localhost";
-	var host:String = "192.168.1.3";
+	var host:String = "localhost";
 	var port:Int = 7680;
 	
 	var logServer:OutputText;
