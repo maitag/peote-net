@@ -131,8 +131,7 @@ class Stress
 				var diff:Int = bytes.compare( lastSendedBytes.get(client));
 				if ( diff == 0 ) {
 					if (verbose) log('Successfully recieve ${bytes.length} Bytes',1, client.jointNr);
-					if (delayTime>0) Timer.delay(function() {sendRandomBytes(client); }, delayTime);
-					else sendRandomBytes(client);
+					if (delayTime>0) Timer.delay(function() {sendRandomBytes(client); }, delayTime); else sendRandomBytes(client);
 				}
 				else log('ERROR: recieve data (${bytes.length} Bytes) not consistent ($diff) :',1, client.jointNr);
 			}
@@ -161,7 +160,6 @@ class Stress
 	
 	public function sendRandomBytes(client:PeoteClient):Void {
 		var bytes:Bytes = TestBytes.ofRandom(Std.int(minBytes+Math.random()*(1+maxBytes-minBytes)));
-		//var bytes:Bytes = TestBytes.ofRandom(1); // todo: 30 000 get out of bonds in buffers
 		if (verbose) log('Send ${bytes.length} Bytes',1, client.jointNr);
 		lastSendedBytes.set(client, bytes);
 		client.sendChunk( bytes );

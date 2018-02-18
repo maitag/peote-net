@@ -20,11 +20,13 @@
 	<!--<haxedef name="dom" />-->
 	
 	<!--<haxedef name="debugPeoteJoint" />-->
+	<!--<haxedef name="debugPeoteNet" />-->
 	
 	<haxeflag name="-dce" value="full" />
 	<!--<haxedef name="no-traces" />
 	-->
-
+	<haxedef name="source-map-content" />
+	
 	<dependency path="../../dependencies/swfobject-2.3.js" if="html5" />	
 	<assets path="../../dependencies/peoteSocketBridge.swf" rename="peoteSocketBridge.swf" embed="false" if="html5" />
 

@@ -33,7 +33,7 @@ class MainOpenfl extends Sprite {
 	#end
 	
 	var minBytes:Int = 1;
-	var maxBytes:Int = 65536;
+	var maxBytes:Int = 0x10000;
 
 	var test:Stress;
 	
