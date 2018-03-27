@@ -1,0 +1,7 @@
+Export/flash
+Export/windows
+Export/android
+Export/html5
+.build
+bin/
+build/
