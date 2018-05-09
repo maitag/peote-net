@@ -3,12 +3,19 @@ package;
 import haxe.io.Bytes;
 import lime.app.Application;
 
+#if server
 import peote.net.PeoteServer;
+#end
+
+#if client
+import peote.net.PeoteClient;
+#end
+
 import peote.io.PeoteBytesOutput;
 import peote.io.PeoteBytesInput;
 import peote.bridge.PeoteSocketBridge;
 
-class PeoteServerTest extends Application {
+class PeoteTest extends Application {
 	
 	public function new ()
 	{
@@ -24,7 +31,10 @@ class PeoteServerTest extends Application {
 	}
 	
 	public function openSocket():Void
-	{		
+	{
+		#if !(server ||client) trace("Use with -Dserver or -Dclient"); #end
+
+		#if server
 		var peoteServer = new PeoteServer({
 				onCreateJoint: function(server:PeoteServer) {
 					trace('onCreateJoint: Channel ${server.jointNr} created.');
@@ -40,7 +50,8 @@ class PeoteServerTest extends Application {
 				},
 				onUserConnect: function(server:PeoteServer, userNr:Int) {
 					trace('onUserConnect: jointNr:${server.jointNr}, userNr:$userNr');
-					sendTestData(server, userNr);
+					server.sendChunk(userNr, prepareTestChunk('Hello Client $userNr'));
+					//server.sendChunk(userNr, prepareFibonacciChunk());
 				},
 				onUserDisconnect: function(server:PeoteServer, userNr:Int, reason:Int) {
 					trace('onUserDisconnect: jointNr:${server.jointNr}, userNr:$userNr');
@@ -51,23 +62,60 @@ class PeoteServerTest extends Application {
 					}
 				},
 				//onData: onData
-				onDataChunk: onDataChunk
+				onDataChunk: function(server:PeoteServer, userNr:Int, bytes:Bytes) {
+					trace('Chunk arrives from joint ${server.jointNr} - chunk size is ${bytes.length}');
+					ouputChunk( bytes );
+				}
 			});
 			
 		trace("trying to connect to peote-server...");
 		peoteServer.createJoint("localhost", 7680, "testserver");
+		#end
 		
-		
+		#if client
+		var peoteClient = new PeoteClient({
+				onEnterJoint: function(client:PeoteClient) {
+					trace('onEnterJoint: Joint number ${client.jointNr} entered');
+					client.sendChunk( prepareTestChunk('Hello Server'));
+					//client.sendChunk( prepareFibonacciChunk());
+				},
+				onEnterJointError: function(client:PeoteClient, error:Int) {
+					switch(error) {
+						case 1:  trace("can't enter channel");
+						case -2: trace("can't connect to peote-server");
+						case -1: trace("disconnected from peote-server");
+						default: trace('onEnterJointError:$error');
+					}
+				},
+				onDisconnect: function(client:PeoteClient, reason:Int) {
+					trace('onDisconnect: jointNr=${client.jointNr}');
+					switch (reason) {
+						case 0: trace("channel closed by owner");
+						case 1: trace("channel-owner disconnected!");
+						case 2: trace("kicked by channel-owner!"); // TODO ?
+						default: trace('reason:$reason');
+					}
+				},
+				//onData: onData
+				onDataChunk: function(client:PeoteClient, bytes:Bytes) {
+					trace('Chunk arrives from joint ${client.jointNr} - chunk size is ${bytes.length}');
+					ouputChunk( bytes );
+				}
+			});
+			
+		trace("trying to connect to peote-server...");
+		peoteClient.enterJoint("localhost", 7680, "testserver");
+		#end
 	}
 
 	// ---------------------------------------------------------
-	// -------------------- SEND DATA --------------------------
-	// ---------------------------------------------------------
 
-	public function sendTestData(server:PeoteServer, userNr:Int):Void
+	public function prepareTestChunk(message:String):Bytes
 	{	
 		var output:PeoteBytesOutput = new PeoteBytesOutput();
-		output.writeString("Hello Client " + userNr);
+		output.writeString("DATATYPES");
+		
+		output.writeString(message);
 		output.writeByte(255);
 		output.writeUInt16(65535);
 		output.writeInt16(32767);
@@ -77,24 +125,39 @@ class PeoteServerTest extends Application {
 		output.writeFloat(1.2345678);
 		output.writeDouble(1.2345678901234567890123456789);
 		
-		server.sendChunk(userNr, output.getBytes());
+		return output.getBytes();
+	}
+		
+	public function prepareFibonacciChunk():Bytes
+	{	
+		var output:PeoteBytesOutput = new PeoteBytesOutput();
+		output.writeString("FIBONACCI");
+		
+		var fib_pre:Int = 1; output.writeInt32(fib_pre);
+		var fib:Int = 2; output.writeInt32(fib);
+		
+		while ( fib < 2147483648 - fib_pre )
+		{
+			fib = fib + fib_pre;
+			fib_pre = fib - fib_pre;
+			output.writeInt32(fib);
+		}
+		
+		return output.getBytes();
 	}
 		
 	// ---------------------------------------------------------
-	// -------------------- RECIEVE DATA -----------------------
-	// ---------------------------------------------------------
-		
-	public function onDataChunk(server:PeoteServer, userNr:Int, bytes:Bytes ):Void 
+	
+	public function ouputChunk( bytes:Bytes ):Void
 	{
 		var input:PeoteBytesInput = new PeoteBytesInput(bytes);
 		var chunkEnd:Int = input.bytesLeft() - bytes.length;
-		trace('Chunk arrives from joint ${server.jointNr} - chunk size is ${bytes.length}'); // never read less or more that chunksize!
 
 		var command:String = input.readString();
 		trace('-- Command chunk: "$command" ------');
 		switch (command)
 		{
-			
+			// do not read less or more than chunksize!
 			case "DATATYPES":
 				trace('string     : '+input.readString());
 				trace('max Byte   : '+input.readByte());

@@ -4,7 +4,7 @@
   <output>
     <movie outputType="CustomBuild" />
     <movie input="" />
-    <movie path="peoteNet.xml" />
+    <movie path="project.xml" />
     <movie fps="30" />
     <movie width="800" />
     <movie height="600" />
@@ -16,11 +16,11 @@
   <!-- Other classes to be compiled into your SWF -->
   <classpaths>
     <class path="Source" />
-    <class path="Export\html5\haxe" />
+    <class path="Export\neko\haxe" />
   </classpaths>
   <!-- Build options -->
   <build>
-    <option directives="lime=6.0.1&#xA;tools=6.0.1&#xA;howlerjs&#xA;no-compilation&#xA;lime-html5&#xA;client&#xA;html5&#xA;web&#xA;html5&#xA;html&#xA;display" />
+    <option directives="lime=6.3.0&#xA;peote-net=0.5.6&#xA;peote-socket=0.7.7&#xA;debugPeoteJoint&#xA;tools=6.3.0&#xA;debugPeoteNet&#xA;server&#xA;no-compilation&#xA;native&#xA;lime-native&#xA;lime-vorbis&#xA;lime-cffi&#xA;windows&#xA;desktop&#xA;display" />
     <option flashStrict="False" />
     <option noInlineOnDebug="False" />
     <option mainClass="ApplicationMain" />
