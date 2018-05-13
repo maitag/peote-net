@@ -12,5 +12,8 @@ typedef PeoteServerEvents = {
 	onUserConnect:PeoteServer -> Int -> Void,
 	onUserDisconnect:PeoteServer -> Int -> Int -> Void,
 	?onData:PeoteServer -> Int -> Bytes -> Void,
-	?onDataChunk:PeoteServer -> Int -> Bytes -> Void
+	?onDataChunk:PeoteServer -> Int -> Bytes -> Void,
+	?offline:Bool,
+	?netLag:Int,
+	?netSpeed:Int,
 }

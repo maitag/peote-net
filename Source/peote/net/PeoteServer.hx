@@ -2,6 +2,7 @@ package peote.net;
 
 import haxe.ds.Vector;
 import haxe.io.Bytes;
+import haxe.Timer;
 
 /**
  * by Sylvio Sell - rostock 2015
@@ -16,6 +17,12 @@ class PeoteServer
 	public var server(default, null):String = "";
 	public var port(default, null):Int;
 
+	public var offline(default, null):Bool=false;
+
+	public var localPeoteClient:Array<PeoteClient> = [];
+	public var netLag:Int = 400; // simmulates net-behavior
+	public var netSpeed:Int = 1024; // simmulates net-behavior (1024 bytes per second)
+	
 	var peoteJointSocket:PeoteJointSocket;
 	/*
 	var input:Bytes;
@@ -28,9 +35,12 @@ class PeoteServer
 	public function new(events:PeoteServerEvents) 
 	{
 		this.events = events;
+		if (events.offline != null) offline = events.offline;
+		if (events.netLag != null) netLag = events.netLag;
+		if (events.netSpeed != null) netSpeed = events.netSpeed;
 		if (events.onDataChunk != null) {
 			//input = Bytes.alloc(32767*2); // TODO
-			inputBuffers = new Vector<InputBuffer>(256);
+			inputBuffers = new Vector<InputBuffer>(PeoteNet.MAX_USER*2);
 		}
 	}
 	
@@ -39,12 +49,14 @@ class PeoteServer
 	
 	public function createJoint(server:String, port:Int, jointId:String):Void
 	{
+		
 		if (this.server == "")
 		{
 			this.server = server;
 			this.port = port;
 			this.jointId = jointId;
-			PeoteNet.createJoint(this, server, port, jointId);
+			if (offline) PeoteNet.createOfflineJoint(this, server, port, jointId);
+			else PeoteNet.createJoint(this, server, port, jointId);
 		}
 		else
 		{
@@ -58,7 +70,8 @@ class PeoteServer
 	
 	public function deleteJoint():Void 
 	{
-		PeoteNet.deleteJoint(this, this.server, this.port, this.jointNr);
+		if (offline) PeoteNet.deleteOfflineJoint(this, this.server, this.port, this.jointId);
+		else PeoteNet.deleteJoint(this, this.server, this.port, this.jointNr);
 		this.server = "";
 	}
 	
@@ -67,7 +80,11 @@ class PeoteServer
 
 	public inline function send(userNr:Int, bytes:Bytes):Void
 	{
-		this.peoteJointSocket.sendDataToJointOwn(this.jointNr, userNr, bytes);
+		if (userNr < PeoteNet.MAX_USER)
+			this.peoteJointSocket.sendDataToJointOwn(this.jointNr, userNr, bytes);
+		else Timer.delay(function() {
+				localPeoteClient[PeoteNet.MAX_USER-userNr]._onData(localPeoteClient[PeoteNet.MAX_USER-userNr].jointNr, bytes); // TODO _onLocalData optimizing
+			}, Std.int(netLag + 1000 * bytes.length/netSpeed));
 	}
 
 	public function sendChunk(userNr:Int, bytes:Bytes):Void

@@ -32,10 +32,15 @@ class PeoteTest extends Application {
 	
 	public function openSocket():Void
 	{
-		#if !(server ||client) trace("Use with -Dserver or -Dclient"); #end
+		#if !(server || client) trace("Use with -Dserver or -Dclient (use both to test direct connection)"); #end
 
 		#if server
 		var peoteServer = new PeoteServer({
+			
+				//offline: true, // do not open a socket (for direct client-connection in same app)
+				//netLag: 400, // simmulates net response time (in milliseconds)
+				//netSpeed: 1024, // simmulates net speed (in Bytes per second)
+				
 				onCreateJoint: function(server:PeoteServer) {
 					trace('onCreateJoint: Channel ${server.jointNr} created.');
 				},
@@ -68,7 +73,7 @@ class PeoteTest extends Application {
 				}
 			});
 			
-		trace("trying to connect to peote-server...");
+		if (!peoteServer.offline) trace("trying to connect to peote-server...");
 		peoteServer.createJoint("localhost", 7680, "testserver");
 		#end
 		
@@ -77,7 +82,6 @@ class PeoteTest extends Application {
 				onEnterJoint: function(client:PeoteClient) {
 					trace('onEnterJoint: Joint number ${client.jointNr} entered');
 					client.sendChunk( prepareTestChunk('Hello Server'));
-					//client.sendChunk( prepareFibonacciChunk());
 				},
 				onEnterJointError: function(client:PeoteClient, error:Int) {
 					switch(error) {
@@ -100,10 +104,12 @@ class PeoteTest extends Application {
 				onDataChunk: function(client:PeoteClient, bytes:Bytes) {
 					trace('Chunk arrives from joint ${client.jointNr} - chunk size is ${bytes.length}');
 					ouputChunk( bytes );
+					//client.sendChunk( prepareFibonacciChunk());
 				}
 			});
 			
-		trace("trying to connect to peote-server...");
+		#if !server trace("trying to connect to peote-server..."); #end
+		// if server is in same app all messages will go directly (not throught socket and proxyserver)
 		peoteClient.enterJoint("localhost", 7680, "testserver");
 		#end
 	}

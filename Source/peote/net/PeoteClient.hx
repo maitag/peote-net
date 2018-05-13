@@ -1,6 +1,7 @@
 package peote.net;
 
 import haxe.io.Bytes;
+import haxe.Timer;
 
 /**
  * by Sylvio Sell - rostock 2015
@@ -15,6 +16,9 @@ class PeoteClient
 	public var server(default, null):String = "";
 	public var port(default, null):Int;
 
+	public var localPeoteServer:PeoteServer = null;
+	public var localUserNr:Int;
+	
 	var peoteJointSocket:PeoteJointSocket;
 	
 	var input:Bytes;
@@ -61,7 +65,10 @@ class PeoteClient
 
 	public function send(bytes:Bytes):Void
 	{	
-		this.peoteJointSocket.sendDataToJointIn(this.jointNr, bytes );
+		if (localPeoteServer == null) this.peoteJointSocket.sendDataToJointIn(this.jointNr, bytes );
+		else Timer.delay(function() {
+				localPeoteServer._onData(localPeoteServer.jointNr, localUserNr , bytes);
+			}, Std.int(localPeoteServer.netLag + 1000 * bytes.length/localPeoteServer.netSpeed));   // TODO: more bytes -> more lag !
 	}
 
 	public function sendChunk(bytes:Bytes):Void

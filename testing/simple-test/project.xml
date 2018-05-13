@@ -3,9 +3,9 @@
 	
 	<meta title="PeoteNetTest" package="peote.net" version="0.5.7" company="Sylvio Sell - maitag" />
 	
-	<app main="PeoteTest"             path="Export" file="PeoteTest" />
 	<app main="PeoteTest" if="server" path="Export" file="PeoteTestServer" />
 	<app main="PeoteTest" if="client" path="Export" file="PeoteTestClient" />
+	<app main="PeoteTest" if="server client" path="Export" file="PeoteTest" />
 		
 	<source path="Source" />
 	
