@@ -16,6 +16,10 @@ haxelib git peote-net https://github.com/maitag/peote-net
 ## How To Create a Server
 ```
 peoteServer = new PeoteServer({
+		//offline: true,  // do not open a socket (for direct client-connection in same app)
+		//netLag: 400,    // simmulates net response time (in milliseconds)
+		//netSpeed: 1024, // simmulates net speed (in Bytes per second)
+		
 		onCreateJoint: function(server:PeoteServer) {
 			trace('Channel ${server.jointNr} created.');
 		},
