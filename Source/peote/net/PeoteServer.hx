@@ -47,7 +47,7 @@ class PeoteServer
 	// -----------------------------------------------------------------------------------
 	// CREATE NEW JOINT ------------------------------------------------------------------
 	
-	public function createJoint(server:String, port:Int, jointId:String):Void
+	public function create(server:String, port:Int, jointId:String):Void
 	{
 		
 		if (this.server == "")
@@ -61,14 +61,14 @@ class PeoteServer
 		else
 		{
 			throw("Error: PeoteServer already connected");
-			events.onCreateJointError(this, 255); // TODO
+			events.onError(this, 255); // TODO
 		}	
 	}
 
 	// -----------------------------------------------------------------------------------
 	// DELETE JOINT -----------------------------------------------------------------------
 	
-	public function deleteJoint():Void 
+	public function delete():Void 
 	{
 		if (offline) PeoteNet.deleteOfflineJoint(this, this.server, this.port, this.jointId);
 		else PeoteNet.deleteJoint(this, this.server, this.port, this.jointNr);
@@ -106,13 +106,13 @@ class PeoteServer
 	{
 		this.peoteJointSocket = peoteJointSocket;
 		this.jointNr = jointNr;
-		events.onCreateJoint(this);
+		events.onCreate(this);
 	}
 	
 	public inline function _onCreateJointError(errorNr:Int):Void
 	{
 		this.server = "";
-		events.onCreateJointError(this, errorNr );
+		events.onError(this, errorNr );
 	}
 	
 	public inline function _onUserConnect(jointNr:Int, userNr:Int):Void 

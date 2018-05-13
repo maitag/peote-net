@@ -43,11 +43,11 @@ class ServerChannel extends Sprite implements I_Channel
 		
 		peoteServer = new PeoteServer( {
 			
-			onCreateJoint: function( server:PeoteServer ) {
+			onCreate: function( server:PeoteServer ) {
 				outputAppend('create new channel (${server.jointNr}): "$channelName"');
 			},
 			
-			onCreateJointError: function( server:PeoteServer, errorNr:Int ) {
+			onError: function( server:PeoteServer, errorNr:Int ) {
 				outputAppend('can\'t create channel "$channelName" - error-code:' + errorNr);
 				Timer.delay( function() { onCloseConnection(this); } , 1000);
 			},
@@ -65,7 +65,7 @@ class ServerChannel extends Sprite implements I_Channel
 			
 		});
 		
-		peoteServer.createJoint( server, port, channelName );
+		peoteServer.create( server, port, channelName );
 	}
 	
 	// -------------------- append to Text to Output --------------------------------
@@ -98,7 +98,7 @@ class ServerChannel extends Sprite implements I_Channel
 
 	public function close():Void
 	{
-		peoteServer.deleteJoint(); // close Channel
+		peoteServer.delete(); // close Channel
 	}
 	
 	// ------------------------------------------------------------------------------

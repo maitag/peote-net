@@ -64,11 +64,11 @@ class Stress
 		lastSendedBytes = new Map<PeoteClient, Bytes>();
 		
 		serverEvents = {
-			onCreateJoint: function(server:PeoteServer) {
+			onCreate: function(server:PeoteServer) {
 				log('Channel ${server.jointNr} created. ("${server.jointId}")', 0, server.jointNr);
 				Timer.delay(createNext, 100);
 			},
-			onCreateJointError: function(server:PeoteServer, error:Int) {
+			onError: function(server:PeoteServer, error:Int) {
 				var isOk:Bool = false;
 				switch(error) {
 					case -2: log("Can't connect to peote-server.", 0, server.jointNr);
@@ -99,12 +99,12 @@ class Stress
 		};
 		// --------------------------------------------------------------------------
 		clientEvents = {
-			onEnterJoint: function(client:PeoteClient) {
+			onEnter: function(client:PeoteClient) {
 				log('Connect: Channel ${client.jointNr} entered ("${client.jointId}")',1, client.jointNr);
 				Timer.delay(enterNext, 100);
 				sendRandomBytes(client);
 			},
-			onEnterJointError: function(client:PeoteClient, error:Int) {
+			onError: function(client:PeoteClient, error:Int) {
 				var isOk:Bool = false;
 				switch(error) {
 					case 1:  isOk = true;//log("can't enter channel (channel not exists)",1);
@@ -145,7 +145,7 @@ class Stress
 	var created:Int = -1;
 	public function createNext():Void {
 		if (activeServers < maxServers) {
-			new PeoteServer(serverEvents).createJoint(host, port, channelName + (++created % maxChannel));
+			new PeoteServer(serverEvents).create(host, port, channelName + (++created % maxChannel));
 			activeServers++;
 		}
 	}
@@ -153,7 +153,7 @@ class Stress
 	var entered:Int = -1;
 	public function enterNext():Void {
 		if (activeClients < maxClients) {
-			new PeoteClient(clientEvents).enterJoint(host, port, channelName + (++entered % maxChannel));
+			new PeoteClient(clientEvents).enter(host, port, channelName + (++entered % maxChannel));
 			activeClients++;
 		}
 	}

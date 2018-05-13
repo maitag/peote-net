@@ -20,10 +20,10 @@ peoteServer = new PeoteServer({
 		//netLag: 400,    // simmulates net response time (in milliseconds)
 		//netSpeed: 1024, // simmulates net speed (in Bytes per second)
 		
-		onCreateJoint: function(server:PeoteServer) {
+		onCreate: function(server:PeoteServer) {
 			trace('Channel ${server.jointNr} created.');
 		},
-		onCreateJointError: function(server:PeoteServer, error:Int) {
+		onError: function(server:PeoteServer, error:Int) {
 			switch(error) {
 				case -2: trace("Can't connect to peote-server.");
 				case -1: trace("Disconnected from peote-server.");
@@ -56,20 +56,20 @@ peoteServer = new PeoteServer({
 		}
 	});
 	
-peoteServer.createJoint("localhost", 7680, "testserver");
+peoteServer.create("localhost", 7680, "testserver");
 ```
 
 ## How To Create a Client
 ```
 peoteClient = new PeoteClient({
-		onEnterJoint: function(client:PeoteClient) {
+		onEnter: function(client:PeoteClient) {
 			trace('Connect: Channel ${client.jointNr} entered');
 			// send something to server
 			var output:PeoteBytesOutput = new PeoteBytesOutput();
 			output.writeString("Hello Server");
 			client.sendChunk( output.getBytes() );
 		},
-		onEnterJointError: function(client:PeoteClient, error:Int) {
+		onError: function(client:PeoteClient, error:Int) {
 			switch(error) {
 				case 1:  trace("can't enter channel");
 				case -2: trace("can't connect to peote-server");
@@ -95,7 +95,7 @@ peoteClient = new PeoteClient({
 		}
 	});
 
-peoteClient.enterJoint("localhost", 7680, "testserver");
+peoteClient.enter("localhost", 7680, "testserver");
 ```
 
 
@@ -132,6 +132,7 @@ Use [peote-server](https://github.com/maitag/peote-server) (written in [Perl](ht
 
 
 ## TODO:
+- rpc and obj. syncing
 - better errorhandling
 - more options to handle buffering (max users per server, payload, outbounds)
 - let server disconnect/block users

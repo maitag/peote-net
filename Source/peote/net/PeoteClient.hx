@@ -35,7 +35,7 @@ class PeoteClient
 	// -----------------------------------------------------------------------------------
 	// ENTER JOINT -----------------------------------------------------------------------
 	
-	public function enterJoint(server:String, port:Int, jointId:String):Void 
+	public function enter(server:String, port:Int, jointId:String):Void 
 	{
 		if (this.server == "")
 		{
@@ -47,14 +47,14 @@ class PeoteClient
 		else
 		{
 			throw("Error: PeoteClient already connected");
-			events.onEnterJointError(this, 255); // TODO
+			events.onError(this, 255); // TODO
 		}
 	}
 
 	// -----------------------------------------------------------------------------------
 	// LEAVE JOINT -----------------------------------------------------------------------
 	
-	public function leaveJoint():Void 
+	public function leave():Void 
 	{
 		PeoteNet.leaveJoint(this, this.server, this.port, this.jointNr);
 		this.server = "";
@@ -90,13 +90,13 @@ class PeoteClient
 	{
 		this.peoteJointSocket = peoteJointSocket;
 		this.jointNr = jointNr;
-		events.onEnterJoint(this);
+		events.onEnter(this);
  	}
 	
 	public function _onEnterJointError(errorNr:Int):Void // bei FEHLER
 	{
 		this.server = "";
-		events.onEnterJointError(this, errorNr );
+		events.onError(this, errorNr );
  	}
 	
 	public function _onDisconnect(jointNr:Int, reason:Int):Void 

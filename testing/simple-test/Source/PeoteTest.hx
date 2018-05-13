@@ -41,10 +41,10 @@ class PeoteTest extends Application {
 				//netLag: 400, // simmulates net response time (in milliseconds)
 				//netSpeed: 1024, // simmulates net speed (in Bytes per second)
 				
-				onCreateJoint: function(server:PeoteServer) {
+				onCreate: function(server:PeoteServer) {
 					trace('onCreateJoint: Channel ${server.jointNr} created.');
 				},
-				onCreateJointError: function(server:PeoteServer, error:Int) {
+				onError: function(server:PeoteServer, error:Int) {
 					trace("onCreateJointError:");
 					switch(error) {
 						case -2: trace("Can't connect to peote-server.");
@@ -74,16 +74,16 @@ class PeoteTest extends Application {
 			});
 			
 		if (!peoteServer.offline) trace("trying to connect to peote-server...");
-		peoteServer.createJoint("localhost", 7680, "testserver");
+		peoteServer.create("localhost", 7680, "testserver");
 		#end
 		
 		#if client
 		var peoteClient = new PeoteClient({
-				onEnterJoint: function(client:PeoteClient) {
+				onEnter: function(client:PeoteClient) {
 					trace('onEnterJoint: Joint number ${client.jointNr} entered');
 					client.sendChunk( prepareTestChunk('Hello Server'));
 				},
-				onEnterJointError: function(client:PeoteClient, error:Int) {
+				onError: function(client:PeoteClient, error:Int) {
 					switch(error) {
 						case 1:  trace("can't enter channel");
 						case -2: trace("can't connect to peote-server");
@@ -110,7 +110,7 @@ class PeoteTest extends Application {
 			
 		#if !server trace("trying to connect to peote-server..."); #end
 		// if server is in same app all messages will go directly (not throught socket and proxyserver)
-		peoteClient.enterJoint("localhost", 7680, "testserver");
+		peoteClient.enter("localhost", 7680, "testserver");
 		#end
 	}
 

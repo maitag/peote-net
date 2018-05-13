@@ -37,12 +37,12 @@ class ClientChannel extends Sprite implements I_Channel
 		
 		peoteClient = new PeoteClient( {
 			
-			onEnterJoint: function(client:PeoteClient) {
+			onEnter: function(client:PeoteClient) {
 				outputAppend('enter channel (${client.jointNr}) "$channelName"');
 				send(username); // send username first
 			},
 			
-			onEnterJointError: function(client:PeoteClient, errorNr:Int) {
+			onError: function(client:PeoteClient, errorNr:Int) {
 				outputAppend('can\'t enter channel "$channelName" - error-code:' + errorNr);
 				Timer.delay( function() { onCloseConnection(this); } , 1000);
 			},
@@ -56,7 +56,7 @@ class ClientChannel extends Sprite implements I_Channel
 			
 		});
 		
-		peoteClient.enterJoint(server, port, channelName );
+		peoteClient.enter(server, port, channelName );
 	}
 
 	// -------------------- append to Text to Output --------------------------------
@@ -80,7 +80,7 @@ class ClientChannel extends Sprite implements I_Channel
 
 	public function close():Void
 	{
-		peoteClient.leaveJoint();
+		peoteClient.leave();
 	}
 	
 	// ------------------------------------------------------------------------------
