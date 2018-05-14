@@ -1,9 +1,7 @@
 Export/linux
 Export/linux64
-Export/flash
+Export/html5
 Export/windows
 Export/android
-Export/html5
+Export/flash
 .build
-bin/
-build/
