@@ -2,6 +2,7 @@ package peote.net;
 
 import haxe.io.Bytes;
 import haxe.Timer;
+import peote.io.PeoteBytesOutput;
 
 /**
  * by Sylvio Sell - rostock 2015
@@ -62,13 +63,20 @@ class PeoteClient
 
 	// -----------------------------------------------------------------------------------
 	// SEND DATA -------------------------------------------------------------------------
-
+	public var last_delay:Int = 0;
+	public var last_time:Float = 0;
 	public function send(bytes:Bytes):Void
 	{	
 		if (localPeoteServer == null) this.peoteJointSocket.sendDataToJointIn(this.jointNr, bytes );
-		else Timer.delay(function() {
+		else {
+			var delay = Std.int(Math.max(0, last_delay - (Timer.stamp() - last_time) * 1000))
+			          + Std.int(localPeoteServer.netLag + 1000 * bytes.length / localPeoteServer.netSpeed);
+			last_delay = delay; // TODO: for local testing put a LIMIT here for OVERFLOW!!!!!
+			last_time = Timer.stamp();
+			Timer.delay(function() {
 				localPeoteServer._onData(localPeoteServer.jointNr, localUserNr , bytes);
-			}, Std.int(localPeoteServer.netLag + 1000 * bytes.length/localPeoteServer.netSpeed));   // TODO: more bytes -> more lag !
+			}, delay);
+		}
 	}
 
 	public function sendChunk(bytes:Bytes):Void
@@ -137,6 +145,30 @@ class PeoteClient
 		else events.onData(this, bytes);
 	
 	}
+	
+	// -----------------------------------------------------------------------------------
+	// RPC -------------------------------------------------------------------------
+
+	public function getRemoteFunctions(f:Dynamic):Dynamic {
+		
+		// TODO: return a NEW object that has only the following functiona:
+		
+		f.message = function (p1:String, p2:Int):Void {
+			var output = new PeoteBytesOutput();
+			output.writeByte(0);//trace("send procedureNr:"+0);
+			output.writeString(p1);
+			output.writeInt32(p2);
+			sendChunk(output.getBytes()); // TODO: faster without chunks
+		}
+		f.test = function (p1:Int):Void {
+			var output = new PeoteBytesOutput();
+			output.writeByte(1);//trace("send procedureNr:"+1);
+			output.writeInt32(p1);
+			sendChunk(output.getBytes());
+		}
+		return f;
+	}
+	
 
 
 }

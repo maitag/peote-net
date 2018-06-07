@@ -3,9 +3,10 @@
 	
 	<meta title="testing peote-net framework" package="peote.test" version="0.3.0" company="Sylvio Sell - maitag" />
 	
-	<app main="MainOpenfl" path="build/openfl" file="peote-net-test" />
-	<app if="server" main="MainOpenfl" path="build/openfl" file="peote-net-test-server" />
-	<app if="client" main="MainOpenfl" path="build/openfl" file="peote-net-test-client" />
+	<app                    main="MainOpenfl" path="build/openfl" file="peote-rpc-server" />
+	<app if="server"        main="MainOpenfl" path="build/openfl" file="peote-rpc-server" />
+	<app if="client"        main="MainOpenfl" path="build/openfl" file="peote-rpc-client" />
+	<app if="server client" main="MainOpenfl" path="build/openfl" file="peote-rpc" />
 	
 	<window width="574" height="560" />
 	<window if="mobile" orientation="portrait" fullscreen="true" width="0" height="0" />
@@ -16,13 +17,14 @@
 	
 	<haxelib name="peote-socket" />
 	<haxelib name="peote-net" />
+	<haxelib name="peote-event" />
 	
 	<!--<haxedef name="dom" />-->
 	
 	<!--<haxedef name="debugPeoteJoint" />-->
 	<!--<haxedef name="debugPeoteNet" />-->
 	
-	<haxeflag name="-dce" value="full" />
+	<!--<haxeflag name="-dce" value="full" />-->
 	<!--<haxedef name="no-traces" />
 	-->
 	<haxedef name="source-map-content" />
