@@ -7,6 +7,8 @@ package peote.net;
 import haxe.macro.Expr;
 import haxe.macro.Context;
 import haxe.macro.ExprTools;
+//import peote.net.PeoteClient; // <----- HERE error: Class<lime._backend.native.NativeCFFI> has no field lime_system_get_device_model
+
 
 @:remove @:autoBuild(peote.net.Remote.RemoteImpl.build())
 extern interface Remote {}
@@ -103,7 +105,7 @@ class RemoteImpl
 			fbody += remoteName + "(" + 
 					[for (j in 0...remoteParams[i].length) 'p$j' ].join(",") +
 				");";
-			exprs.push( Context.parse( 'function (input:PeoteBytesInput):Void { $fbody }', Context.currentPos()) );
+			exprs.push( Context.parse( 'function (input:peote.io.PeoteBytesInput):Void { $fbody }', Context.currentPos()) );
 		}
 		
 		trace( ExprTools.toString( macro return $a{exprs} ) );
@@ -113,7 +115,7 @@ class RemoteImpl
 			//args:[{name:"a", type:macro:String, opt:false, value:null}], // arguments
 			args:[],
 			expr: macro return $a{exprs},
-			ret: macro:Array<PeoteBytesInput->Void>, // ret = return type
+			ret: macro:Array<peote.io.PeoteBytesInput->Void>, // ret = return type
 		}
     
 		fields.push({
@@ -122,8 +124,24 @@ class RemoteImpl
 		  pos: Context.currentPos(),
 		  kind: FieldType.FFun(getRemotes),
 		});
-	
-	
+		
+
+		// -------------------------------------------------------------------------------------------------
+		// ------------------------------------- generate new class for remote-calling ---------------------
+		// -------------------------------------------------------------------------------------------------
+		//var c = macro class ServerFunctionsRemote {
+			//var client:PeoteClient;
+			//public function new(client:peote.net.PeoteClient) { this.client = client; }
+			//public function $funcName() {
+			//		trace($v{funcName} + " was called");
+			//}
+		//}
+		//Context.defineType(c);
+
+		
+		
+		
+		// -------------------------------------------------------------------------------------------------
 		return fields;
 	}
 

@@ -1,9 +1,6 @@
 package;
 
-import haxe.Timer;
 import haxe.io.Bytes;
-import peote.io.PeoteBytesInput;
-import peote.io.PeoteBytesOutput;
 import peote.net.Remote;
 
 import openfl.display.Sprite;
@@ -12,7 +9,7 @@ import peote.net.PeoteServer;
 import peote.net.PeoteClient;
 import peote.bridge.PeoteSocketBridge;
 
-import ui.OutputText;
+//import ui.OutputText;
 
 class MainOpenfl extends Sprite
 {
@@ -20,8 +17,8 @@ class MainOpenfl extends Sprite
 	var host:String = "localhost";
 	var port:Int = 7680;
 
-	var logServer:OutputText;
-	var logClient:OutputText;
+	//var logServer:OutputText;
+	//var logClient:OutputText;
 
 	var channelName:String = "testserver";
 	
@@ -67,6 +64,7 @@ class MainOpenfl extends Sprite
 				serverFunctions.test = function(a:Int) { trace("test:"+a); };
 				
 				server.setRemoteFunctions(userNr, serverFunctions);
+				
 				//peoteServer.delRemoteFunctions(userNr);
 				
 				//var remote = peoteServer.getRemoteFunctions(userNr, new RemoteClientFunctions() );
@@ -102,6 +100,8 @@ class MainOpenfl extends Sprite
 				trace('onEnterJoint: Joint number ${client.jointNr} entered');
 				
 				var remote = client.getRemoteFunctions( new ServerFunctions() );
+				//var remote = ServerFunctions.remoteClient(client);
+				//var remote = new ServerFunctionsRemoteClient(client);
 				//TODO: onRemote (do only after a remote obj. is set from other side
 				remote.message("hello from client", 23);
 				remote.test(8);
@@ -125,12 +125,12 @@ class MainOpenfl extends Sprite
 		#end
 
 	}
-
+	/*
 	public function log(s:String, type:Int, nr:Int):Void
 	{
 		if (type == 0) logServer.log(s);
 		else logClient.log(s);
-	}
+	}*/
 
 }
 
@@ -138,6 +138,7 @@ class MainOpenfl extends Sprite
 class ServerFunctions implements Remote {
 	@:remote public var message:String->Int->Void;
 	@:remote public var test:Int->Void;
+
 }
 
 class ClientFunctions {

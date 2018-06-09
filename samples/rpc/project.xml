@@ -17,7 +17,6 @@
 	
 	<haxelib name="peote-socket" />
 	<haxelib name="peote-net" />
-	<haxelib name="peote-event" />
 	
 	<!--<haxedef name="dom" />-->
 	
