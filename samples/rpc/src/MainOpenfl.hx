@@ -67,7 +67,7 @@ class MainOpenfl extends Sprite
 				
 				//peoteServer.delRemoteFunctions(userNr);
 				
-				//var remote = peoteServer.getRemoteFunctions(userNr, new RemoteClientFunctions() );
+				//var remote = ClientFunctions.getRemoteServer(server);
 				//remote.message("hello from server");
 				
 			},
@@ -99,9 +99,8 @@ class MainOpenfl extends Sprite
 			{
 				trace('onEnterJoint: Joint number ${client.jointNr} entered');
 				
-				var remote = client.getRemoteFunctions( new ServerFunctions() );
-				//var remote = ServerFunctions.remoteClient(client);
-				//var remote = new ServerFunctionsRemoteClient(client);
+				//var remote = client.getRemoteFunctions( new ServerFunctions() );
+				var remote = ServerFunctions.getRemoteClient(client); // TODO: -> A P I usability?`?`?
 				//TODO: onRemote (do only after a remote obj. is set from other side
 				remote.message("hello from client", 23);
 				remote.test(8);

@@ -23,6 +23,7 @@ class RemoteImpl
 		var remoteParams = new Array<Array<String>>();
 		var hasNoNew:Bool = true;
 		
+		var classname = Context.getLocalClass().get().name;
 		var fields = Context.getBuildFields();
 		for (f in fields)
 		{
@@ -117,8 +118,7 @@ class RemoteImpl
 			expr: macro return $a{exprs},
 			ret: macro:Array<peote.io.PeoteBytesInput->Void>, // ret = return type
 		}
-    
-		fields.push({
+ 		fields.push({
 		  name: "getRemotes",
 		  access: [APublic],
 		  pos: Context.currentPos(),
@@ -129,17 +129,38 @@ class RemoteImpl
 		// -------------------------------------------------------------------------------------------------
 		// ------------------------------------- generate new class for remote-calling ---------------------
 		// -------------------------------------------------------------------------------------------------
-		//var c = macro class ServerFunctionsRemote {
-			//var client:PeoteClient;
-			//public function new(client:peote.net.PeoteClient) { this.client = client; }
-			//public function $funcName() {
-			//		trace($v{funcName} + " was called");
-			//}
-		//}
-		//Context.defineType(c);
+		trace(classname);
+		var c = macro class ServerFunctionsRemote {
+			var client:peote.net.PeoteClient;
+			public function new(client:peote.net.PeoteClient) { this.client = client; }
+			public function message(p1:String, p2:Int):Void {
+				var output = new peote.io.PeoteBytesOutput();
+				output.writeByte(0);
+				output.writeString(p1);
+				output.writeInt32(p2);
+				client.sendChunk(output.getBytes());
+			}
+			public function test(p1:Int):Void {
+				var output = new peote.io.PeoteBytesOutput();
+				output.writeByte(1);
+				output.writeInt32(p1);
+				client.sendChunk(output.getBytes());
+			}
+		}
+		Context.defineType(c);
 
-		
-		
+		// add function to return an instanze of that class
+		var getRemoteClient:Function = {
+			args:[{name:"client", type:macro:peote.net.PeoteClient, opt:false, value:null}], // arguments
+			expr: macro return new ServerFunctionsRemote(client),
+			ret: macro:ServerFunctionsRemote, // ret = return type
+		}
+ 		fields.push({
+		  name: "getRemoteClient",
+		  access: [APublic,AStatic],
+		  pos: Context.currentPos(),
+		  kind: FieldType.FFun(getRemoteClient),
+		});
 		
 		// -------------------------------------------------------------------------------------------------
 		return fields;

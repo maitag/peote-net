@@ -148,27 +148,10 @@ class PeoteClient
 	
 	// -----------------------------------------------------------------------------------
 	// RPC -------------------------------------------------------------------------
-
-	public function getRemoteFunctions(f:Dynamic):Dynamic {
-		
-		// TODO: return a NEW object that has only the following functiona:
-		
-		f.message = function (p1:String, p2:Int):Void {
-			var output = new PeoteBytesOutput();
-			output.writeByte(0);//trace("send procedureNr:"+0);
-			output.writeString(p1);
-			output.writeInt32(p2);
-			sendChunk(output.getBytes()); // TODO: faster without chunks
-		}
-		f.test = function (p1:Int):Void {
-			var output = new PeoteBytesOutput();
-			output.writeByte(1);//trace("send procedureNr:"+1);
-			output.writeInt32(p1);
-			sendChunk(output.getBytes());
-		}
-		return f;
+	/*
+	public function getRemote...(f:Dynamic):Dynamic {
 	}
-	
+	*/
 
 
 }
