@@ -74,6 +74,7 @@ class RemoteImpl
 				remoteParams.push(remParams);
 			}
 		}
+		// TODO: error if more then 255 remote-functions
 		
 		// add constructor ("new") if it is not there
 		if (hasNoNew) fields.push({
@@ -87,29 +88,22 @@ class RemoteImpl
 				ret: null
 			})
 		});
-	
+		
 		var exprs = [];
 		for ( i in 0...remoteNames.length)
 		{
-			var remoteName = remoteNames[i];
 			var fbody = "";
 			for ( j in 0...remoteParams[i].length)
-			{
-				var remoteParam = remoteParams[i][j];
-				switch (remoteParam) {
+				switch (remoteParams[i][j]) {
 					case "String": fbody += 'var p$j = input.readString();';
 					case "Byte":   fbody += 'var p$j = input.readByte();';
 					case "Int":    fbody += 'var p$j = input.readInt32();';
-					default:       fbody += 'var p$j = remoteParam.fromPeoteBytesInput(input);'; // TODO -> give own datatypes an obj.serialization
+					default:       fbody += 'var p$j = $remoteParams[i][j].fromPeoteBytesInput(input);'; //TODO -> better Bytes
 				}
-			}
-			fbody += remoteName + "(" + 
-					[for (j in 0...remoteParams[i].length) 'p$j' ].join(",") +
-				");";
+			fbody += remoteNames[i] + "(" + [for (j in 0...remoteParams[i].length) 'p$j' ].join(",") + ");";
 			exprs.push( Context.parse( 'function (input:peote.io.PeoteBytesInput):Void { $fbody }', Context.currentPos()) );
 		}
-		
-		trace( ExprTools.toString( macro return $a{exprs} ) );
+		//trace( ExprTools.toString( macro return $a{exprs} ) );
 		
 		// add getRemotes function
 		var getRemotes:Function = { 
@@ -127,33 +121,32 @@ class RemoteImpl
 		
 
 		// -------------------------------------------------------------------------------------------------
-		// ------------------------------------- generate new class for remote-calling ---------------------
+		// ------------------------------------- generates new classs for remote-calling ---------------------
 		// -------------------------------------------------------------------------------------------------
-		trace(classname);
-		var c = macro class ServerFunctionsRemote {
-			var client:peote.net.PeoteClient;
-			public function new(client:peote.net.PeoteClient) { this.client = client; }
-			public function message(p1:String, p2:Int):Void {
-				var output = new peote.io.PeoteBytesOutput();
-				output.writeByte(0);
-				output.writeString(p1);
-				output.writeInt32(p2);
-				client.sendChunk(output.getBytes());
-			}
-			public function test(p1:Int):Void {
-				var output = new peote.io.PeoteBytesOutput();
-				output.writeByte(1);
-				output.writeInt32(p1);
-				client.sendChunk(output.getBytes());
-			}
+		var classnameRemote = classname+"RemoteServer";
+		Context.defineType(generateRemoteCaller(classnameRemote, true, remoteNames, remoteParams));		
+		// add function to return an instanze of that class
+		var getRemoteServer:Function = {
+			args:[ {name:"server", type:macro:peote.net.PeoteServer, opt:false, value:null},
+			       {name:"user", type:macro:Int, opt:false, value:null}
+			],
+			expr: Context.parse( 'return new $classnameRemote(server, user)', Context.currentPos()) ,
+			ret: TPath({ name:classnameRemote, pack:[], params:[] }) // ret = return type
 		}
-		Context.defineType(c);
-
+ 		fields.push({
+		  name: "getRemoteServer",
+		  access: [APublic,AStatic],
+		  pos: Context.currentPos(),
+		  kind: FieldType.FFun(getRemoteServer),
+		});
+		
+		classnameRemote = classname+"RemoteClient";
+		Context.defineType(generateRemoteCaller(classnameRemote, false, remoteNames, remoteParams));		
 		// add function to return an instanze of that class
 		var getRemoteClient:Function = {
-			args:[{name:"client", type:macro:peote.net.PeoteClient, opt:false, value:null}], // arguments
-			expr: macro return new ServerFunctionsRemote(client),
-			ret: macro:ServerFunctionsRemote, // ret = return type
+			args:[{name:"client", type:macro:peote.net.PeoteClient, opt:false, value:null}],
+			expr: Context.parse( 'return new $classnameRemote(client)', Context.currentPos()) ,
+			ret: TPath({ name:classnameRemote, pack:[], params:[] }) // ret = return type
 		}
  		fields.push({
 		  name: "getRemoteClient",
@@ -162,10 +155,55 @@ class RemoteImpl
 		  kind: FieldType.FFun(getRemoteClient),
 		});
 		
-		// -------------------------------------------------------------------------------------------------
 		return fields;
 	}
-
+	
+	// -------------------------------------------------------------------------------------------------
+	public static function generateRemoteCaller(classname:String, isServer:Bool, remoteNames:Array<String>, remoteParams:Array<Array<String>>):TypeDefinition
+	{
+		var c:TypeDefinition;
+		if (isServer) {
+			c = macro class $classname {
+				var server:peote.net.PeoteServer;
+				var user:Int;
+				public function new(server:peote.net.PeoteServer, user:Int) { this.server = server; this.user = user; }
+			}
+		} else {
+			c = macro class $classname {
+				var client:peote.net.PeoteClient;
+				public function new(client:peote.net.PeoteClient) { this.client = client; }
+			}
+		}
+		
+		for ( i in 0...remoteNames.length)
+		{
+			var fbody = "{var output = new peote.io.PeoteBytesOutput();";
+			fbody += 'output.writeByte($i);';
+			for ( j in 0...remoteParams[i].length)
+				switch (remoteParams[i][j]) {
+					case "String": fbody += 'output.writeString(p$j);';
+					case "Byte":   fbody += 'output.writeByte(p$j);';
+					case "Int":    fbody += 'output.writeInt32(p$j);';
+					default:       fbody += '$remoteParams[i][j].toPeoteBytesOutput(p$j, output);'; // TODO -> better Bytes
+				}
+			if (isServer) fbody += "server.sendChunk(user, output.getBytes());}";
+			else fbody += "client.sendChunk(output.getBytes());}";
+			
+			var f:Function = {
+				args:[for (j in 0...remoteParams[i].length) {name:'p$j', type:TPath({ name: remoteParams[i][j], pack:[], params:[] }), opt:false} ], // arguments
+				expr: Context.parse( fbody, Context.currentPos()),
+				ret: null, // ret = return type
+			}
+			c.fields.push({
+				name: remoteNames[i],
+				access: [APublic],
+				pos: Context.currentPos(),
+				kind: FieldType.FFun(f),
+			});
+		}
+		return(c);
+	}
+	
 #end
 
 }

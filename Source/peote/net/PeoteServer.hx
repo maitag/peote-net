@@ -43,6 +43,9 @@ class PeoteServer
 			//input = Bytes.alloc(32767*2); // TODO
 			inputBuffers = new Vector<InputBuffer>(PeoteNet.MAX_USER*2);//todo (max local users)
 		}
+		
+		// TODO: only for remote-usage
+		remotes = new Vector<Vector<PeoteBytesInput->Void>>(PeoteNet.MAX_USER * 2);//todo (max local users)		
 	}
 	
 	// -----------------------------------------------------------------------------------
@@ -150,9 +153,6 @@ class PeoteServer
 	var remotes:Vector<Vector<PeoteBytesInput->Void>>; // stores all remote functions for incomming data
 	
 	public function setRemoteFunctions(userNr:Int, f:Dynamic):Void {
-		// obj. per user-nr -> TODO (in constructor)
-		remotes = new Vector<Vector<PeoteBytesInput->Void>>(PeoteNet.MAX_USER * 2);//todo (max local users)
-		
 		remotes[userNr] = f.getRemotes();
 	}
 	

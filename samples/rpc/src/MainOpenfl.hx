@@ -9,7 +9,7 @@ import peote.net.PeoteServer;
 import peote.net.PeoteClient;
 import peote.bridge.PeoteSocketBridge;
 
-//import ui.OutputText;
+import ui.OutputText;
 
 class MainOpenfl extends Sprite
 {
@@ -17,38 +17,37 @@ class MainOpenfl extends Sprite
 	var host:String = "localhost";
 	var port:Int = 7680;
 
-	//var logServer:OutputText;
-	//var logClient:OutputText;
+	var out:OutputText;
 
 	var channelName:String = "testserver";
 	
 	public function new ()
 	{
 		super ();
-		/*
-		logServer = new OutputText(3, 3, 280, 550);
-		addChild(logServer);
+		out = new OutputText(3, 3, 560, 550);
+		addChild(out);
 
-		logClient = new OutputText(290, 5, 280, 550);
-		addChild(logClient);
-
-		
+		#if ((!server) && (!client))
+		onLoadSocketBridge();
+		#else
 		PeoteSocketBridge.load( {
 			onload: onLoadSocketBridge,
 			preferWebsockets: true,
-			onfail: function() { log("Browser doesn't support flash- or websockets",0,0 ); }
-		});*/
-		onLoadSocketBridge();
+			onfail: function() { out.log("Browser doesn't support flash- or websockets" ); }
+		});
+		#end
 	}
 
 	public function onLoadSocketBridge():Void
 	{
-		#if server
+		#if (server || (!client))
 		var peoteServer = new PeoteServer(
 		{
+			#if (!client)
 			offline:true,
 			netLag:40,
-			netSpeed:1024*1024,
+			netSpeed:1024 * 1024,
+			#end
 			//remoteCalling:true,
 			//remoteFunctions:true,
 			onCreate: function(server:PeoteServer)
@@ -60,15 +59,19 @@ class MainOpenfl extends Sprite
 				trace('onUserConnect: jointNr:${server.jointNr}, userNr:$userNr');
 				
 				var serverFunctions = new ServerFunctions();
-				serverFunctions.message = function(msg:String, a:Int) { trace("message:"+msg + "," + a); };
-				serverFunctions.test = function(a:Int) { trace("test:"+a); };
-				
+				serverFunctions.message = function(msg:String, a:Int) {
+					out.log("serverfunction 'message':"+msg + "," + a);
+				};
+				serverFunctions.test = function(a:Int) {
+					out.log("serverfunction 'test':"+a);
+				};
 				server.setRemoteFunctions(userNr, serverFunctions);
 				
-				//peoteServer.delRemoteFunctions(userNr);
+				// TODO: peoteServer.delRemoteFunctions(userNr);
 				
-				//var remote = ClientFunctions.getRemoteServer(server);
-				//remote.message("hello from server");
+				// TODO: onRemote (do only after a remote obj. is set from other side
+				var remote = ClientFunctions.getRemoteServer(server, userNr);
+				remote.message("hello from server");
 				
 			},
 			onUserDisconnect: function(server:PeoteServer, userNr:Int, reason:Int)
@@ -81,7 +84,6 @@ class MainOpenfl extends Sprite
 			},
 			onDataChunk: function(server:PeoteServer, userNr:Int, bytes:Bytes )
 			{
-				//trace("onDataChunk:" + bytes.length);
 				server.remote(userNr, bytes);
 			}
 		});
@@ -90,7 +92,7 @@ class MainOpenfl extends Sprite
 		peoteServer.create("localhost", 7680, "testserver");
 		#end
 		
-		#if client
+		#if (client || (!server))
 		var peoteClient = new PeoteClient(
 		{
 			//remoteCalling:true,
@@ -99,11 +101,17 @@ class MainOpenfl extends Sprite
 			{
 				trace('onEnterJoint: Joint number ${client.jointNr} entered');
 				
-				//var remote = client.getRemoteFunctions( new ServerFunctions() );
-				var remote = ServerFunctions.getRemoteClient(client); // TODO: -> A P I usability?`?`?
-				//TODO: onRemote (do only after a remote obj. is set from other side
+				var clientFunctions = new ClientFunctions();
+				clientFunctions.message = function(msg:String) {
+					out.log("clientfunction 'message':"+msg);
+				};
+				client.setRemoteFunctions(clientFunctions);
+				
+				// TODO: onRemote (do only after a remote obj. is set from other side
+				var remote = ServerFunctions.getRemoteClient(client); // TODO: api
 				remote.message("hello from client", 23);
-				remote.test(8);
+				remote.test(42);
+				
 			},
 			onDisconnect: function(client:PeoteClient, reason:Int)
 			{
@@ -115,7 +123,7 @@ class MainOpenfl extends Sprite
 			},
 			onDataChunk: function(client:PeoteClient, bytes:Bytes )
 			{
-				// client.remote(bytes);
+				client.remote(bytes);
 			}
 		});
 		
@@ -124,12 +132,6 @@ class MainOpenfl extends Sprite
 		#end
 
 	}
-	/*
-	public function log(s:String, type:Int, nr:Int):Void
-	{
-		if (type == 0) logServer.log(s);
-		else logClient.log(s);
-	}*/
 
 }
 
@@ -137,10 +139,8 @@ class MainOpenfl extends Sprite
 class ServerFunctions implements Remote {
 	@:remote public var message:String->Int->Void;
 	@:remote public var test:Int->Void;
-
 }
 
-class ClientFunctions {
-	public var message:String->Void;
-	public inline function new() {}
+class ClientFunctions implements Remote {
+	@:remote public var message:String->Void;
 }

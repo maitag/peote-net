@@ -1,8 +1,9 @@
 package peote.net;
 
+import haxe.ds.Vector;
 import haxe.io.Bytes;
 import haxe.Timer;
-import peote.io.PeoteBytesOutput;
+import peote.io.PeoteBytesInput;
 
 /**
  * by Sylvio Sell - rostock 2015
@@ -148,10 +149,19 @@ class PeoteClient
 	
 	// -----------------------------------------------------------------------------------
 	// RPC -------------------------------------------------------------------------
-	/*
-	public function getRemote...(f:Dynamic):Dynamic {
+	var remotes:Vector<PeoteBytesInput->Void>; // stores all remote functions for incomming data
+	
+	public function setRemoteFunctions(f:Dynamic):Void {
+		remotes = f.getRemotes();
 	}
-	*/
+	
+	// TODO for OPTIMIZE : autom-chunksize-handling (proc-nr first and only chunksize if there are variable params)
+	public function remote(bytes:Bytes) {
+		var input = new PeoteBytesInput(bytes);
+		var procedureNr = input.readByte(); //trace("procedureNr:"+procedureNr);
+		// TODO for SECURITY: check max remotes and disconnect client if malicous
+		remotes[procedureNr](input);
+	}
 
 
 }
