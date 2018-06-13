@@ -43,7 +43,7 @@ class MainOpenfl extends Sprite
 		#if (server || (!client))
 		var peoteServer = new PeoteServer(
 		{
-			#if (!client)
+			#if (!server)
 			offline:true,
 			netLag:40,
 			netSpeed:1024 * 1024,
@@ -67,7 +67,7 @@ class MainOpenfl extends Sprite
 				};
 				server.setRemoteFunctions(userNr, serverFunctions);
 				
-				// TODO: peoteServer.delRemoteFunctions(userNr);
+				// TODO: peoteServer.delRemoteFunctions(userNr, serverFunctions);
 				
 				// TODO: onRemote (do only after a remote obj. is set from other side
 				var remote = ClientFunctions.getRemoteServer(server, userNr);
@@ -111,7 +111,6 @@ class MainOpenfl extends Sprite
 				var remote = ServerFunctions.getRemoteClient(client); // TODO: api
 				remote.message("hello from client", 23);
 				remote.test(42);
-				
 			},
 			onDisconnect: function(client:PeoteClient, reason:Int)
 			{
