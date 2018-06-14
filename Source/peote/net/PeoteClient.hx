@@ -32,6 +32,9 @@ class PeoteClient
 	{
 		this.events = events;
 		if (events.onDataChunk != null) input = Bytes.alloc((65536+2)*2); // TODO
+	
+		// TODO: only for remote-usage
+		remotes = new Vector<Vector<PeoteBytesInput->Void>>(256);
 	}
 
 	// -----------------------------------------------------------------------------------
@@ -149,18 +152,37 @@ class PeoteClient
 	
 	// -----------------------------------------------------------------------------------
 	// RPC -------------------------------------------------------------------------
-	var remotes:Vector<PeoteBytesInput->Void>; // stores all remote functions for incomming data
+	var remotes:Vector<Vector<PeoteBytesInput->Void>>; // stores all remote functions for incomming data
 	
-	public function setRemoteFunctions(f:Dynamic):Void {
-		remotes = f.getRemotes();
+	public function setRemote(f:Dynamic, remoteId:Int = 0):Void
+	{
+		remotes[remoteId] = f.getRemotes();
+		
+		var bytes = Bytes.alloc(1); // TODO: max-amount-of-remote-objects
+		bytes.set(0, remoteId);
+		sendChunk(bytes);
 	}
 	
-	// TODO for OPTIMIZE : autom-chunksize-handling (proc-nr first and only chunksize if there are variable params)
-	public function remote(bytes:Bytes) {
+	public function remote(bytes:Bytes)
+	{
 		var input = new PeoteBytesInput(bytes);
-		var procedureNr = input.readByte(); //trace("procedureNr:"+procedureNr);
-		// TODO for SECURITY: check max remotes and disconnect client if malicous
-		remotes[procedureNr](input);
+		
+		var remoteId = input.readByte(); trace("remoteId:"+remoteId);
+		
+		if (input.bytesLeft() == 0)
+		{
+			events.onRemote(this, remoteId);
+		}
+		else
+		{
+			// TODO: if there no more Bytes to read
+			// trigger onDelRemote(this, objectId);
+			
+			var procedureNr = input.readByte(); //trace("procedureNr:"+procedureNr);
+			// TODO for SECURITY: check max remotes and disconnect client if malicous
+			remotes[remoteId][procedureNr](input);
+		}
+		
 	}
 
 

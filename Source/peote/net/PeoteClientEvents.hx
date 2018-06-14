@@ -11,5 +11,6 @@ typedef PeoteClientEvents = {
 	onError:PeoteClient -> Int -> Void,
 	onDisconnect:PeoteClient -> Int -> Void,
 	?onData:PeoteClient -> Bytes -> Void,
-	?onDataChunk:PeoteClient -> Bytes -> Void
+	?onDataChunk:PeoteClient -> Bytes -> Void,
+	?onRemote:PeoteClient -> Int -> Void
 }

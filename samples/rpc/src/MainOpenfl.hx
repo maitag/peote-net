@@ -58,21 +58,30 @@ class MainOpenfl extends Sprite
 			{
 				trace('onUserConnect: jointNr:${server.jointNr}, userNr:$userNr');
 				
+				// server object where methods can be called by remote
 				var serverFunctions = new ServerFunctions();
 				serverFunctions.message = function(msg:String, a:Int) {
 					out.log("serverfunction 'message':"+msg + "," + a);
 				};
 				serverFunctions.test = function(a:Int) {
 					out.log("serverfunction 'test':"+a);
-				};
-				server.setRemoteFunctions(userNr, serverFunctions);
+				};				
+				server.setRemote(userNr, serverFunctions, 0); // --> Client's onRemote on will be called with 0
 				
-				// TODO: peoteServer.delRemoteFunctions(userNr, serverFunctions);
-				
-				// TODO: onRemote (do only after a remote obj. is set from other side
-				var remote = ClientFunctions.getRemoteServer(server, userNr);
-				remote.message("hello from server");
-				
+			},
+			onRemote: function(server:PeoteServer, userNr:Int, remoteId:Int)
+			{
+				trace('onRemote: jointNr:${server.jointNr}, userNr:$userNr, remoteId:$remoteId');
+				switch (remoteId) {
+					case 0:
+						var clientFunctions = ClientFunctions.getRemoteServer(server, userNr, remoteId);
+						clientFunctions.message("hello from server");
+					case 1:
+						var secondClientFunctions = SecondClientFunctions.getRemoteServer(server, userNr, remoteId);
+						secondClientFunctions.test();
+						
+					default: trace("unknow type");
+				}
 			},
 			onUserDisconnect: function(server:PeoteServer, userNr:Int, reason:Int)
 			{
@@ -101,16 +110,31 @@ class MainOpenfl extends Sprite
 			{
 				trace('onEnterJoint: Joint number ${client.jointNr} entered');
 				
+				// first client object where methods can be called by remote
 				var clientFunctions = new ClientFunctions();
 				clientFunctions.message = function(msg:String) {
 					out.log("clientfunction 'message':"+msg);
-				};
-				client.setRemoteFunctions(clientFunctions);
+				};				
+				client.setRemote(clientFunctions, 0);       // --> Server's onRemote on will be called with 0
 				
-				// TODO: onRemote (do only after a remote obj. is set from other side
-				var remote = ServerFunctions.getRemoteClient(client); // TODO: api
-				remote.message("hello from client", 23);
-				remote.test(42);
+				// second client object where methods can be called by remote
+				var secondClientFunctions = new SecondClientFunctions();
+				secondClientFunctions.test = function() {
+					out.log("clientfunction 'test (second client remoteObjectsMethodCall ;)':");
+				};				
+				client.setRemote(secondClientFunctions, 1);  // --> Server's onRemote on will be called with 1
+				
+			},
+			onRemote: function(client:PeoteClient, remoteId:Int)
+			{
+				trace('onRemote: jointNr:${client.jointNr}, remoteId:$remoteId');
+				switch (remoteId) {
+					case 0:
+						var serverFunctions = ServerFunctions.getRemoteClient(client, remoteId);
+						serverFunctions.message("hello from client", 23);
+						serverFunctions.test(42);
+					default: trace("unknow type");
+				}
 			},
 			onDisconnect: function(client:PeoteClient, reason:Int)
 			{
@@ -134,6 +158,7 @@ class MainOpenfl extends Sprite
 
 }
 
+// REMOTE-OBJECTS --------------------------------------
 
 class ServerFunctions implements Remote {
 	@:remote public var message:String->Int->Void;
@@ -142,4 +167,7 @@ class ServerFunctions implements Remote {
 
 class ClientFunctions implements Remote {
 	@:remote public var message:String->Void;
+}
+class SecondClientFunctions implements Remote {
+	@:remote public var test:Void->Void;
 }

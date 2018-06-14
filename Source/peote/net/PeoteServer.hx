@@ -45,7 +45,7 @@ class PeoteServer
 		}
 		
 		// TODO: only for remote-usage
-		remotes = new Vector<Vector<PeoteBytesInput->Void>>(PeoteNet.MAX_USER * 2);//todo (max local users)		
+		remotes = new Vector<Vector<Vector<PeoteBytesInput->Void>>>(PeoteNet.MAX_USER * 2);//todo (max local users)		
 	}
 	
 	// -----------------------------------------------------------------------------------
@@ -129,12 +129,16 @@ class PeoteServer
 	
 	public inline function _onUserConnect(jointNr:Int, userNr:Int):Void 
 	{
+		remotes[userNr] = new Vector<Vector<PeoteBytesInput->Void>>(256);
+
 		inputBuffers.set(userNr, new InputBuffer(this, userNr, events.onDataChunk));
 		events.onUserConnect(this, userNr);
 	}
 	
 	public inline function _onUserDisconnect(jointNr:Int, userNr:Int, reason:Int):Void 
 	{
+		remotes[userNr] = null;
+		
 		inputBuffers.set(userNr, null);
 		events.onUserDisconnect(this, userNr, reason);
 	}
@@ -150,18 +154,37 @@ class PeoteServer
 
 	// -----------------------------------------------------------------------------------
 	// RPC -------------------------------------------------------------------------
-	var remotes:Vector<Vector<PeoteBytesInput->Void>>; // stores all remote functions for incomming data
+	var remotes:Vector<Vector<Vector<PeoteBytesInput->Void>>>; // stores all remote functions for incomming data
+	//var remotes:Vector<Vector<PeoteBytesInput->Void>>; // stores all remote functions for incomming data
 	
-	public function setRemoteFunctions(userNr:Int, f:Dynamic):Void {
-		remotes[userNr] = f.getRemotes();
+	public function setRemote(userNr:Int, f:Dynamic, remoteId:Int = 0 ):Void
+	{
+		remotes[userNr][remoteId] = f.getRemotes();
+
+		var bytes = Bytes.alloc(1); // TODO: max-amount-of-remote-objects
+		bytes.set(0, remoteId);
+		sendChunk(userNr, bytes);
 	}
 	
-	// TODO for OPTIMIZE : autom-chunksize-handling (proc-nr first and only chunksize if there are variable params)
-	public function remote(userNr:Int, bytes:Bytes) {
+	public function remote(userNr:Int, bytes:Bytes)
+	{
 		var input = new PeoteBytesInput(bytes);
-		var procedureNr = input.readByte(); //trace("procedureNr:"+procedureNr);
-		// TODO for SECURITY: check max remotes and disconnect client if malicous
-		remotes[userNr][procedureNr](input);
+		
+		var remoteId = input.readByte(); trace("remoteId:"+remoteId);
+		
+		if (input.bytesLeft() == 0)
+		{
+			events.onRemote(this, userNr, remoteId);
+		}
+		else
+		{
+			// TODO: if there no more Bytes to read
+			// trigger onDelRemote(this, objectId);
+			
+			var procedureNr = input.readByte(); //trace("procedureNr:"+procedureNr);
+			// TODO for SECURITY: check max remotes and disconnect client if malicous
+			remotes[userNr][remoteId][procedureNr](input);
+		}
 	}
 
 }

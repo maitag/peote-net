@@ -128,9 +128,10 @@ class RemoteImpl
 		// add function to return an instanze of that class
 		var getRemoteServer:Function = {
 			args:[ {name:"server", type:macro:peote.net.PeoteServer, opt:false, value:null},
-			       {name:"user", type:macro:Int, opt:false, value:null}
+			       {name:"user", type:macro:Int, opt:false, value:null},
+			       {name:"remoteId", type:macro:Int, opt:false, value:null}
 			],
-			expr: Context.parse( 'return new $classnameRemote(server, user)', Context.currentPos()) ,
+			expr: Context.parse( 'return new $classnameRemote(server, user, remoteId)', Context.currentPos()) ,
 			ret: TPath({ name:classnameRemote, pack:[], params:[] }) // ret = return type
 		}
  		fields.push({
@@ -144,8 +145,10 @@ class RemoteImpl
 		Context.defineType(generateRemoteCaller(classnameRemote, false, remoteNames, remoteParams));		
 		// add function to return an instanze of that class
 		var getRemoteClient:Function = {
-			args:[{name:"client", type:macro:peote.net.PeoteClient, opt:false, value:null}],
-			expr: Context.parse( 'return new $classnameRemote(client)', Context.currentPos()) ,
+			args:[ {name:"client", type:macro:peote.net.PeoteClient, opt:false, value:null},
+			       {name:"remoteId", type:macro:Int, opt:false, value:null}
+			],
+			expr: Context.parse( 'return new $classnameRemote(client, remoteId)', Context.currentPos()) ,
 			ret: TPath({ name:classnameRemote, pack:[], params:[] }) // ret = return type
 		}
  		fields.push({
@@ -166,18 +169,21 @@ class RemoteImpl
 			c = macro class $classname {
 				var server:peote.net.PeoteServer;
 				var user:Int;
-				public function new(server:peote.net.PeoteServer, user:Int) { this.server = server; this.user = user; }
+				var remoteId:Int;
+				public function new(server:peote.net.PeoteServer, user:Int, remoteId:Int) { this.server = server; this.user = user; this.remoteId = remoteId; }
 			}
 		} else {
 			c = macro class $classname {
 				var client:peote.net.PeoteClient;
-				public function new(client:peote.net.PeoteClient) { this.client = client; }
+				var remoteId:Int;
+				public function new(client:peote.net.PeoteClient, remoteId:Int) { this.client = client; this.remoteId = remoteId; }
 			}
 		}
 		
 		for ( i in 0...remoteNames.length)
 		{
 			var fbody = "{var output = new peote.io.PeoteBytesOutput();";
+			fbody += 'output.writeByte(remoteId);';
 			fbody += 'output.writeByte($i);';
 			for ( j in 0...remoteParams[i].length)
 				switch (remoteParams[i][j]) {

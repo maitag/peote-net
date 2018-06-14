@@ -132,7 +132,6 @@ Use [peote-server](https://github.com/maitag/peote-server) (written in [Perl](ht
 
 
 ## TODO:
-- rpc and obj. syncing
 - better errorhandling
 - more options to handle buffering (max users per server, payload, outbounds)
 - let server disconnect/block users

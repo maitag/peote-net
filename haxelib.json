@@ -2,11 +2,11 @@
 	"name": "peote-net",
 	"url": "https://github.com/maitag/peote-net",
 	"license": "MIT",
-	"tags": ["peote", "socket", "tcp", "networking"],
+	"tags": ["peote", "socket", "tcp", "networking", "rpc"],
 	"description": "Library to write TCP-Networking Applications",
-	"version": "0.6.0",
+	"version": "0.6.6",
 	"classPath": "Source/",
-	"releasenote": "",
+	"releasenote": "starting remote procedure call with multiple objects",
 	"contributors": ["maitag"],
 	"dependencies": {
 		"peote-socket": ""
