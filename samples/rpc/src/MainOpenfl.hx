@@ -45,8 +45,8 @@ class MainOpenfl extends Sprite
 		{
 			#if (!server)
 			offline:true,
-			netLag:40,
-			netSpeed:1024 * 1024,
+			netLag:10, // results in 20 ms per chunk
+			netSpeed:1024 * 1024 * 512, //[512KB] per second
 			#end
 			//remoteCalling:true,
 			//remoteFunctions:true,
@@ -132,7 +132,7 @@ class MainOpenfl extends Sprite
 					case 0:
 						var serverFunctions = ServerFunctions.getRemoteClient(client, remoteId);
 						serverFunctions.message("hello from client", 23);
-						serverFunctions.test(42);
+						for (i in 0...23) serverFunctions.test(i);
 					default: trace("unknow type");
 				}
 			},

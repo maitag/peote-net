@@ -22,4 +22,4 @@ The folder `build/openfl/` will contain a build-directory for each compiled targ
 ## TODO:
 
 - more datatypes and custom serialization
-- hardening (protocol)
+- hardening against wrong input sizes in remote-functionparams

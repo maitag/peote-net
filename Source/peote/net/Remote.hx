@@ -70,11 +70,13 @@ class RemoteImpl
 						}
 					default:
 				}
+				
+				// error if more then 256 remote-functions
+				if (remoteNames.length == 256) throw Context.error('To much @remote functions (max is 256)', f.pos);
 				remoteNames.push(f.name);
 				remoteParams.push(remParams);
 			}
-		}
-		// TODO: error if more then 255 remote-functions
+		}		
 		
 		// add constructor ("new") if it is not there
 		if (hasNoNew) fields.push({
@@ -90,6 +92,7 @@ class RemoteImpl
 		});
 		
 		var exprs = [];
+		exprs.push(Context.parse('var v = new haxe.ds.Vector<peote.io.PeoteBytesInput->Void>(${remoteNames.length})', Context.currentPos()));
 		for ( i in 0...remoteNames.length)
 		{
 			var fbody = "";
@@ -101,16 +104,15 @@ class RemoteImpl
 					default:       fbody += 'var p$j = $remoteParams[i][j].fromPeoteBytesInput(input);'; //TODO -> better Bytes
 				}
 			fbody += remoteNames[i] + "(" + [for (j in 0...remoteParams[i].length) 'p$j' ].join(",") + ");";
-			exprs.push( Context.parse( 'function (input:peote.io.PeoteBytesInput):Void { $fbody }', Context.currentPos()) );
+			exprs.push(Context.parse('v.set($i, function(input:peote.io.PeoteBytesInput):Void { $fbody })', Context.currentPos()));
 		}
-		//trace( ExprTools.toString( macro return $a{exprs} ) );
+		exprs.push(Context.parse("return v", Context.currentPos()));//trace( ExprTools.toString( macro $b{exprs} ) );
 		
 		// add getRemotes function
 		var getRemotes:Function = { 
-			//args:[{name:"a", type:macro:String, opt:false, value:null}], // arguments
 			args:[],
-			expr: macro return $a{exprs},
-			ret: macro:Array<peote.io.PeoteBytesInput->Void>, // ret = return type
+			expr: macro $b{exprs},
+			ret: macro:haxe.ds.Vector<peote.io.PeoteBytesInput->Void>, // ret = return type
 		}
  		fields.push({
 		  name: "getRemotes",

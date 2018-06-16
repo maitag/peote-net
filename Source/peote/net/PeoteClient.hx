@@ -86,7 +86,7 @@ class PeoteClient
 	public function sendChunk(bytes:Bytes):Void
 	{
 		if (bytes.length <= 0) throw("Error(sendChunk): can't send zero length chunk");
-		else if (bytes.length > 65536)  throw("Error(sendChunk): max chunksize is 65536 Bytes");
+		else if (bytes.length > 65536)  throw("Error(sendChunk): max chunksize is 65536 Bytes"); // TODO: dynamic chunksize
 		else {
 			var chunksize:Bytes = Bytes.alloc(2);
 			chunksize.setUInt16(0, bytes.length-1);
@@ -165,22 +165,21 @@ class PeoteClient
 	
 	public function remote(bytes:Bytes)
 	{
-		var input = new PeoteBytesInput(bytes);
+		var input = new PeoteBytesInput(bytes);		
+		var remoteId = input.readByte(); //trace("remoteId:"+remoteId);
 		
-		var remoteId = input.readByte(); trace("remoteId:"+remoteId);
-		
-		if (input.bytesLeft() == 0)
-		{
-			events.onRemote(this, remoteId);
-		}
+		if (input.bytesLeft() == 0)	events.onRemote(this, remoteId);
 		else
 		{
-			// TODO: if there no more Bytes to read
-			// trigger onDelRemote(this, objectId);
-			
-			var procedureNr = input.readByte(); //trace("procedureNr:"+procedureNr);
-			// TODO for SECURITY: check max remotes and disconnect client if malicous
-			remotes[remoteId][procedureNr](input);
+			// check that remoteID exists 
+			var remoteObject = remotes.get(remoteId); //trace("remoteObject:"+remoteObject);
+			if (remoteObject != null)
+			{
+				var procedureNr = input.readByte(); //trace("procedureNr:" + procedureNr);
+				// check max remotes
+				if (procedureNr < remoteObject.length) remoteObject[procedureNr](input);
+				else events.onError(this, 23); // TODO: better error-nr
+			} else events.onError(this, 23);   //   -> disconnect client if malicous		
 		}
 		
 	}
