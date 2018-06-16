@@ -25,12 +25,7 @@ class PeoteServer
 	public var netSpeed:Int = 1024 * 1024; // simmulates net-behavior (1024 * 1024 bytes [1KB] per second)
 	
 	var peoteJointSocket:PeoteJointSocket;
-	/*
-	var input:Bytes;
-	var input_pos:Int = 0;
-	var input_end:Int = 0;
-	var chunk_size:Int = 0;
-	*/
+	
 	var inputBuffers:Vector<InputBuffer>;
 	
 	public function new(events:PeoteServerEvents) 
@@ -40,7 +35,6 @@ class PeoteServer
 		if (events.netLag != null) netLag = events.netLag;
 		if (events.netSpeed != null) netSpeed = events.netSpeed;
 		if (events.onDataChunk != null) {
-			//input = Bytes.alloc(32767*2); // TODO
 			inputBuffers = new Vector<InputBuffer>(PeoteNet.MAX_USER*2);//todo (max local users)
 		}
 		
@@ -145,7 +139,6 @@ class PeoteServer
 	
 	public function _onData(jointNr:Int, userNr:Int, bytes:Bytes):Void
 	{
-		//trace("onData: " + bytes.length);
 		if (events.onDataChunk != null) {
 			inputBuffers.get(userNr).onData(bytes);
 		}
@@ -155,7 +148,6 @@ class PeoteServer
 	// -----------------------------------------------------------------------------------
 	// RPC -------------------------------------------------------------------------
 	var remotes:Vector<Vector<Vector<PeoteBytesInput->Void>>>; // stores all remote functions for incomming data
-	//var remotes:Vector<Vector<PeoteBytesInput->Void>>; // stores all remote functions for incomming data
 	
 	public function setRemote(userNr:Int, f:Dynamic, remoteId:Int = 0 ):Void
 	{
@@ -181,8 +173,9 @@ class PeoteServer
 			{
 				var procedureNr = input.readByte(); //trace("procedureNr:" + procedureNr);
 				// check max remotes
-				if (procedureNr < remoteObject.length) remoteObject[procedureNr](input);
-				else events.onError(this, 23); // TODO: better error-nr
+				if (procedureNr < remoteObject.length)
+					try remoteObject[procedureNr](input) catch (m:Dynamic) {trace(m); events.onError(this, 21);} // TODO: better error-nr
+				else events.onError(this, 22); // TODO: better error-nr
 			} else events.onError(this, 23);   //   -> disconnect client if malicous
 		}
 	}
@@ -204,7 +197,7 @@ class InputBuffer {
 		this.peoteServer = peoteServer;
 		this.userNr = userNr;
 		this.onDataChunk = onDataChunk;
-		input = Bytes.alloc((65536+2)*2);
+		input = Bytes.alloc((65536+2)*2); // TODO: variable chunksize (and global max-settings)
 	}
 	
 	public function onData(bytes:Bytes):Void // TODO: split into great and small chunks like with peoteJoint-protocol

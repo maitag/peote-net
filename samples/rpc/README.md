@@ -21,5 +21,5 @@ The folder `build/openfl/` will contain a build-directory for each compiled targ
 
 ## TODO:
 
-- more datatypes and custom serialization
-- hardening against wrong input sizes in remote-functionparams
+- more simple datatypes and recursive vector/array serialization
+- testing custom serialization for remote-function parameters

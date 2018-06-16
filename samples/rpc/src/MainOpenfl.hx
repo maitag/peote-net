@@ -23,7 +23,7 @@ class MainOpenfl extends Sprite
 	
 	public function new ()
 	{
-		super ();
+		super();
 		out = new OutputText(3, 3, 560, 550);
 		addChild(out);
 

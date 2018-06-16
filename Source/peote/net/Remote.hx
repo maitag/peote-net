@@ -100,13 +100,14 @@ class RemoteImpl
 				switch (remoteParams[i][j]) {
 					case "String": fbody += 'var p$j = input.readString();';
 					case "Byte":   fbody += 'var p$j = input.readByte();';
-					case "Int":    fbody += 'var p$j = input.readInt32();';
+					case "Int":    fbody += 'var p$j = input.readInt32(); ';
 					default:       fbody += 'var p$j = $remoteParams[i][j].fromPeoteBytesInput(input);'; //TODO -> better Bytes
 				}
-			fbody += remoteNames[i] + "(" + [for (j in 0...remoteParams[i].length) 'p$j' ].join(",") + ");";
+			fbody += "if (input.bytesLeft() > 0) throw('flooded');";
+			fbody += remoteNames[i] + "(" + [for (j in 0...remoteParams[i].length) 'p$j' ].join(",") + ");"; // remote function call
 			exprs.push(Context.parse('v.set($i, function(input:peote.io.PeoteBytesInput):Void { $fbody })', Context.currentPos()));
 		}
-		exprs.push(Context.parse("return v", Context.currentPos()));//trace( ExprTools.toString( macro $b{exprs} ) );
+		exprs.push(Context.parse("return v", Context.currentPos())); // trace( ExprTools.toString( macro $b{exprs} ) );
 		
 		// add getRemotes function
 		var getRemotes:Function = { 

@@ -31,7 +31,7 @@ class PeoteClient
 	public function new(events:PeoteClientEvents) 
 	{
 		this.events = events;
-		if (events.onDataChunk != null) input = Bytes.alloc((65536+2)*2); // TODO
+		if (events.onDataChunk != null) input = Bytes.alloc((65536+2)*2); // TODO: variable chunksize
 	
 		// TODO: only for remote-usage
 		remotes = new Vector<Vector<PeoteBytesInput->Void>>(256);
@@ -177,8 +177,9 @@ class PeoteClient
 			{
 				var procedureNr = input.readByte(); //trace("procedureNr:" + procedureNr);
 				// check max remotes
-				if (procedureNr < remoteObject.length) remoteObject[procedureNr](input);
-				else events.onError(this, 23); // TODO: better error-nr
+				if (procedureNr < remoteObject.length)
+					try remoteObject[procedureNr](input) catch (m:Dynamic) events.onError(this, 21); // TODO: better error-nr
+				else events.onError(this, 22); // TODO: better error-nr
 			} else events.onError(this, 23);   //   -> disconnect client if malicous		
 		}
 		
