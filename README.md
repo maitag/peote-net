@@ -53,7 +53,8 @@ peoteServer = new PeoteServer({
 		onDataChunk: function(server:PeoteServer, userNr:Int, bytes:Bytes) {
 			var input = new PeoteBytesInput(bytes);
 			trace( input.readString() ); // Hello Server
-		}
+		},
+		// maxChunkSize: 256  // max amount of bytes per chunk (default is 32 KB)
 	});
 	
 peoteServer.create("localhost", 7680, "testserver");
@@ -92,7 +93,8 @@ peoteClient = new PeoteClient({
 		onDataChunk: function(client:PeoteClient, bytes:Bytes) {
 			var input = new PeoteBytesInput(bytes);
 			trace( input.readString() ); // Hello Client ..
-		}
+		},
+		// maxChunkSize: 256  // max amount of bytes per chunk (default is 32 KB)
 	});
 
 peoteClient.enter("localhost", 7680, "testserver");
@@ -135,6 +137,6 @@ Use [peote-server](https://github.com/maitag/peote-server) (written in [Perl](ht
 - better errorhandling
 - more options to handle buffering (max users per server, payload, outbounds)
 - let server disconnect/block users
+- let server send data to all users at once
 - hardening to make it more robust against flooding
 - better implementation/documentation of the network-protocol
-- total rewrite of the Perl Peote-Server in haxe

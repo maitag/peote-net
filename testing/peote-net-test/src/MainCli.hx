@@ -70,7 +70,7 @@ class PeoteNetTest {
 		*
 	**/
 	@:flag('--maxBytes','-max') @:alias(false)
-	public var maxBytes:Int = 0x10000;
+	public var maxBytes:Int = 32768;
 	
 	/**
 		host/ip of the running peote-server
