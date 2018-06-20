@@ -24,6 +24,14 @@ class PeoteServer
 	public var netLag:Int = 20; // simmulates net-lag in milliseconds
 	public var netSpeed:Int = 1024 * 1024; // simmulates net-behavior (1024 * 1024 bytes [1KB] per second)
 	
+	// variable chunksize:
+	// max values for 1 byte -> max 256
+	//            for 2 byte -> max 32768 (32 KB),
+	//            for 3 byte -> max 4194304 (4 MB)
+	//            for 4 byte -> max 536870912 (512 MB)
+	var maxBytesPerChunkSize:Int = 2;
+	var maxChunkSize:Int = 32768;
+	
 	var peoteJointSocket:PeoteJointSocket;
 	
 	var inputBuffers:Vector<InputBuffer>;
@@ -35,7 +43,15 @@ class PeoteServer
 		if (events.netLag != null) netLag = events.netLag;
 		if (events.netSpeed != null) netSpeed = events.netSpeed;
 		if (events.onDataChunk != null) {
-			inputBuffers = new Vector<InputBuffer>(PeoteNet.MAX_USER*2);//todo (max local users)
+			if (events.maxChunkSize != null) {
+				maxChunkSize = events.maxChunkSize;
+				maxBytesPerChunkSize = 1;
+				if (maxChunkSize > 256) maxBytesPerChunkSize++;
+				if (maxChunkSize > 32768) maxBytesPerChunkSize++;
+				if (maxChunkSize > 4194304) maxBytesPerChunkSize++;
+				//trace(maxChunkSize, maxBytesPerChunkSize);
+			}
+			inputBuffers = new Vector<InputBuffer>(PeoteNet.MAX_USER * 2);//todo (max local users)
 		}
 		
 		// TODO: only for remote-usage
@@ -96,13 +112,38 @@ class PeoteServer
 	public function sendChunk(userNr:Int, bytes:Bytes):Void
 	{
 		if (bytes.length <= 0) throw("Error(sendChunk): can't send zero length chunk");
-		else if (bytes.length > 65536)  throw("Error(sendChunk): max chunksize is 65536 Bytes"); // TODO: dynamic chunksize
+		else if (bytes.length > maxChunkSize)  throw('Error(sendChunk): max chunksize is $maxChunkSize Bytes');
 		else {
-			var chunksize:Bytes = Bytes.alloc(2);
-			chunksize.setUInt16(0, bytes.length-1);
-			send( userNr, chunksize );
+			send( userNr, writeChunkSize(bytes.length) );
 			send( userNr, bytes );
 		}
+	}
+	
+	function writeChunkSize(size:Int):Bytes
+	{
+		//if (size <= 0) throw("Error(sendChunk): can't send zero length chunk");
+		var bytes = Bytes.alloc(maxBytesPerChunkSize);
+		var bytecount:Int = 0;
+		var b:Int;
+		size--;
+		do
+		{
+			bytecount++;
+			if (bytecount < maxBytesPerChunkSize) {
+				b = size & 127; // get 7 bits
+				size = size >> 7;
+			}
+			else {
+				b = size & 255; // last get 8 bits
+				size = size >> 8;
+			}
+			if (size > 0) b += 128;
+			bytes.set(bytecount-1,  b);
+		}
+		while (size > 0 && bytecount < maxBytesPerChunkSize);
+		
+		//if (size > 0) throw('chunksize to great for maxBytesPerChunkSize=$maxBytesPerChunkSize');
+		return(bytes.sub(0, bytecount));
 	}
 	
 	// -----------------------------------------------------------------------------------
@@ -125,7 +166,7 @@ class PeoteServer
 	{
 		remotes[userNr] = new Vector<Vector<PeoteBytesInput->Void>>(256);
 
-		inputBuffers.set(userNr, new InputBuffer(this, userNr, events.onDataChunk));
+		inputBuffers.set(userNr, new InputBuffer(this, userNr, events.onDataChunk, maxChunkSize, maxBytesPerChunkSize));
 		events.onUserConnect(this, userNr);
 	}
 	
@@ -138,7 +179,7 @@ class PeoteServer
 	}
 	
 	public function _onData(jointNr:Int, userNr:Int, bytes:Bytes):Void
-	{
+	{	
 		if (events.onDataChunk != null) {
 			inputBuffers.get(userNr).onData(bytes);
 		}
@@ -187,23 +228,26 @@ class InputBuffer {
 	var input_pos:Int = 0;
 	var input_end:Int = 0;
 	var chunk_size:Int= 0;
+	var chunkReady:Bool = false;
+	var chunkBytecount:Int = 0;
+	var byte:Int;
 	var input:Bytes;
+	var maxBytesPerChunkSize:Int;
 	
 	var onDataChunk:PeoteServer -> Int -> Bytes -> Void;
 	var peoteServer:PeoteServer;
 	var userNr:Int;
 	
-	public function new(peoteServer:PeoteServer, userNr:Int, onDataChunk:PeoteServer -> Int -> Bytes -> Void) {
+	public function new(peoteServer:PeoteServer, userNr:Int, onDataChunk:PeoteServer -> Int -> Bytes -> Void, maxChunkSize:Int, maxBytesPerChunkSize:Int) {
 		this.peoteServer = peoteServer;
 		this.userNr = userNr;
 		this.onDataChunk = onDataChunk;
-		input = Bytes.alloc((65536+2)*2); // TODO: variable chunksize (and global max-settings)
+		this.maxBytesPerChunkSize = maxBytesPerChunkSize;
+		input = Bytes.alloc((maxChunkSize+maxBytesPerChunkSize)*2); // TODO: variable chunksize (and global max-settings)
 	}
 	
-	public function onData(bytes:Bytes):Void // TODO: split into great and small chunks like with peoteJoint-protocol
+	public function onData(bytes:Bytes):Void
 	{
-		//trace("onData: " + bytes.length);
-			
 		if (input_pos == input_end) { input_pos = input_end = 0; }
 		
 		//var debugOut = "";for (i in 0...bytes.length) debugOut += bytes.get(i) + " ";trace("data:" + debugOut);		
@@ -211,20 +255,30 @@ class InputBuffer {
 		input.blit(input_end, bytes, 0, bytes.length );
 		
 		input_end += bytes.length;
-		
-		if (chunk_size == 0 && input_end-input_pos >=2 ) {
-			chunk_size = input.getUInt16(input_pos) + 1; // read chunk size
-			//trace("chunksize readed:" + chunk_size, input.get(input_pos),input.get(input_pos+1));
-			input_pos += 2;
+				
+		while (!chunkReady && input_end-input_pos >=1) {
+			
+			byte = input.get(input_pos++);
+			if (chunkBytecount == maxBytesPerChunkSize-1 || byte < 128)
+			{
+				if (byte == 0 && chunkBytecount != 0) trace("MALECIOUS ?");
+				chunk_size = chunk_size | (byte << chunkBytecount*7);
+				chunkReady = true; chunkBytecount = 0; chunk_size++; 
+			}
+			else // uppest bit is set and more bytes avail
+			{
+				chunk_size = chunk_size | ( (byte-128) << chunkBytecount*7);
+				chunkBytecount++;
+			}
 		}
-		
-		if ( chunk_size != 0 && input_end-input_pos >= chunk_size )
+				
+		if ( chunkReady && input_end-input_pos >= chunk_size )
 		{
 			var b:Bytes = Bytes.alloc(chunk_size);
 			//trace(" ---> onDataChunk: " + b.length + "Bytes ( start:"+input_pos+" end:"+input_end+ ")",b.get(0), b.get(1), b.get(2));
 			b.blit(0, input, input_pos, chunk_size);
 			input_pos += chunk_size;
-			chunk_size = 0;
+			chunk_size = 0; chunkReady = false;
 			onDataChunk(peoteServer, userNr, b );
 		}
 	}

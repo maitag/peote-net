@@ -20,18 +20,39 @@ class PeoteClient
 
 	public var localPeoteServer:PeoteServer = null;
 	public var localUserNr:Int;
-	
+
+	// variable chunksize:
+	// max values for 1 byte -> max 256
+	//            for 2 byte -> max 32768 (32 KB),
+	//            for 3 byte -> max 4194304 (4 MB)
+	//            for 4 byte -> max 536870912 (512 MB)
+	var maxBytesPerChunkSize:Int = 2;
+	var maxChunkSize:Int = 32768;
+
 	var peoteJointSocket:PeoteJointSocket;
 	
 	var input:Bytes;
 	var input_pos:Int = 0;
 	var input_end:Int = 0;
 	var chunk_size:Int = 0;
+	var chunkReady:Bool = false;
+	var chunkBytecount:Int = 0;
+	var byte:Int;
 	
 	public function new(events:PeoteClientEvents) 
 	{
 		this.events = events;
-		if (events.onDataChunk != null) input = Bytes.alloc((65536+2)*2); // TODO: variable chunksize
+		if (events.onDataChunk != null) {
+			if (events.maxChunkSize != null) {
+				maxChunkSize = events.maxChunkSize;
+				maxBytesPerChunkSize = 1;
+				if (maxChunkSize > 256) maxBytesPerChunkSize++;
+				if (maxChunkSize > 32768) maxBytesPerChunkSize++;
+				if (maxChunkSize > 4194304) maxBytesPerChunkSize++;
+				//trace(maxChunkSize, maxBytesPerChunkSize);
+			}
+			input = Bytes.alloc((maxChunkSize+maxBytesPerChunkSize)*2);
+		}
 	
 		// TODO: only for remote-usage
 		remotes = new Vector<Vector<PeoteBytesInput->Void>>(256);
@@ -86,15 +107,40 @@ class PeoteClient
 	public function sendChunk(bytes:Bytes):Void
 	{
 		if (bytes.length <= 0) throw("Error(sendChunk): can't send zero length chunk");
-		else if (bytes.length > 65536)  throw("Error(sendChunk): max chunksize is 65536 Bytes"); // TODO: dynamic chunksize
+		else if (bytes.length > maxChunkSize)  throw("Error(sendChunk): max chunksize is 65536 Bytes"); // TODO: dynamic chunksize
 		else {
-			var chunksize:Bytes = Bytes.alloc(2);
-			chunksize.setUInt16(0, bytes.length-1);
-			send( chunksize );
+			send( writeChunkSize(bytes.length) );
 			send( bytes );			
 		}
 	}
 	
+	function writeChunkSize(size:Int):Bytes
+	{
+		//if (size <= 0) throw("Error(sendChunk): can't send zero length chunk");
+		var bytes = Bytes.alloc(maxBytesPerChunkSize);
+		var bytecount:Int = 0;
+		var b:Int;
+		size--;
+		do
+		{
+			bytecount++;
+			if (bytecount < maxBytesPerChunkSize) {
+				b = size & 127; // get 7 bits
+				size = size >> 7;
+			}
+			else {
+				b = size & 255; // last get 8 bits
+				size = size >> 8;
+			}
+			if (size > 0) b += 128;
+			bytes.set(bytecount-1,  b);
+		}
+		while (size > 0 && bytecount < maxBytesPerChunkSize);
+
+		//if (size > 0) throw('chunksize to great for maxBytesPerChunkSize=$maxBytesPerChunkSize');
+		return(bytes.sub(0, bytecount));
+	}
+
 	// -----------------------------------------------------------------------------------
 	// CALLBACKS -------------------------------------------------------------------------
 	
@@ -130,19 +176,29 @@ class PeoteClient
 			
 			input_end += bytes.length;
 			
-			if (chunk_size == 0 && input_end-input_pos >=2 ) {
-				chunk_size = input.getUInt16(input_pos) + 1; // read chunk size
-				//trace("chunksize readed:" + chunk_size, input.get(input_pos),input.get(input_pos+1));
-				input_pos += 2;
+			while (!chunkReady && input_end-input_pos >=1) {
+				
+				byte = input.get(input_pos++);
+				if (chunkBytecount == maxBytesPerChunkSize-1 || byte < 128)
+				{
+					if (byte == 0 && chunkBytecount != 0) trace("MALECIOUS ?");
+					chunk_size = chunk_size | (byte << chunkBytecount*7);
+					chunkReady = true; chunkBytecount = 0; chunk_size++;
+				}
+				else // uppest bit is set and more bytes avail
+				{
+					chunk_size = chunk_size | ( (byte-128) << chunkBytecount*7);
+					chunkBytecount++;
+				}
 			}
 			
-			if ( chunk_size != 0 && input_end-input_pos >= chunk_size )
-			{
+			if ( chunkReady && input_end-input_pos >= chunk_size )
+			{	//trace("chunk_size:"+chunk_size);
 				var b:Bytes = Bytes.alloc(chunk_size);
 				//trace(" ---> onDataChunk: " + b.length + "Bytes ( start:"+input_pos+" end:"+input_end+ ")",b.get(0), b.get(1), b.get(2));
 				b.blit(0, input, input_pos, chunk_size);
 				input_pos += chunk_size;
-				chunk_size = 0;
+				chunk_size = 0; chunkReady = false;
 				events.onDataChunk(this, b );
 			}
 		}

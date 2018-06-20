@@ -64,6 +64,7 @@ class Stress
 		lastSendedBytes = new Map<PeoteClient, Bytes>();
 		
 		serverEvents = {
+			maxChunkSize: maxBytes,
 			onCreate: function(server:PeoteServer) {
 				log('Channel ${server.jointNr} created. ("${server.jointId}")', 0, server.jointNr);
 				Timer.delay(createNext, 100);
@@ -99,6 +100,7 @@ class Stress
 		};
 		// --------------------------------------------------------------------------
 		clientEvents = {
+			maxChunkSize: maxBytes,
 			onEnter: function(client:PeoteClient) {
 				log('Connect: Channel ${client.jointNr} entered ("${client.jointId}")',1, client.jointNr);
 				Timer.delay(enterNext, 100);

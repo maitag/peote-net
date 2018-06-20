@@ -3,13 +3,14 @@
 	
 	<meta title="PeoteNetTest" package="peote.net" version="0.5.7" company="Sylvio Sell - maitag" />
 	
+	<app main="PeoteTest"             path="Export" file="PeoteTestLocal" />
 	<app main="PeoteTest" if="server" path="Export" file="PeoteTestServer" />
 	<app main="PeoteTest" if="client" path="Export" file="PeoteTestClient" />
-	<app main="PeoteTest" if="server client" path="Export" file="PeoteTest" />
+	<!--<app  main="TestVariableChunksize" path="Export" file="testChunks" />-->
 		
 	<source path="Source" />
 	
-	<haxelib name="lime" />
+	<haxelib name="openfl" />
 	<haxelib name="peote-socket" />
 	<haxelib name="peote-net" />
 	
