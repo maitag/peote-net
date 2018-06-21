@@ -5,6 +5,7 @@ import openfl.display.Sprite;
 
 import peote.net.PeoteServer;
 import peote.net.PeoteClient;
+import peote.net.Reason;
 
 import peote.io.PeoteBytesOutput;
 import peote.io.PeoteBytesInput;
@@ -52,32 +53,32 @@ class PeoteTest extends Sprite {
 			#end
 			
 			onCreate: function(server:PeoteServer) {
-				logServer.log('onCreateJoint: Channel ${server.jointNr} created.');
+				logServer.log('onCreateJoint: Channel ${server.jointNr} created.\n');
 			},
-			onError: function(server:PeoteServer, error:Int) {
-				switch(error) {
-					case -2: logServer.log("Can't connect to peote-server.");
-					case -1: logServer.log("Disconnected from peote-server.");
-					case  2: logServer.log("Another joint with same id exists.");
-					default: logServer.log('onCreateJointError:$error');
+			onError: function(server:PeoteServer, userNr:Int, reason:Int) {
+				logServer.log('onError: jointNr:${server.jointNr}, userNr:$userNr.\n');
+				switch(reason) {
+					case Reason.DISCONNECT:logServer.log("Can't connect to peote-server.");
+					case Reason.CLOSE:     logServer.log("Connection to peote-server is closed.");
+					case Reason.ID:        logServer.log("There is another channel with same ID. (or wrong ID)");
+					case Reason.MAX:       logServer.log("Created to much channels on this server (max is 128).");
+					case Reason.MALICIOUS: if (userNr > 0) logServer.log('User $userNr sending malicious data.'); // TODO: kick/bann user
 				}
 			},
 			onUserConnect: function(server:PeoteServer, userNr:Int) {
-				logServer.log('onUserConnect: jointNr:${server.jointNr}, userNr:$userNr');
+				logServer.log('onUserConnect: jointNr:${server.jointNr}, userNr:$userNr.\n');
 				server.sendChunk(userNr, prepareTestChunk('Hello Client $userNr'));
 				//server.sendChunk(userNr, prepareFibonacciChunk());
 			},
 			onUserDisconnect: function(server:PeoteServer, userNr:Int, reason:Int) {
 				logServer.log('onUserDisconnect: jointNr:${server.jointNr}, userNr:$userNr');
 				switch (reason) {
-					case 0: logServer.log("User leaves channel.");
-					case 1: logServer.log("User was disconnected.");
-					default: logServer.log('Reason: $reason');
+					case Reason.CLOSE:      logServer.log("User leaves channel.");
+					case Reason.DISCONNECT: logServer.log("User disconnected from peote-server.");
 				}
 			},
-			//onData: onData
 			onDataChunk: function(server:PeoteServer, userNr:Int, bytes:Bytes) {
-				logServer.log('Chunk arrives from joint ${server.jointNr} - chunk size is ${bytes.length}');
+				logServer.log('Chunk arrives from joint ${server.jointNr}, user $userNr - chunk size is ${bytes.length}');
 				ouputChunk( bytes, logServer );
 			}
 		});
@@ -90,35 +91,36 @@ class PeoteTest extends Sprite {
 		var peoteClient = new PeoteClient({
 			
 			onEnter: function(client:PeoteClient) {
-				logClient.log('onEnterJoint: Joint number ${client.jointNr} entered');
+				logClient.log('onEnterJoint: Joint number ${client.jointNr} entered.\n');
 				client.sendChunk( prepareTestChunk('Hello Server'));
+				//client.sendChunk( prepareFibonacciChunk());
 			},
-			onError: function(client:PeoteClient, error:Int) {
-				switch(error) {
-					case 1:  logClient.log("can't enter channel");
-					case -2: logClient.log("can't connect to peote-server");
-					case -1: logClient.log("disconnected from peote-server");
-					default: logClient.log('onEnterJointError:$error');
+			onError: function(client:PeoteClient, reason:Int) {
+				switch(reason) {
+					case Reason.DISCONNECT:logClient.log("Can't connect to peote-server.");
+					case Reason.CLOSE:     logClient.log("Connection to peote-server is closed.");
+					case Reason.ID:        logClient.log("No channel with this ID to enter.");
+					case Reason.MAX:       logClient.log("Entered to much channels on this server (max is 128)");
+					case Reason.FULL:      logClient.log("Channel is full (max of 256 users already connected).");
+					case Reason.MALICIOUS: logClient.log("Malicious data.");
 				}
 			},
 			onDisconnect: function(client:PeoteClient, reason:Int) {
-				logClient.log('onDisconnect: jointNr=${client.jointNr}');
+				logClient.log('onDisconnect from jointNr=${client.jointNr}');
 				switch (reason) {
-					case 0: logClient.log("channel closed by owner");
-					case 1: logClient.log("channel-owner disconnected!");
-					case 2: logClient.log("kicked by channel-owner!"); // TODO ?
-					default: logClient.log('reason:$reason');
+					case Reason.CLOSE:     logClient.log("Channel closed by creator.");
+					case Reason.DISCONNECT:logClient.log("Channel-creator disconnected.");
+					//case Reason.KICK: logClient.log("Kicked by channel-owner."); // TODO
 				}
 			},
 			//onData: onData
 			onDataChunk: function(client:PeoteClient, bytes:Bytes) {
 				logClient.log('Chunk arrives from joint ${client.jointNr} - chunk size is ${bytes.length}');
 				ouputChunk( bytes, logClient );
-				//client.sendChunk( prepareFibonacciChunk());
 			}
 		});
 			
-		#if !server trace("trying to connect to peote-server..."); #end
+		#if client logClient.log("trying to connect to peote-server..."); #end
 		// if server is in same app all messages will go directly (not throught socket and proxyserver)
 		peoteClient.enter("localhost", 7680, "testserver");
 		#end

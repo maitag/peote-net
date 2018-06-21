@@ -84,16 +84,16 @@ class PeoteChat extends Sprite {
 							channel_list.removeChannel(channel.channelName);
 							channels.remove(channel.channelName);
 							if (channel == active)
-							{
-								active = channels.iterator().next();
-								
-								if (active != null)
+							{	
+								if (channels.iterator().hasNext())
 								{
+									active = channels.iterator().next();
 									swapChildren( cast channel, cast active );
 									channel_list.setSelector(active.channelName);
 								}
 								else
 								{
+									active = null;
 									removeChild(send_message);
 									removeChild(close_button);
 									channel_list.hideSelector();
@@ -136,15 +136,15 @@ class PeoteChat extends Sprite {
 							channels.remove(channel.channelName);
 							if (channel == active)
 							{
-								active = channels.iterator().next();
-								
-								if (active != null)
+								if (channels.iterator().hasNext())
 								{
+									active = channels.iterator().next();
 									swapChildren( cast channel, cast active );
 									channel_list.setSelector(active.channelName);
 								}
 								else
 								{
+									active = null;
 									removeChild(send_message);
 									removeChild(close_button);
 									channel_list.hideSelector();
@@ -206,15 +206,16 @@ class PeoteChat extends Sprite {
 				channels.remove(active.channelName);
 				
 				var old:I_Channel = active;
-				active = channels.iterator().next();
 				
-				if (active != null)
+				if (channels.iterator().hasNext())
 				{
+					active = channels.iterator().next();
 					swapChildren( cast old, cast active );
 					channel_list.setSelector(active.channelName);
 				}
 				else
 				{
+					active = null;
 					removeChild(send_message);
 					removeChild(close_button);
 					channel_list.hideSelector();

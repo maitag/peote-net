@@ -72,7 +72,7 @@ class PeoteJointSocket
 	public function connect(server:String, port:Int):Void
 	{
 		if ( connected )
-		{	trace("PeoteNet Error: socket is already connected and has to close before new connect()");
+		{	throw("PeoteNet Error: socket is already connected and has to close before new connect()");
 		}
 		else
 		{
@@ -83,7 +83,7 @@ class PeoteJointSocket
 	public function close():Void 
 	{
 		if ( !connected )
-		{	trace("PeoteNet Error: socket is not connected and nothing to close()");
+		{	throw("PeoteNet Error: socket is not connected and nothing to close()");
 		}
 		else
 		{
@@ -163,7 +163,8 @@ class PeoteJointSocket
 		}
 		else
 		{
-			if (errorCallback != null) errorCallback(-3); // joint_id to long
+			throw("Joind-ID is to long (max 255 bytes!)");
+			//if (errorCallback != null) errorCallback(Reason.ID); // joint_id to long
 		}		
 	}
 	
@@ -173,8 +174,6 @@ class PeoteJointSocket
 															userDisconnectCallback:Int -> Int -> Int -> Void,
 															errorCallback:Int -> Void = null):Void 
 	{
-		//trace("onCreateOwnJoint: ANTWORT ...");
-		// chunk auswerten:
 		if (command_chunk.get(0) == 0) // -> OK 
 		{	
 			var joint_nr = command_chunk.get(1); // -> joint_nr lesen
@@ -189,8 +188,15 @@ class PeoteJointSocket
 			commandCallback(joint_nr);
 		}
 		else
-		{	// Fehler
-			if (errorCallback != null) errorCallback(command_chunk.get(1));
+		{	// -> Error
+			if (errorCallback != null) {
+				switch(command_chunk.get(1)) {
+					case 1 : errorCallback(Reason.MAX);  // user is already entered in more than 128 joints
+					case 2 : errorCallback(Reason.ID);   // joint with this id did already exist
+					default : errorCallback(Reason.MALICIOUS); 
+				}
+				
+			}
 		}
 	}
 	
@@ -260,7 +266,8 @@ class PeoteJointSocket
 		}
 		else
 		{
-			if (errorCallback != null) errorCallback(-3); // joint_id to long
+			throw("Joind-ID is to long (max 255 bytes!)");
+			//if (errorCallback != null) errorCallback(Reason.ID); // joint_id to long
 		}		
 	}
 	
@@ -269,9 +276,6 @@ class PeoteJointSocket
 															disconnectCallback:Int -> Int -> Void,
 															errorCallback:Int -> Void = null):Void 
 	{
-		
-		//trace("enterInJoint(): ANTWORT ...");
-		// chunk auswerten:
 		if (command_chunk.get(0) == 0) // -> OK 
 		{	//trace("OK ----");
 			var joint_nr:Int = command_chunk.get(1); // -> joint_nr lesen
@@ -283,8 +287,17 @@ class PeoteJointSocket
 			commandCallback(joint_nr);
 		}
 		else
-		{	// FEHLER
-			if (errorCallback != null) errorCallback(command_chunk.get(1));
+		{	// -> ERROR
+			if (errorCallback != null) {
+				switch(command_chunk.get(1)) {
+					case 1 : errorCallback(Reason.ID);   // joint with this id did not exist
+					case 3 : errorCallback(Reason.ID);   // already connected to this id
+					case 4 : errorCallback(Reason.FULL); // to much users connected already (max is 256)
+					case 5 : errorCallback(Reason.MAX);  // user is already entered in more than 128 joints
+					default: errorCallback(Reason.MALICIOUS); 
+				}
+				
+			}
 		}
 	}
 	
@@ -300,7 +313,7 @@ class PeoteJointSocket
 		if (input_pos == input_end) { input_pos = input_end = 0; }
 		
 		//input.blit(input_pos, bytes, 0, bytes.length );
-		if (input_end + bytes.length > input.length) trace("ERROR PeoteJointSocket: out of BOUNDS");
+		if (input_end + bytes.length > input.length) throw("ERROR PeoteJointSocket: out of BOUNDS");
 		input.blit(input_end, bytes, 0, bytes.length ); // <---TODO !!!!!!!!!!!
 		
 		input_end += bytes.length;
@@ -359,8 +372,10 @@ class PeoteJointSocket
 						{	
 							inDisconnectCallback.get(j_nr)(command_chunk);
 						}
-						//else if (server_command == 255)// keepalive
-						//else trace("ERROR: no valid servercommand"); // TODO
+						else if (server_command != 255) // keepalive is OK
+						{
+							onError("Error in protocol: no valid servercommand");
+						}
 					}
 					
 					command_mode = false;
@@ -541,7 +556,6 @@ class PeoteJointSocket
 				peoteSocket.writeByte(joint_nr);
 				writeFullBytes(ba, pos, len);
 				peoteSocket.flush();
-				
 				pos += len;
 			}
 		}
@@ -575,7 +589,6 @@ class PeoteJointSocket
 				peoteSocket.writeByte(user_nr);
 				writeFullBytes(ba, pos, len);
 				peoteSocket.flush();
-				
 				pos += len;
 			}
 			

@@ -74,8 +74,7 @@ class PeoteServer
 		}
 		else
 		{
-			throw("Error: PeoteServer already connected");
-			events.onError(this, 255); // TODO
+			throw("Error: This instance of PeoteServer already opened a Joint (delete before create again)");
 		}	
 	}
 
@@ -159,7 +158,7 @@ class PeoteServer
 	public inline function _onCreateJointError(errorNr:Int):Void
 	{
 		this.server = "";
-		events.onError(this, errorNr );
+		events.onError(this, -1, errorNr);
 	}
 	
 	public inline function _onUserConnect(jointNr:Int, userNr:Int):Void 
@@ -215,9 +214,9 @@ class PeoteServer
 				var procedureNr = input.readByte(); //trace("procedureNr:" + procedureNr);
 				// check max remotes
 				if (procedureNr < remoteObject.length)
-					try remoteObject[procedureNr](input) catch (m:Dynamic) {trace(m); events.onError(this, 21);} // TODO: better error-nr
-				else events.onError(this, 22); // TODO: better error-nr
-			} else events.onError(this, 23);   //   -> disconnect client if malicous
+					try remoteObject[procedureNr](input) catch (m:Dynamic) {trace(m); events.onError(this, userNr, Reason.MALICIOUS);}
+				else events.onError(this, userNr, Reason.MALICIOUS);
+			} else events.onError(this, userNr, Reason.MALICIOUS);  // TODO: disconnect user if malicous input
 		}
 	}
 

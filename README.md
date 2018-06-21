@@ -16,34 +16,35 @@ haxelib git peote-net https://github.com/maitag/peote-net
 ## How To Create a Server
 ```
 peoteServer = new PeoteServer({
-		//offline: true,  // do not open a socket (for direct client-connection in same app)
+		//offline: true,  // did not open a socket (for testing client-connection inside same app)
 		//netLag: 400,    // simmulates net response time (in milliseconds)
 		//netSpeed: 1024, // simmulates net speed (in Bytes per second)
 		
 		onCreate: function(server:PeoteServer) {
 			trace('Channel ${server.jointNr} created.');
 		},
-		onError: function(server:PeoteServer, error:Int) {
-			switch(error) {
-				case -2: trace("Can't connect to peote-server.");
-				case -1: trace("Disconnected from peote-server.");
-				case  2: trace("Another joint with same id exists.");
-				default: trace('Error: $error');
+		onError: function(server:PeoteServer, userNr:Int, reason:Int) {
+			switch(reason) {
+				case Reason.DISCONNECT: trace("Can't connect to peote-server.");
+				case Reason.CLOSE:      trace("Connection to peote-server is closed.");
+				case Reason.ID:         trace("Another channel with same id (or wrong id).");
+				case Reason.MAX:        trace("Created to much channels on this server (max is 128).");
+				case Reason.MALICIOUS:  trace("Malicious data (by user).");
 			}
 		},
 		onUserConnect: function(server:PeoteServer, userNr:Int) {
-			trace('New user connects: jointNr:${server.jointNr}, userNr=$userNr');
+			trace('New user $userNr enters channel ${server.jointNr}.');
+			
 			// send something to client
 			var output:PeoteBytesOutput = new PeoteBytesOutput();
 			output.writeString('Hello Client $userNr');
 			server.sendChunk( userNr, output.getBytes() );
 		},
 		onUserDisconnect: function(server:PeoteServer, userNr:Int, reason:Int) {
-			trace('User disconnects: jointNr=${server.jointNr}, userNr=$userNr');
+			trace('User $userNr disconnects from channel ${server.jointNr}.');
 			switch (reason) {
-				case 0: trace("User leaves channel.");
-				case 1: trace("User was disconnected.");
-				default: trace('Reason: $reason');
+				case Reason.CLOSE:      trace("User leaves channel.");
+				case Reason.DISCONNECT: trace("User was disconnected.");
 			}
 		},
 		//choose between onData or onDataChunk
@@ -65,25 +66,27 @@ peoteServer.create("localhost", 7680, "testserver");
 peoteClient = new PeoteClient({
 		onEnter: function(client:PeoteClient) {
 			trace('Connect: Channel ${client.jointNr} entered');
+			
 			// send something to server
 			var output:PeoteBytesOutput = new PeoteBytesOutput();
 			output.writeString("Hello Server");
 			client.sendChunk( output.getBytes() );
 		},
-		onError: function(client:PeoteClient, error:Int) {
-			switch(error) {
-				case 1:  trace("can't enter channel");
-				case -2: trace("can't connect to peote-server");
-				case -1: trace("disconnected from peote-server");
-				default: trace('Error:$error');
+		onError: function(client:PeoteClient, reason:Int) {
+			switch(reason) {
+				case Reason.DISCONNECT:trace("can't connect to peote-server");
+				case Reason.CLOSE:     trace("disconnected from peote-server");
+				case Reason.ID:        trace("No channel with this ID to enter.");
+				case Reason.MAX:       trace("Entered to much channels on this server (max is 128)");
+				case Reason.FULL:      trace("Channel is full (max of 256 users already connected).");
+				case Reason.MALICIOUS: trace("Malicious data.");
 			}
 		},
 		onDisconnect: function(client:PeoteClient, reason:Int) {
-			trace('Disconnect: jointNr:${client.jointNr}');
+			trace('Disconnected from channel ${client.jointNr}');
 			switch (reason) {
-				case 0: trace("Channel closed by owner");
-				case 1: trace("Channel-owner disconnected");
-				default: trace('Reason:$reason');
+				case Reason.CLOSE:      trace("Channel closed by creator.");
+				case Reason.DISCONNECT: trace("Channel-creator disconnected.");
 			}
 		},
 		//choose between onData or onDataChunk
@@ -134,7 +137,7 @@ Use [peote-server](https://github.com/maitag/peote-server) (written in [Perl](ht
 
 
 ## TODO:
-- better errorhandling
+- finalizing remote-procedure-call
 - more options to handle buffering (max users per server, payload, outbounds)
 - let server disconnect/block users
 - let server send data to all users at once

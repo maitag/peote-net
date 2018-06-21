@@ -47,7 +47,7 @@ class ServerChannel extends Sprite implements I_Channel
 				outputAppend('create new channel (${server.jointNr}): "$channelName"');
 			},
 			
-			onError: function( server:PeoteServer, errorNr:Int ) {
+			onError: function( server:PeoteServer, userNr:Int, errorNr:Int ) {
 				outputAppend('can\'t create channel "$channelName" - error-code:' + errorNr);
 				Timer.delay( function() { onCloseConnection(this); } , 1000);
 			},

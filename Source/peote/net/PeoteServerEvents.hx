@@ -8,7 +8,7 @@ import haxe.io.Bytes;
 
 typedef PeoteServerEvents = {
 	onCreate: PeoteServer -> Void,
-	onError:PeoteServer -> Int -> Void,
+	onError:PeoteServer -> Int -> Int -> Void,
 	onUserConnect:PeoteServer -> Int -> Void,
 	onUserDisconnect:PeoteServer -> Int -> Int -> Void,
 	?onData:PeoteServer -> Int -> Bytes -> Void,

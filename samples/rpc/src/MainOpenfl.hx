@@ -87,9 +87,9 @@ class MainOpenfl extends Sprite
 			{
 				trace('onUserDisconnect: jointNr:${server.jointNr}, userNr:$userNr');
 			},
-			onError: function(server:PeoteServer, error:Int)
+			onError: function(server:PeoteServer, userNr:Int, reason:Int)
 			{
-				trace('onCreateJointError:$error');
+				trace('onCreateJointError:$reason, userNr:$userNr');
 			},
 			onDataChunk: function(server:PeoteServer, userNr:Int, bytes:Bytes )
 			{
@@ -140,9 +140,9 @@ class MainOpenfl extends Sprite
 			{
 				trace('onDisconnect: jointNr=${client.jointNr}');
 			},
-			onError: function(client:PeoteClient, error:Int)
+			onError: function(client:PeoteClient, reason:Int)
 			{
-				trace('onEnterJointError:$error');
+				trace('onEnterJointError:$reason');
 			},
 			onDataChunk: function(client:PeoteClient, bytes:Bytes )
 			{

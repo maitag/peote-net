@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <project>
 	
-	<meta title="testing peote-net framework" package="peote.test" version="0.3.0" company="Sylvio Sell - maitag" />
+	<meta title="testing peote-net framework" package="peote.test" version="0.3.1" company="Sylvio Sell - maitag" />
 	
 	<app main="MainOpenfl" path="build/openfl" file="peote-net-test" />
 	<app if="server" main="MainOpenfl" path="build/openfl" file="peote-net-test-server" />
@@ -23,9 +23,8 @@
 	<!--<haxedef name="debugPeoteNet" />-->
 	
 	<haxeflag name="-dce" value="full" />
-	<!--<haxedef name="no-traces" />
-	-->
-	<haxedef name="source-map-content" />
+	<!--<haxedef name="no-traces" />-->
+	<!--<haxedef name="source-map-content" />-->
 	
 	<dependency path="../../dependencies/swfobject-2.3.js" if="html5" />	
 	<assets path="../../dependencies/peoteSocketBridge.swf" rename="peoteSocketBridge.swf" embed="false" if="html5" />

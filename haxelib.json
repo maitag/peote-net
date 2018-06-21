@@ -4,9 +4,9 @@
 	"license": "MIT",
 	"tags": ["peote", "socket", "tcp", "networking", "rpc"],
 	"description": "Library to write TCP-Networking Applications",
-	"version": "0.6.7",
+	"version": "0.6.8",
 	"classPath": "Source/",
-	"releasenote": "starting remote procedure call with multiple objects",
+	"releasenote": "variable chunksizes and errorhandling",
 	"contributors": ["maitag"],
 	"dependencies": {
 		"peote-socket": ""

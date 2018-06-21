@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <project>
 	
-	<meta title="PeoteNetTest" package="peote.net" version="0.5.7" company="Sylvio Sell - maitag" />
+	<meta title="PeoteNetTest" package="peote.net" version="0.5.8" company="Sylvio Sell - maitag" />
 	
 	<app main="PeoteTest"             path="Export" file="PeoteTestLocal" />
 	<app main="PeoteTest" if="server" path="Export" file="PeoteTestServer" />
