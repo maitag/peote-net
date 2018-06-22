@@ -19,6 +19,8 @@ class PeoteServer
 	public var port(default, null):Int;
 
 	public var offline(default, null):Bool=false;
+	public var isRemote(default, null):Bool=false;
+	public var isChunks(default, null):Bool=false;
 
 	public var localPeoteClient:Array<PeoteClient> = [];
 	public var netLag:Int = 20; // simmulates net-lag in milliseconds
@@ -36,13 +38,23 @@ class PeoteServer
 	
 	var inputBuffers:Vector<InputBuffer>;
 	
-	public function new(events:PeoteServerEvents) 
+	public function new(events:PeoteServerEvents)
 	{
 		this.events = events;
+		
 		if (events.offline != null) offline = events.offline;
 		if (events.netLag != null) netLag = events.netLag;
 		if (events.netSpeed != null) netSpeed = events.netSpeed;
-		if (events.onDataChunk != null) {
+		
+		if (events.onDataChunk == null && events.onData == null) {
+			isRemote = true; 
+			isChunks = true;
+		} else if (events.onDataChunk != null) {
+			if (events.onData != null) throw("Error: Use either 'onDataChunk' or 'onData' callback but not both.");
+			isChunks = true;
+		}
+		
+		if (isChunks) {
 			if (events.maxChunkSize != null) {
 				maxChunkSize = events.maxChunkSize;
 				maxBytesPerChunkSize = 1;
@@ -51,8 +63,9 @@ class PeoteServer
 				if (maxChunkSize > 4194304) maxBytesPerChunkSize++;
 				//trace(maxChunkSize, maxBytesPerChunkSize);
 			}
-			inputBuffers = new Vector<InputBuffer>(PeoteNet.MAX_USER * 2);//todo (max local users)
+			inputBuffers = new Vector<InputBuffer>(PeoteNet.MAX_USER * 2); // todo (max local users)
 		}
+
 		
 		// TODO: only for remote-usage
 		remotes = new Vector<Vector<Vector<PeoteBytesInput->Void>>>(PeoteNet.MAX_USER * 2);//todo (max local users)		
@@ -164,8 +177,10 @@ class PeoteServer
 	public inline function _onUserConnect(jointNr:Int, userNr:Int):Void 
 	{
 		remotes[userNr] = new Vector<Vector<PeoteBytesInput->Void>>(256);
-
-		inputBuffers.set(userNr, new InputBuffer(this, userNr, events.onDataChunk, maxChunkSize, maxBytesPerChunkSize));
+		
+		if (isRemote)      inputBuffers.set(userNr, new InputBuffer(this, userNr, remote,             maxChunkSize, maxBytesPerChunkSize));
+		else if (isChunks) inputBuffers.set(userNr, new InputBuffer(this, userNr, events.onDataChunk, maxChunkSize, maxBytesPerChunkSize));
+		
 		events.onUserConnect(this, userNr);
 	}
 	
@@ -173,13 +188,13 @@ class PeoteServer
 	{
 		remotes[userNr] = null;
 		
-		inputBuffers.set(userNr, null);
+		if (isChunks) inputBuffers.set(userNr, null);
 		events.onUserDisconnect(this, userNr, reason);
 	}
 	
 	public function _onData(jointNr:Int, userNr:Int, bytes:Bytes):Void
 	{	
-		if (events.onDataChunk != null) {
+		if (isChunks) {
 			inputBuffers.get(userNr).onData(bytes);
 		}
 		else events.onData(this, userNr, bytes);
@@ -191,6 +206,7 @@ class PeoteServer
 	
 	public function setRemote(userNr:Int, f:Dynamic, remoteId:Int = 0 ):Void
 	{
+		if (!isRemote) throw("Error: Do not use 'onDataChunk' or 'onData' while using Remote-Objects in PeoteServer!");	
 		remotes[userNr][remoteId] = f.getRemotes();
 
 		var bytes = Bytes.alloc(1); // TODO: max-amount-of-remote-objects
@@ -198,7 +214,7 @@ class PeoteServer
 		sendChunk(userNr, bytes);
 	}
 	
-	public function remote(userNr:Int, bytes:Bytes)
+	private function remote(server:PeoteServer, userNr:Int, bytes:Bytes)
 	{
 		var input = new PeoteBytesInput(bytes);
 		
@@ -242,7 +258,7 @@ class InputBuffer {
 		this.userNr = userNr;
 		this.onDataChunk = onDataChunk;
 		this.maxBytesPerChunkSize = maxBytesPerChunkSize;
-		input = Bytes.alloc((maxChunkSize+maxBytesPerChunkSize)*2); // TODO: variable chunksize (and global max-settings)
+		input = Bytes.alloc((maxChunkSize+maxBytesPerChunkSize)*2);
 	}
 	
 	public function onData(bytes:Bytes):Void

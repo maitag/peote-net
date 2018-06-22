@@ -113,7 +113,6 @@ class PeoteTest extends Sprite {
 					//case Reason.KICK: logClient.log("Kicked by channel-owner."); // TODO
 				}
 			},
-			//onData: onData
 			onDataChunk: function(client:PeoteClient, bytes:Bytes) {
 				logClient.log('Chunk arrives from joint ${client.jointNr} - chunk size is ${bytes.length}');
 				ouputChunk( bytes, logClient );
@@ -140,8 +139,8 @@ class PeoteTest extends Sprite {
 		output.writeInt16(-32768);
 		output.writeInt32(2147483647);
 		output.writeInt32(-2147483648);
-		output.writeFloat(1.2345678);
-		output.writeDouble(1.2345678901234567890123456789);
+		output.writeFloat(1.2345678901234);
+		output.writeDouble(1.2345678901234);
 		
 		return output.getBytes();
 	}

@@ -1,8 +1,6 @@
 # peote-rpc sample
 
 Remote Procedure Call sample for [peote-net](https://github.com/maitag/peote-net).  
-  
-  (Todo: api is not finalized yet!)
 
 ## Build and run with OpenFL
 
@@ -18,8 +16,3 @@ build and run a client:
 
 The folder `build/openfl/` will contain a build-directory for each compiled target.  
 
-
-## TODO:
-
-- more simple datatypes and recursive vector/array serialization
-- testing custom serialization for remote-function parameters

@@ -20,7 +20,7 @@ class RemoteImpl
 	public static function build()
 	{
 		var remoteNames  = new Array<String>();
-		var remoteParams = new Array<Array<String>>();
+		var remoteParams = new Array<Array<TypePath>>();
 		var hasNoNew:Bool = true;
 		
 		var classname = Context.getLocalClass().get().name;
@@ -34,11 +34,12 @@ class RemoteImpl
 			}
 			else if ( hasMeta(":remote") )
 			{
-				var remParams = new Array<String>();
+				var remParams = new Array<TypePath>();
 				switch (f.kind)
 				{
 					case FVar(TFunction(params,ret),_):
-						switch (ret) {
+						switch (ret) 
+						{
 							case TPath(param): 
 								if (param.name != "Void") {
 									throw throw Context.error('Remote function has no Void return type', f.pos);
@@ -46,17 +47,20 @@ class RemoteImpl
 							default:
 						}
 						for (p in params)
-						{	switch (p) {
+						{
+							switch (p)
+							{
 								case TPath(param): 
 									switch (param.name) {
 										case "Void":
-										default: remParams.push(param.name); // add param
+										default: remParams.push(param); // add param type
 									}
 								default:
 							}
 						}
 					case FFun(func):
-						if (func.ret != null) {
+						if (func.ret != null)
+						{
 							switch (func.ret) {
 								case TPath(param): 
 									if (param.name != "Void") {
@@ -65,8 +69,17 @@ class RemoteImpl
 								default:
 							}
 						}
-						for (param in func.args) {
-							remParams.push(param.name); // add param
+						for (p in func.args)
+						{
+							switch (p.type)
+							{
+								case TPath(param): 
+									switch (param.name) {
+										case "Void":
+										default: remParams.push(param); // add param type
+									}
+								default:
+							}
 						}
 					default:
 				}
@@ -97,11 +110,18 @@ class RemoteImpl
 		{
 			var fbody = "";
 			for ( j in 0...remoteParams[i].length)
-				switch (remoteParams[i][j]) {
-					case "String": fbody += 'var p$j = input.readString();';
+				switch (remoteParams[i][j].name) {
+					case "Bool":   fbody += 'var p$j = input.readBool();';
 					case "Byte":   fbody += 'var p$j = input.readByte();';
+					case "UInt16": fbody += 'var p$j = input.readUInt16(); ';
+					case "Int16":  fbody += 'var p$j = input.readInt16(); ';
+					case "Int32":  fbody += 'var p$j = input.readInt32(); ';
 					case "Int":    fbody += 'var p$j = input.readInt32(); ';
-					default:       fbody += 'var p$j = $remoteParams[i][j].fromPeoteBytesInput(input);'; //TODO -> better Bytes
+					case "Float":  fbody += 'var p$j = input.readFloat(); ';
+					case "Double": fbody += 'var p$j = input.readDouble(); ';
+					case "String": fbody += 'var p$j = input.readString();';
+					case "Bytes":  fbody += 'var p$j = input.read();';
+					default:       fbody += 'var p$j = haxe.Unserializer.run(input.readString());';
 				}
 			fbody += "if (input.bytesLeft() > 0) throw('flooded');";
 			fbody += remoteNames[i] + "(" + [for (j in 0...remoteParams[i].length) 'p$j' ].join(",") + ");"; // remote function call
@@ -165,7 +185,7 @@ class RemoteImpl
 	}
 	
 	// -------------------------------------------------------------------------------------------------
-	public static function generateRemoteCaller(classname:String, isServer:Bool, remoteNames:Array<String>, remoteParams:Array<Array<String>>):TypeDefinition
+	public static function generateRemoteCaller(classname:String, isServer:Bool, remoteNames:Array<String>, remoteParams:Array<Array<TypePath>>):TypeDefinition
 	{
 		var c:TypeDefinition;
 		if (isServer) {
@@ -189,19 +209,37 @@ class RemoteImpl
 			fbody += 'output.writeByte(remoteId);';
 			fbody += 'output.writeByte($i);';
 			for ( j in 0...remoteParams[i].length)
-				switch (remoteParams[i][j]) {
-					case "String": fbody += 'output.writeString(p$j);';
+				switch (remoteParams[i][j].name) {
+					case "Bool":   fbody += 'output.writeBool(p$j);';
 					case "Byte":   fbody += 'output.writeByte(p$j);';
+					case "UInt16": fbody += 'output.writeUInt16(p$j);';
+					case "Int16":  fbody += 'output.writeInt16(p$j);';
+					case "Int32":  fbody += 'output.writeInt32(p$j);';
 					case "Int":    fbody += 'output.writeInt32(p$j);';
-					default:       fbody += '$remoteParams[i][j].toPeoteBytesOutput(p$j, output);'; // TODO -> better Bytes
+					case "Float":  fbody += 'output.writeFloat(p$j);';
+					case "Double": fbody += 'output.writeDouble(p$j);';
+					case "String": fbody += 'output.writeString(p$j);';
+					case "Bytes":  fbody += 'output.write(p$j);';
+					default:       fbody += 'output.writeString(haxe.Serializer.run(p$j));';
 				}
 			if (isServer) fbody += "server.sendChunk(user, output.getBytes());}";
 			else fbody += "client.sendChunk(output.getBytes());}";
 			
 			var f:Function = {
-				args:[for (j in 0...remoteParams[i].length) {name:'p$j', type:TPath({ name: remoteParams[i][j], pack:[], params:[] }), opt:false} ], // arguments
+				args:[for (j in 0...remoteParams[i].length) {
+					name:'p$j',
+					type:TPath({
+						name: remoteParams[i][j].name,
+						pack: switch(remoteParams[i][j].name) {
+							case "Byte"|"UInt16"|"Int16"|"Int32"|"Double": ["peote", "io"];
+							case "Bytes": ["haxe", "io"];							
+							default:remoteParams[i][j].pack; 
+						},
+						params:remoteParams[i][j].params						
+					}), opt:false
+				}],
 				expr: Context.parse( fbody, Context.currentPos()),
-				ret: null, // ret = return type
+				ret: null,
 			}
 			c.fields.push({
 				name: remoteNames[i],
@@ -216,3 +254,4 @@ class RemoteImpl
 #end
 
 }
+abstract UInt16(Int) from Int to Int { inline public function new(i:Int) {this = i;} }

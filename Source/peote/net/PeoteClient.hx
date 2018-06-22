@@ -18,6 +18,9 @@ class PeoteClient
 	public var server(default, null):String = "";
 	public var port(default, null):Int;
 
+	public var isRemote(default, null):Bool=false;
+	public var isChunks(default, null):Bool=false;
+
 	public var localPeoteServer:PeoteServer = null;
 	public var localUserNr:Int;
 
@@ -39,10 +42,19 @@ class PeoteClient
 	var chunkBytecount:Int = 0;
 	var byte:Int;
 	
-	public function new(events:PeoteClientEvents) 
+	public function new(events:PeoteClientEvents)
 	{
 		this.events = events;
-		if (events.onDataChunk != null) {
+		
+		if (events.onDataChunk == null && events.onData == null) {
+			isRemote = true; 
+			isChunks = true;
+		} else if (events.onDataChunk != null) {
+			if (events.onData != null) throw("Error: Use either 'onDataChunk' or 'onData' callback but not both.");
+			isChunks = true;
+		}
+		
+		if (isChunks) {
 			if (events.maxChunkSize != null) {
 				maxChunkSize = events.maxChunkSize;
 				maxBytesPerChunkSize = 1;
@@ -165,7 +177,7 @@ class PeoteClient
 	public function _onData(jointNr:Int, bytes:Bytes):Void
 	{
 		//trace("onData: " + bytes.length);
-		if (events.onDataChunk != null) {
+		if (isChunks) {
 		
 			if (input_pos == input_end) { input_pos = input_end = 0; }
 			
@@ -198,7 +210,8 @@ class PeoteClient
 				b.blit(0, input, input_pos, chunk_size);
 				input_pos += chunk_size;
 				chunk_size = 0; chunkReady = false;
-				events.onDataChunk(this, b );
+				if (isRemote) remote(b);
+				else events.onDataChunk(this, b );
 			}
 		}
 		else events.onData(this, bytes);
@@ -211,6 +224,7 @@ class PeoteClient
 	
 	public function setRemote(f:Dynamic, remoteId:Int = 0):Void
 	{
+		if (!isRemote) throw("Error: Do not use 'onDataChunk' or 'onData' while using Remote-Objects in PeoteServer!");
 		remotes[remoteId] = f.getRemotes();
 		
 		var bytes = Bytes.alloc(1); // TODO: max-amount-of-remote-objects

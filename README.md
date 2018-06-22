@@ -47,7 +47,7 @@ peoteServer = new PeoteServer({
 				case Reason.DISCONNECT: trace("User was disconnected.");
 			}
 		},
-		//choose between onData or onDataChunk
+		//choose between onData or onDataChunk (do not use one for remoteobject functioncalling)
 		//onData: function(server:PeoteServer, userNr:Int, bytes:Bytes ) {
 		//	trace('User $userNr sends some bytes on channel ${server.jointNr}');
 		//},
@@ -89,7 +89,7 @@ peoteClient = new PeoteClient({
 				case Reason.DISCONNECT: trace("Channel-creator disconnected.");
 			}
 		},
-		//choose between onData or onDataChunk
+		//choose between onData or onDataChunk (do not use one for remoteobject functioncalling)
 		//onData: function(client:PeoteClient, bytes:Bytes) {
 		//	trace('Server sends some bytes on channel ${client.jointNr}');
 		//},
@@ -102,6 +102,8 @@ peoteClient = new PeoteClient({
 
 peoteClient.enter("localhost", 7680, "testserver");
 ```
+If you wanna try out more please look into the testing and samples folders.  
+There are included a simple chat and how to do "remote procedure calling".  
 
 
 ## Depends on
@@ -137,7 +139,6 @@ Use [peote-server](https://github.com/maitag/peote-server) (written in [Perl](ht
 
 
 ## TODO:
-- finalizing remote-procedure-call
 - more options to handle buffering (max users per server, payload, outbounds)
 - let server disconnect/block users
 - let server send data to all users at once
