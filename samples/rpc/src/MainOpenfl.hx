@@ -33,7 +33,7 @@ class MainOpenfl extends Sprite
 		super();
 		out = new OutputText(3, 3, 560, 550);
 		addChild(out);
-
+		
 		#if ((!server) && (!client))
 		onLoadSocketBridge();
 		#else
@@ -72,7 +72,7 @@ class MainOpenfl extends Sprite
 				serverFunctions.numbers = function(a:Byte, b:UInt16, c:Int16, d:Int32, e:Int, f:Float, g:Double) {
 					out.log('serverobject -> numbers($a, $b, $c, $d, $e, $f, $g)');
 				};				
-				serverFunctions.complex = function(b:Bytes, a:Array<String>) {
+				serverFunctions.complex = function(b:Bytes, a:Vector<Array<Int>>) {
 					out.log('serverobject -> complex($b, $a)');
 				};				
 				server.setRemote(userNr, serverFunctions); // --> Client's onRemote on will be called with 0
@@ -135,7 +135,10 @@ class MainOpenfl extends Sprite
 				// call ServerFunctions
 				serverFunctions.message("hello from client", true);
 				serverFunctions.numbers(255, 0xFFFF, 0x7FFF, 0x7FFFFFFF, 0x7FFFFFFF, 1.2345678901234, 1.2345678901234 );
-				serverFunctions.complex(Bytes.ofString("dada"), ["hello","server"]);
+				var v = new Vector<Array<Int>>(2);
+				v[0] = [1, 2];
+				v[1] = [3, 4, 5];
+				serverFunctions.complex(Bytes.ofString("dada"), v);
 			},
 			onDisconnect: function(client:PeoteClient, reason:Int)
 			{
@@ -158,7 +161,7 @@ class MainOpenfl extends Sprite
 class ServerFunctions implements Remote {
 	@:remote public var message:String->Bool->Void;
 	@:remote public var numbers:Byte->UInt16->Int16->Int32->Int->Float->Double->Void;
-	@:remote public var complex:Bytes->Array<String>->Void;
+	@:remote public var complex:Bytes -> Vector<Array<Int>> -> Void;
 }
 
 class FirstClientFunctions implements Remote {

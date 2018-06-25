@@ -42,7 +42,7 @@ class RemoteImpl
 						{
 							case TPath(param): 
 								if (param.name != "Void") {
-									throw throw Context.error('Remote function has no Void return type', f.pos);
+									throw Context.error('Remote function has no Void return type', f.pos);
 								}
 							default:
 						}
@@ -109,25 +109,13 @@ class RemoteImpl
 		for ( i in 0...remoteNames.length)
 		{
 			var fbody = "";
-			for ( j in 0...remoteParams[i].length)
-				switch (remoteParams[i][j].name) {
-					case "Bool":   fbody += 'var p$j = input.readBool();';
-					case "Byte":   fbody += 'var p$j = input.readByte();';
-					case "UInt16": fbody += 'var p$j = input.readUInt16(); ';
-					case "Int16":  fbody += 'var p$j = input.readInt16(); ';
-					case "Int32":  fbody += 'var p$j = input.readInt32(); ';
-					case "Int":    fbody += 'var p$j = input.readInt32(); ';
-					case "Float":  fbody += 'var p$j = input.readFloat(); ';
-					case "Double": fbody += 'var p$j = input.readDouble(); ';
-					case "String": fbody += 'var p$j = input.readString();';
-					case "Bytes":  fbody += 'var p$j = input.read();';
-					default:       fbody += 'var p$j = haxe.Unserializer.run(input.readString());';
-				}
+			for ( j in 0...remoteParams[i].length) fbody += generateInput(remoteParams[i][j],j);
+
 			fbody += "if (input.bytesLeft() > 0) throw('flooded');";
 			fbody += remoteNames[i] + "(" + [for (j in 0...remoteParams[i].length) 'p$j' ].join(",") + ");"; // remote function call
 			exprs.push(Context.parse('v.set($i, function(input:peote.io.PeoteBytesInput):Void { $fbody })', Context.currentPos()));
 		}
-		exprs.push(Context.parse("return v", Context.currentPos())); // trace( ExprTools.toString( macro $b{exprs} ) );
+		exprs.push(Context.parse("return v", Context.currentPos())); trace( ExprTools.toString( macro $b{exprs} ) );
 		
 		// add getRemotes function
 		var getRemotes:Function = { 
@@ -208,20 +196,9 @@ class RemoteImpl
 			var fbody = "{var output = new peote.io.PeoteBytesOutput();";
 			fbody += 'output.writeByte(remoteId);';
 			fbody += 'output.writeByte($i);';
-			for ( j in 0...remoteParams[i].length)
-				switch (remoteParams[i][j].name) {
-					case "Bool":   fbody += 'output.writeBool(p$j);';
-					case "Byte":   fbody += 'output.writeByte(p$j);';
-					case "UInt16": fbody += 'output.writeUInt16(p$j);';
-					case "Int16":  fbody += 'output.writeInt16(p$j);';
-					case "Int32":  fbody += 'output.writeInt32(p$j);';
-					case "Int":    fbody += 'output.writeInt32(p$j);';
-					case "Float":  fbody += 'output.writeFloat(p$j);';
-					case "Double": fbody += 'output.writeDouble(p$j);';
-					case "String": fbody += 'output.writeString(p$j);';
-					case "Bytes":  fbody += 'output.write(p$j);';
-					default:       fbody += 'output.writeString(haxe.Serializer.run(p$j));';
-				}
+			
+			for ( j in 0...remoteParams[i].length) fbody += generateOutput(remoteParams[i][j],j);
+
 			if (isServer) fbody += "server.sendChunk(user, output.getBytes());}";
 			else fbody += "client.sendChunk(output.getBytes());}";
 			
@@ -232,8 +209,9 @@ class RemoteImpl
 						name: remoteParams[i][j].name,
 						pack: switch(remoteParams[i][j].name) {
 							case "Byte"|"UInt16"|"Int16"|"Int32"|"Double": ["peote", "io"];
-							case "Bytes": ["haxe", "io"];							
-							default:remoteParams[i][j].pack; 
+							case "Bytes": ["haxe", "io"];						
+							case "Vector": ["haxe", "ds"];						
+							default:remoteParams[i][j].pack;
 						},
 						params:remoteParams[i][j].params						
 					}), opt:false
@@ -241,6 +219,7 @@ class RemoteImpl
 				expr: Context.parse( fbody, Context.currentPos()),
 				ret: null,
 			}
+			trace( ExprTools.toString( Context.parse( fbody, Context.currentPos()) ) );
 			c.fields.push({
 				name: remoteNames[i],
 				access: [APublic],
@@ -251,7 +230,71 @@ class RemoteImpl
 		return(c);
 	}
 	
+	public static function getFullType(tp:TypePath):String 
+	{
+		if (tp.params.length == 0) return "";
+		switch(tp.params[0]) {
+			case TPType(TPath(t)): return '<${t.name}' + getFullType(t) + '>';
+			default: return "";// throw Context.error('no valid subtype', f.pos);
+		}		
+	}
+	
+	public static function generateInput(tp:TypePath, j:Int, depth:Int = 0):String 
+	{		
+		var subtypes:Array<TypePath> = [];
+		for (p in tp.params)
+			switch(p) {
+				case TPType(TPath(t)): subtypes.push(t);
+				default:
+			}
+		var v = 'p$j' + [for (i in 0...depth) '[i$i]' ].join('') + "=";
+		if (depth == 0) v = 'var ' + v;
+		
+		return v + switch (tp.name) {
+			case "Array":  'new Array'+getFullType(tp)+'();' +
+			               'for (i$depth in 0...input.readUInt16()) {'+ generateInput(subtypes[0], j, depth+1) + '}';
+			case "Vector": 'new haxe.ds.Vector'+getFullType(tp)+'(input.readUInt16());' +
+			               'for (i$depth in 0...p$j.length) {'+ generateInput(subtypes[0], j, depth+1) + '}';
+			case "Bool":   'input.readBool();';
+			case "Byte":   'input.readByte();';
+			case "UInt16": 'input.readUInt16();';
+			case "Int16":  'input.readInt16();';
+			case "Int32":  'input.readInt32();';
+			case "Int":    'input.readInt32();';
+			case "Float":  'input.readFloat();';
+			case "Double": 'input.readDouble();';
+			case "String": 'input.readString();';
+			case "Bytes":  'input.read();';
+			default:       'haxe.Unserializer.run(input.readString());';
+		}
+	}
+	
+	public static function generateOutput(tp:TypePath, j:Int, depth:Int = 0):String
+	{		
+		var subtypes:Array<TypePath> = [];
+		for (p in tp.params)
+			switch(p) {
+				case TPType(TPath(t)): subtypes.push(t);
+				default:
+			}
+		var v = 'p$j' + [for (i in 0...depth) '[i$i]' ].join('');
+		
+		return switch (tp.name) {
+			case "Array"|"Vector": 'output.writeUInt16($v.length); for (i$depth in 0...$v.length) {'+ generateOutput(subtypes[0], j, depth+1) +'}';
+			case "Bool":   'output.writeBool($v);';
+			case "Byte":   'output.writeByte($v);';
+			case "UInt16": 'output.writeUInt16($v);';
+			case "Int16":  'output.writeInt16($v);';
+			case "Int32":  'output.writeInt32($v);';
+			case "Int":    'output.writeInt32($v);';
+			case "Float":  'output.writeFloat($v);';
+			case "Double": 'output.writeDouble($v);';
+			case "String": 'output.writeString($v);';
+			case "Bytes":  'output.write($v);';
+			default:       'output.writeString(haxe.Serializer.run($v));';
+		}
+	}
+	
 #end
 
 }
-abstract UInt16(Int) from Int to Int { inline public function new(i:Int) {this = i;} }
