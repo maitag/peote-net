@@ -109,13 +109,13 @@ class RemoteImpl
 		for ( i in 0...remoteNames.length)
 		{
 			var fbody = "";
-			for ( j in 0...remoteParams[i].length) fbody += generateInput(remoteParams[i][j],j);
+			for ( j in 0...remoteParams[i].length) fbody += generateInput(remoteParams[i][j],'p$j');
 
 			fbody += "if (input.bytesLeft() > 0) throw('flooded');";
 			fbody += remoteNames[i] + "(" + [for (j in 0...remoteParams[i].length) 'p$j' ].join(",") + ");"; // remote function call
 			exprs.push(Context.parse('v.set($i, function(input:peote.io.PeoteBytesInput):Void { $fbody })', Context.currentPos()));
 		}
-		exprs.push(Context.parse("return v", Context.currentPos())); trace( ExprTools.toString( macro $b{exprs} ) );
+		exprs.push(Context.parse("return v", Context.currentPos())); //trace( ExprTools.toString( macro $b{exprs} ) );
 		
 		// add getRemotes function
 		var getRemotes:Function = { 
@@ -197,7 +197,7 @@ class RemoteImpl
 			fbody += 'output.writeByte(remoteId);';
 			fbody += 'output.writeByte($i);';
 			
-			for ( j in 0...remoteParams[i].length) fbody += generateOutput(remoteParams[i][j],j);
+			for ( j in 0...remoteParams[i].length) fbody += generateOutput(remoteParams[i][j],'p$j');
 
 			if (isServer) fbody += "server.sendChunk(user, output.getBytes());}";
 			else fbody += "client.sendChunk(output.getBytes());}";
@@ -210,7 +210,7 @@ class RemoteImpl
 						pack: switch(remoteParams[i][j].name) {
 							case "Byte"|"UInt16"|"Int16"|"Int32"|"Double": ["peote", "io"];
 							case "Bytes": ["haxe", "io"];						
-							case "Vector": ["haxe", "ds"];						
+							case "Vector"|"IntMap"|"StringMap": ["haxe", "ds"];						
 							default:remoteParams[i][j].pack;
 						},
 						params:remoteParams[i][j].params						
@@ -219,7 +219,7 @@ class RemoteImpl
 				expr: Context.parse( fbody, Context.currentPos()),
 				ret: null,
 			}
-			trace( ExprTools.toString( Context.parse( fbody, Context.currentPos()) ) );
+			//trace( ExprTools.toString( Context.parse( fbody, Context.currentPos()) ) );
 			c.fields.push({
 				name: remoteNames[i],
 				access: [APublic],
@@ -233,13 +233,15 @@ class RemoteImpl
 	public static function getFullType(tp:TypePath):String 
 	{
 		if (tp.params.length == 0) return "";
-		switch(tp.params[0]) {
-			case TPType(TPath(t)): return '<${t.name}' + getFullType(t) + '>';
-			default: return "";// throw Context.error('no valid subtype', f.pos);
-		}		
+		
+		return '<' +
+			[for (p in tp.params) switch(p) {
+				case TPType(TPath(t)): '${t.name}' + getFullType(t);
+				default: '';// throw Context.error('no valid subtype', f.pos);
+			}].join(',') + '>';	
 	}
 	
-	public static function generateInput(tp:TypePath, j:Int, depth:Int = 0):String 
+	public static function generateInput(tp:TypePath, varname:String, depth:Int = 0):String 
 	{		
 		var subtypes:Array<TypePath> = [];
 		for (p in tp.params)
@@ -247,14 +249,32 @@ class RemoteImpl
 				case TPType(TPath(t)): subtypes.push(t);
 				default:
 			}
-		var v = 'p$j' + [for (i in 0...depth) '[i$i]' ].join('') + "=";
-		if (depth == 0) v = 'var ' + v;
 		
-		return v + switch (tp.name) {
+		return ((depth == 0) ? 'var ' : '') + varname + "=" + switch (tp.name) {
 			case "Array":  'new Array'+getFullType(tp)+'();' +
-			               'for (i$depth in 0...input.readUInt16()) {'+ generateInput(subtypes[0], j, depth+1) + '}';
-			case "Vector": 'new haxe.ds.Vector'+getFullType(tp)+'(input.readUInt16());' +
-			               'for (i$depth in 0...p$j.length) {'+ generateInput(subtypes[0], j, depth+1) + '}';
+			               'for (i$depth in 0...input.readChunkSize()) {'+ generateInput(subtypes[0], varname+'[i$depth]', depth+1) + '}';
+			case "List":   'new List'+getFullType(tp)+'();' +
+			               'for (i$depth in 0...input.readChunkSize()) {' + 
+						      'var ' + generateInput(subtypes[0], 'item$depth', depth + 1) +
+							  '$varname.add(item$depth);}';
+			case "Vector": 'new haxe.ds.Vector'+getFullType(tp)+'(input.readChunkSize());' +
+			               'for (i$depth in 0...$varname.length) {'+ generateInput(subtypes[0], varname+'[i$depth]', depth+1) + '}';
+			case "Map":    'new Map'+getFullType(tp)+'();' +
+			               'for (i$depth in 0...input.readChunkSize()) {' +
+						      'var ' + generateInput(subtypes[0], 'k$depth', depth+1) +
+			                  'var ' + generateInput(subtypes[1], 'v$depth', depth+1) +
+							  '$varname.set(k$depth,v$depth);}';
+			case "IntMap": 'new haxe.ds.IntMap'+getFullType(tp)+'();' +
+			               'for (i$depth in 0...input.readChunkSize()) {' +
+						      'var ' + generateInput({name:"Int", params:[], pack:[]}, 'k$depth', depth+1) +
+			                  'var ' + generateInput(subtypes[0], 'v$depth', depth+1) +
+							  '$varname.set(k$depth,v$depth);}';
+			case "StringMap": 'new haxe.ds.StringMap'+getFullType(tp)+'();' +
+			               'for (i$depth in 0...input.readChunkSize()) {' +
+						      'var ' + generateInput({name:"String", params:[], pack:[]}, 'k$depth', depth+1) +
+			                  'var ' + generateInput(subtypes[0], 'v$depth', depth+1) +
+							  '$varname.set(k$depth,v$depth);}';
+							  
 			case "Bool":   'input.readBool();';
 			case "Byte":   'input.readByte();';
 			case "UInt16": 'input.readUInt16();';
@@ -269,7 +289,7 @@ class RemoteImpl
 		}
 	}
 	
-	public static function generateOutput(tp:TypePath, j:Int, depth:Int = 0):String
+	public static function generateOutput(tp:TypePath, varname:String, depth:Int = 0):String
 	{		
 		var subtypes:Array<TypePath> = [];
 		for (p in tp.params)
@@ -277,21 +297,34 @@ class RemoteImpl
 				case TPType(TPath(t)): subtypes.push(t);
 				default:
 			}
-		var v = 'p$j' + [for (i in 0...depth) '[i$i]' ].join('');
 		
 		return switch (tp.name) {
-			case "Array"|"Vector": 'output.writeUInt16($v.length); for (i$depth in 0...$v.length) {'+ generateOutput(subtypes[0], j, depth+1) +'}';
-			case "Bool":   'output.writeBool($v);';
-			case "Byte":   'output.writeByte($v);';
-			case "UInt16": 'output.writeUInt16($v);';
-			case "Int16":  'output.writeInt16($v);';
-			case "Int32":  'output.writeInt32($v);';
-			case "Int":    'output.writeInt32($v);';
-			case "Float":  'output.writeFloat($v);';
-			case "Double": 'output.writeDouble($v);';
-			case "String": 'output.writeString($v);';
-			case "Bytes":  'output.write($v);';
-			default:       'output.writeString(haxe.Serializer.run($v));';
+			case "Array"|"Vector": 'if ($varname==null) output.writeChunkSize(0) else {output.writeChunkSize($varname.length); for (i$depth in 0...$varname.length) {'+ generateOutput(subtypes[0], '$varname[i$depth]', depth+1) +'}}';
+			case "List":   'if ($varname==null) output.writeChunkSize(0) else {output.writeChunkSize($varname.length); for (item$depth in $varname) {'+ generateOutput(subtypes[0], 'item$depth', depth+1) +'}}';
+			case "Map":    'if ($varname==null) output.writeChunkSize(0) else {output.writeChunkSize(Lambda.count($varname)); for (k$depth in $varname.keys()) {' +
+			                  generateOutput(subtypes[0], 'k$depth', depth + 1) +
+			                  generateOutput(subtypes[1], '$varname.get(k$depth)', depth + 1) +
+							  '}}';
+			case "IntMap": 'if ($varname==null) output.writeChunkSize(0) else {output.writeChunkSize(Lambda.count($varname)); for (k$depth in $varname.keys()) {' +
+			                  generateOutput({name:"Int", params:[], pack:[]}, 'k$depth', depth + 1) +
+			                  generateOutput(subtypes[0], '$varname.get(k$depth)', depth + 1) +
+							  '}}';
+			case "StringMap": 'if ($varname==null) output.writeChunkSize(0) else {output.writeChunkSize(Lambda.count($varname)); for (k$depth in $varname.keys()) {' +
+			                  generateOutput({name:"String", params:[], pack:[]}, 'k$depth', depth + 1) +
+			                  generateOutput(subtypes[0], '$varname.get(k$depth)', depth + 1) +
+							  '}}';
+			
+			case "Bool":   'output.writeBool($varname);';
+			case "Byte":   'output.writeByte($varname);';
+			case "UInt16": 'output.writeUInt16($varname);';
+			case "Int16":  'output.writeInt16($varname);';
+			case "Int32":  'output.writeInt32($varname);';
+			case "Int":    'output.writeInt32($varname);';
+			case "Float":  'output.writeFloat($varname);';
+			case "Double": 'output.writeDouble($varname);';
+			case "String": 'output.writeString($varname);';
+			case "Bytes":  'output.write($varname);';
+			default:       'output.writeString(haxe.Serializer.run($varname));';
 		}
 	}
 	

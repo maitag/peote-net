@@ -1,5 +1,7 @@
 package;
 
+import haxe.ds.IntMap;
+import haxe.ds.StringMap;
 import haxe.ds.Vector;
 import haxe.io.Bytes;
 import peote.net.Remote;
@@ -75,6 +77,14 @@ class MainOpenfl extends Sprite
 				serverFunctions.complex = function(b:Bytes, a:Vector<Array<Int>>) {
 					out.log('serverobject -> complex($b, $a)');
 				};				
+				serverFunctions.lists = function(list:List<Int>) {
+					out.log('serverobject -> lists($list)');
+				};				
+				//serverFunctions.maps = function(m:IntMap< StringMap<Array<Int>> >) {
+				serverFunctions.maps = function(m:Map< Int, Map<String, Array<Int>> >) {
+					out.log('serverobject -> maps(');
+					for (k in m.keys()) out.log(""+m.get(k));
+				};				
 				server.setRemote(userNr, serverFunctions); // --> Client's onRemote on will be called with 0
 				
 			},
@@ -135,10 +145,24 @@ class MainOpenfl extends Sprite
 				// call ServerFunctions
 				serverFunctions.message("hello from client", true);
 				serverFunctions.numbers(255, 0xFFFF, 0x7FFF, 0x7FFFFFFF, 0x7FFFFFFF, 1.2345678901234, 1.2345678901234 );
+				
 				var v = new Vector<Array<Int>>(2);
 				v[0] = [1, 2];
 				v[1] = [3, 4, 5];
-				serverFunctions.complex(Bytes.ofString("dada"), v);
+				//v[2] = null; // null will result on remote in an empty Array
+				serverFunctions.complex(Bytes.ofString("dada"), v); 
+				
+				var list = new List<Int>(); for (i in 0...5) list.add(i);
+				serverFunctions.lists(list); // null will result on remote in an empty List 
+				
+				//var m:IntMap< haxe.ds.StringMap< Array<Int>> > = [
+				var m = [
+					1 => ["a1" => [10,11], "b1" => [12,13]],
+					2 => ["a2" => [20, 21], "b2" => [22, 23]],
+					//7 => null // null will result on remote in an empty Map
+				];
+				serverFunctions.maps(m);
+				
 			},
 			onDisconnect: function(client:PeoteClient, reason:Int)
 			{
@@ -162,6 +186,9 @@ class ServerFunctions implements Remote {
 	@:remote public var message:String->Bool->Void;
 	@:remote public var numbers:Byte->UInt16->Int16->Int32->Int->Float->Double->Void;
 	@:remote public var complex:Bytes -> Vector<Array<Int>> -> Void;
+	@:remote public var lists:List<Int> -> Void;
+	//@:remote public var maps:IntMap< haxe.ds.StringMap< Array<Int>> > -> Void;
+	@:remote public var maps:Map<Int, Map< String, Array<Int>> > -> Void;
 }
 
 class FirstClientFunctions implements Remote {
