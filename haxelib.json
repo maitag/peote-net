@@ -4,9 +4,9 @@
 	"license": "MIT",
 	"tags": ["peote", "socket", "tcp", "networking", "rpc"],
 	"description": "Library to write TCP-Networking Applications",
-	"version": "0.6.8",
+	"version": "0.6.9",
 	"classPath": "Source/",
-	"releasenote": "variable chunksizes and errorhandling",
+	"releasenote": "hxbit and msgpack-haxe bindings",
 	"contributors": ["maitag"],
 	"dependencies": {
 		"peote-socket": ""

@@ -4,19 +4,21 @@ import haxe.ds.IntMap;
 import haxe.ds.StringMap;
 import haxe.ds.Vector;
 import haxe.io.Bytes;
-import peote.net.Remote;
-
 import openfl.display.Sprite;
 
+import peote.bridge.PeoteSocketBridge;
 import peote.net.PeoteServer;
 import peote.net.PeoteClient;
-import peote.bridge.PeoteSocketBridge;
+import peote.net.Remote;
 
 import peote.io.Byte;
 import peote.io.UInt16;
 import peote.io.Int16;
 import peote.io.Int32;
 import peote.io.Double;
+
+import remoteParams.User;
+import remoteParams.Message;
 
 import ui.OutputText;
 
@@ -84,7 +86,17 @@ class MainOpenfl extends Sprite
 				serverFunctions.maps = function(m:Map< Int, Map<String, Array<Int>> >) {
 					out.log('serverobject -> maps(');
 					for (k in m.keys()) out.log(""+m.get(k));
-				};				
+				};
+				serverFunctions.hxbit = function(u:User) {
+					out.log('serverobject -> hxbit(${u.name}, ${u.age})');
+				};
+				serverFunctions.msgpack = function(o:Dynamic) {
+					out.log('serverobject -> msgpack($o)');
+				};
+				serverFunctions.msgpackTyped = function(m:Message) {
+					out.log('serverobject -> msgpackTyped($m)');
+				};
+				
 				server.setRemote(userNr, serverFunctions); // --> Client's onRemote on will be called with 0
 				
 			},
@@ -146,10 +158,10 @@ class MainOpenfl extends Sprite
 				serverFunctions.message("hello from client", true);
 				serverFunctions.numbers(255, 0xFFFF, 0x7FFF, 0x7FFFFFFF, 0x7FFFFFFF, 1.2345678901234, 1.2345678901234 );
 				
-				var v = new Vector<Array<Int>>(2);
+				var v = new Vector<Array<Int>>(3);
 				v[0] = [1, 2];
 				v[1] = [3, 4, 5];
-				//v[2] = null; // null will result on remote in an empty Array
+				v[2] = null; // null will result on remote in an empty Array
 				serverFunctions.complex(Bytes.ofString("dada"), v); 
 				
 				var list = new List<Int>(); for (i in 0...5) list.add(i);
@@ -159,10 +171,17 @@ class MainOpenfl extends Sprite
 				var m = [
 					1 => ["a1" => [10,11], "b1" => [12,13]],
 					2 => ["a2" => [20, 21], "b2" => [22, 23]],
-					//7 => null // null will result on remote in an empty Map
+					7 => null // null will result on remote in an empty Map
 				];
 				serverFunctions.maps(m);
 				
+				var u = new User("Alice", 42, "test");
+				serverFunctions.hxbit(u);
+				
+				var m:Message = {name:"Klaus", age:23};
+				serverFunctions.msgpackTyped(m);
+				
+				serverFunctions.msgpack({name:"Bob", age:48, friends:["Mary","Johan"]});
 			},
 			onDisconnect: function(client:PeoteClient, reason:Int)
 			{
@@ -189,6 +208,13 @@ class ServerFunctions implements Remote {
 	@:remote public var lists:List<Int> -> Void;
 	//@:remote public var maps:IntMap< haxe.ds.StringMap< Array<Int>> > -> Void;
 	@:remote public var maps:Map<Int, Map< String, Array<Int>> > -> Void;
+	
+	// enable hxbit lib in project.xml to use it's serialization here ( https://lib.haxe.org/p/hxbit/ )
+	@:remote public var hxbit: User -> Void;
+	
+	// enable msgpack lib in project.xml to use it's serialization here( https://lib.haxe.org/p/msgpack-haxe/ )
+	@:remote public var msgpackTyped: Message -> Void;
+	@:remote public var msgpack: Dynamic -> Void; 
 }
 
 class FirstClientFunctions implements Remote {

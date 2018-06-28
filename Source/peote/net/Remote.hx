@@ -17,13 +17,29 @@ class RemoteImpl
 {
 
 #if macro
+	public static function getPackFromImports(name:String, imports:Array<ImportExpr>):Array<String>
+	{
+		var pack = new Array<String>();
+		
+		for (imp in imports) {
+			if (imp.path[imp.path.length - 1].name == name)
+				for (i in 0 ... (imp.path.length - 1) )
+					pack.push(imp.path[i].name);
+		}
+		return pack;
+	}
+	
 	public static function build()
 	{
+		try { Context.resolvePath("org/msgpack/MsgPack.hx"); isMsgPack = true; } catch (e:Dynamic) {}
+		
 		var remoteNames  = new Array<String>();
 		var remoteParams = new Array<Array<TypePath>>();
 		var hasNoNew:Bool = true;
 		
 		var classname = Context.getLocalClass().get().name;
+		var classpackage = Context.getLocalClass().get().pack;
+		
 		var fields = Context.getBuildFields();
 		for (f in fields)
 		{
@@ -53,7 +69,9 @@ class RemoteImpl
 								case TPath(param): 
 									switch (param.name) {
 										case "Void":
-										default: remParams.push(param); // add param type
+										default:
+											if (param.pack.length == 0) param.pack = getPackFromImports(param.name, Context.getLocalImports());
+											remParams.push(param); // add param type											
 									}
 								default:
 							}
@@ -76,7 +94,9 @@ class RemoteImpl
 								case TPath(param): 
 									switch (param.name) {
 										case "Void":
-										default: remParams.push(param); // add param type
+										default: 
+											if (param.pack.length == 0) param.pack = getPackFromImports(param.name, Context.getLocalImports());
+											remParams.push(param); // add param type
 									}
 								default:
 							}
@@ -135,14 +155,15 @@ class RemoteImpl
 		// ------------------------------------- generates new classs for remote-calling ---------------------
 		// -------------------------------------------------------------------------------------------------
 		var classnameRemote = classname+"RemoteServer";
-		Context.defineType(generateRemoteCaller(classnameRemote, true, remoteNames, remoteParams));		
-		// add function to return an instanze of that class
-		var getRemoteServer:Function = {
+		//Context.defineType(generateRemoteCaller(classnameRemote, true, remoteNames, remoteParams));
+		Context.defineModule(classpackage.concat([classnameRemote]).join('.'),[generateRemoteCaller(classnameRemote, true, remoteNames, remoteParams)],Context.getLocalImports());
+		
+		var getRemoteServer:Function = { // add function to return an instanze of that class
 			args:[ {name:"server", type:macro:peote.net.PeoteServer, opt:false, value:null},
 			       {name:"user", type:macro:Int, opt:false, value:null},
 			       {name:"remoteId", type:macro:Int, opt:false, value:null}
 			],
-			expr: Context.parse( 'return new $classnameRemote(server, user, remoteId)', Context.currentPos()) ,
+			expr: Context.parse( 'return new $classnameRemote(server, user, remoteId)', Context.currentPos()),
 			ret: TPath({ name:classnameRemote, pack:[], params:[] }) // ret = return type
 		}
  		fields.push({
@@ -153,9 +174,10 @@ class RemoteImpl
 		});
 		
 		classnameRemote = classname+"RemoteClient";
-		Context.defineType(generateRemoteCaller(classnameRemote, false, remoteNames, remoteParams));		
-		// add function to return an instanze of that class
-		var getRemoteClient:Function = {
+		//Context.defineType(generateRemoteCaller(classnameRemote, false, remoteNames, remoteParams));		
+		Context.defineModule(classpackage.concat([classnameRemote]).join('.'),[generateRemoteCaller(classnameRemote, false, remoteNames, remoteParams)],Context.getLocalImports());		
+		
+		var getRemoteClient:Function = { // add function to return an instanze of that class
 			args:[ {name:"client", type:macro:peote.net.PeoteClient, opt:false, value:null},
 			       {name:"remoteId", type:macro:Int, opt:false, value:null}
 			],
@@ -207,12 +229,13 @@ class RemoteImpl
 					name:'p$j',
 					type:TPath({
 						name: remoteParams[i][j].name,
-						pack: switch(remoteParams[i][j].name) {
+						/*pack: switch(remoteParams[i][j].name) {
 							case "Byte"|"UInt16"|"Int16"|"Int32"|"Double": ["peote", "io"];
 							case "Bytes": ["haxe", "io"];						
 							case "Vector"|"IntMap"|"StringMap": ["haxe", "ds"];						
 							default:remoteParams[i][j].pack;
-						},
+						},*/
+						pack:  remoteParams[i][j].pack,
 						params:remoteParams[i][j].params						
 					}), opt:false
 				}],
@@ -249,6 +272,7 @@ class RemoteImpl
 				case TPType(TPath(t)): subtypes.push(t);
 				default:
 			}
+		var moduleName = ((tp.pack.length != 0) ? tp.pack.join(".") + "." : "") + tp.name;
 		
 		return ((depth == 0) ? 'var ' : '') + varname + "=" + switch (tp.name) {
 			case "Array":  'new Array'+getFullType(tp)+'();' +
@@ -285,7 +309,22 @@ class RemoteImpl
 			case "Double": 'input.readDouble();';
 			case "String": 'input.readString();';
 			case "Bytes":  'input.read();';
-			default:       'haxe.Unserializer.run(input.readString());';
+			
+			case "Dynamic":
+				if (isMsgPack) {
+					trace('Remote param "$moduleName" is using MsgPack Serialization.');
+					'org.msgpack.MsgPack.decode(input.read());';
+				} else {
+					trace('Remote param "$moduleName" is using haxe.Serializer.');
+					'haxe.Unserializer.run(input.readString());';
+				}
+			
+			case "Enum": 'haxe.Unserializer.run(input.readString());'; // TODO
+			
+			default:
+			if (isHxbit(tp, false)) '(new hxbit.Serializer()).unserialize(input.read(),$moduleName);';
+			else if (isTypedef(tp, false)) 'org.msgpack.MsgPack.decode(input.read());';
+			else 'haxe.Unserializer.run(input.readString());';
 		}
 	}
 	
@@ -324,8 +363,63 @@ class RemoteImpl
 			case "Double": 'output.writeDouble($varname);';
 			case "String": 'output.writeString($varname);';
 			case "Bytes":  'output.write($varname);';
-			default:       'output.writeString(haxe.Serializer.run($varname));';
+			
+			case "Dynamic":
+				if (isMsgPack) 'output.write(org.msgpack.MsgPack.encode($varname));';
+				else 'output.writeString(haxe.Serializer.run($varname));';
+
+			
+			case "Enum": 'output.writeString(haxe.Serializer.run($varname));'; // TODO
+			
+			default:
+			if (isHxbit(tp)) 'output.write((new hxbit.Serializer()).serialize($varname));';
+			else if (isTypedef(tp)) 'output.write(org.msgpack.MsgPack.encode($varname));';
+			else 'output.writeString(haxe.Serializer.run($varname));';	
 		}
+	}
+	
+	public static function isHxbit(t:TypePath, silent:Bool = true):Bool
+	{
+		#if hxbit
+			var path = t.name + ".hx";
+			if (t.pack.length != 0) path = t.pack.join("/") +"/" + path;
+			//trace(path);
+			try {
+				var p = Context.resolvePath(path);
+				var s:String = sys.io.File.getContent(p);
+				var r = new EReg('class\\s+'+t.name+getFullType(t)+'\\s+[^{]*?implements\\s+hxbit.Serializable[\\s{]', "");
+				if (r.match(s)) {
+					if (!silent) trace("Remote param '"+t.pack.join(".") + ((t.pack.length != 0) ? "." : "") + t.name + "' is using hxbit Serialization.");
+					return true;
+				}
+			}
+			catch(e:Dynamic) {}
+		#end
+		return false;
+	}
+	
+	public static var isMsgPack:Bool = false;
+	public static function isTypedef(t:TypePath, silent:Bool = true):Bool
+	{
+		if (isMsgPack)
+		{
+			var path = t.name + ".hx";
+			if (t.pack.length != 0) path = t.pack.join("/") +"/" + path;
+			//trace(path);
+			try {
+				var p = Context.resolvePath(path);
+				var s:String = sys.io.File.getContent(p);
+				var r = new EReg('typedef\\s+'+t.name+getFullType(t)+'\\s*=\\s*{', "");
+				if (r.match(s)) {
+					if (!silent) trace("Remote param '"+t.pack.join(".") + ((t.pack.length != 0) ? "." : "") + t.name + "' is using MsgPack Serialization.");
+					return true;
+				}
+			}
+			catch(e:Dynamic) {}
+		}
+				
+		if (!silent) trace("Remote param '"+t.pack.join(".") + ((t.pack.length != 0) ? "." : "") + t.name + "' is using haxe.Serializer.");
+		return false;
 	}
 	
 #end
