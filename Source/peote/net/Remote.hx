@@ -29,6 +29,8 @@ class RemoteImpl
 		return pack;
 	}
 	
+	public static function hasMeta(f:Field, s:String):Bool {for (m in f.meta) { if (m.name == s || m.name == ':$s') return true; } return false; }
+	
 	public static function build()
 	{
 		try { Context.resolvePath("org/msgpack/MsgPack.hx"); isMsgPack = true; } catch (e:Dynamic) {}
@@ -43,12 +45,10 @@ class RemoteImpl
 		var fields = Context.getBuildFields();
 		for (f in fields)
 		{
-			function hasMeta(s:String):Bool {for (m in f.meta) { if (m.name == s) return true;} return false;}
-			
 			if (f.name == "new") {
 				hasNoNew = false;
 			}
-			else if ( hasMeta(":remote") )
+			else if ( hasMeta(f, "remote") )
 			{
 				var remParams = new Array<TypePath>();
 				switch (f.kind)

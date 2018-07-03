@@ -7,8 +7,8 @@ package remoteParams;
 		public var other:String;     // NOT serialized
 #else
 	class User {
-		@:s public var name: String; // serialized
-		@:s public var age: Int;     // serialized
+		public var name: String; // serialized
+		public var age: Int;     // serialized
 		public var other:String;     // serialized
 #end    
 
