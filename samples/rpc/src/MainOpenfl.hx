@@ -28,10 +28,10 @@ class MainOpenfl extends Sprite
 	var host:String = "localhost";
 	var port:Int = 7680;
 
+	var channelName:String = "testserver";
+
 	var out:OutputText;
 
-	var channelName:String = "testserver";
-	
 	public function new ()
 	{	
 		super();
@@ -39,8 +39,10 @@ class MainOpenfl extends Sprite
 		addChild(out);
 		
 		#if ((!server) && (!client))
+		// local testing without socket-connections
 		onLoadSocketBridge();
 		#else
+		// connecting to the dedicated perl-server
 		PeoteSocketBridge.load( {
 			onload: onLoadSocketBridge,
 			preferWebsockets: true,
@@ -51,10 +53,13 @@ class MainOpenfl extends Sprite
 
 	public function onLoadSocketBridge():Void
 	{
+		// ---------------------- SERVER -------------------------
+
 		#if (server || (!client))
 		var peoteServer = new PeoteServer(
 		{
-			#if (!server)
+			// bandwith simmulation if there is local testing
+			#if ((!server) && (!client))
 			offline:true,
 			netLag:10, // results in 20 ms per chunk
 			netSpeed:1024 * 1024 * 512, //[512KB] per second
@@ -70,6 +75,9 @@ class MainOpenfl extends Sprite
 				
 				// server object where methods can be called by remote
 				var serverFunctions = new ServerFunctions();
+				serverFunctions.test = function() {
+					out.log('serverobject -> test()');
+				};
 				serverFunctions.message = function(s:String, b:Bool) {
 					out.log('serverobject -> message("$s", $b)');
 				};
@@ -123,9 +131,11 @@ class MainOpenfl extends Sprite
 			}
 		});
 
-		trace("trying to connect to peote-server...");
-		peoteServer.create("localhost", 7680, "testserver");
+		trace("trying to create...");
+		peoteServer.create(host, port, channelName);
 		#end
+		
+		// ---------------------- CLIENT -------------------------
 		
 		#if (client || (!server))
 		var peoteClient = new PeoteClient(
@@ -156,6 +166,9 @@ class MainOpenfl extends Sprite
 				
 				// call ServerFunctions
 				serverFunctions.message("hello from client", true);
+				haxe.Timer.delay( function() {
+					serverFunctions.test();
+				}, 3000);
 				serverFunctions.numbers(255, 0xFFFF, 0x7FFF, 0x7FFFFFFF, 0x7FFFFFFF, 1.2345678901234, 1.2345678901234 );
 				
 				var v = new Vector<Array<Int>>(3);
@@ -193,15 +206,19 @@ class MainOpenfl extends Sprite
 			}
 		});
 		
-		trace("trying to connect to peote-server...");
-		peoteClient.enter("localhost", 7680, "testserver");
+		trace("trying to enter...");
+		peoteClient.enter(host, port, channelName);
 		#end
 	}
 }
 
+
 // REMOTE-OBJECTS --------------------------------------
 
+
+// functions that run on Server
 class ServerFunctions implements Remote {
+	@:remote public var test:Void->Void;
 	@:remote public var message:String->Bool->Void;
 	@:remote public var numbers:Byte->UInt16->Int16->Int32->Int->Float->Double->Void;
 	@:remote public var complex:Bytes -> Vector<Array<Int>> -> Void;
@@ -217,6 +234,7 @@ class ServerFunctions implements Remote {
 	@:remote public var msgpack: Dynamic -> Void; 
 }
 
+// functions that run on Client
 class FirstClientFunctions implements Remote {
 	public inline static var remoteId = 0;
 	@:remote public var message:String->Void;

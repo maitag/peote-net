@@ -115,7 +115,6 @@ class RemoteImpl
 		if (hasNoNew) fields.push({
 			name: "new",
 			access: [APublic],
-			//meta: [{name:":keep", params:[], pos:Context.currentPos()}],
 			pos: Context.currentPos(),
 			kind: FFun({
 				args: [],
@@ -146,7 +145,6 @@ class RemoteImpl
 		}
  		fields.push({
 		  name: "getRemotes",
-		  meta: [{name:":keep", params:[], pos:Context.currentPos()}],
 		  access: [APublic],
 		  pos: Context.currentPos(),
 		  kind: FieldType.FFun(getRemotes),
@@ -170,13 +168,10 @@ class RemoteImpl
 		}
  		fields.push({
 		  name: "getRemoteServer",
-		  //meta: [{name:":keep", params:[], pos:Context.currentPos()}],
 		  access: [APublic,AStatic],
 		  pos: Context.currentPos(),
 		  kind: FieldType.FFun(getRemoteServer),
 		});
-		
-		// ----------------------
 		
 		classnameRemote = classname+"RemoteClient";
 		//Context.defineType(generateRemoteCaller(classnameRemote, false, remoteNames, remoteParams));		
@@ -191,7 +186,6 @@ class RemoteImpl
 		}
  		fields.push({
 		  name: "getRemoteClient",
-		  //meta: [{name:":keep", params:[], pos:Context.currentPos()}],
 		  access: [APublic,AStatic],
 		  pos: Context.currentPos(),
 		  kind: FieldType.FFun(getRemoteClient),
@@ -256,7 +250,6 @@ class RemoteImpl
 				kind: FieldType.FFun(f),
 			});
 		}
-		//c.meta= [{name:":keep", params:[], pos:Context.currentPos()}];
 		return(c);
 	}
 	

@@ -27,9 +27,9 @@
 	
 	<!--<haxedef name="debugPeoteJoint" />-->
 	<!--<haxedef name="debugPeoteNet" />-->
-	<haxedef name="debugPeoteIO" />
+	<!--<haxedef name="debugPeoteIO" />-->
 	
-	<!--<haxeflag name="-dce" value="full" />-->
+	<haxeflag name="-dce" value="full" />
 	<!--<haxedef name="no-traces" />-->
 	
 	<!--<haxedef name="source-map-content" />-->
