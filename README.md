@@ -2,7 +2,8 @@
 Crossplatform library that provides a simple Client/Server TCP-Networking-API  
 for multiple [Haxe](http://haxe.org) targets (cpp, neko, html5, flash, android).  
 
-Inside webbrowser it supports fallback-solution to use websockets or bridged flash-sockets.  
+Inside webbrowser it supports websockets.  
+
 On serverside the TCP-packets will be redirected with simple and fast protocol  
 by this tool: [peote-server](https://github.com/maitag/peote-server).  
 
@@ -109,29 +110,6 @@ There are included a simple chat and how to do "remote procedure calling".
 ## Depends on
 [peote-socket](https://github.com/maitag/peote-socket) library that handle multiplatform TCP-Sockets.  
   
-For __html5__ or __flash-targets__ you can set a proxy-address before creating a new PeoteSocket,  
-cpp-targets will ignore this and calls the onload-callback directly.  
-```
-PeoteSocketBridge.load( {
-	onload: openSocket,      // callback if swfbridges is loaded or websockets available
-	preferWebsockets: true,  // trying websockets first and fallback to flash (html5)
-	proxys: {
-		proxyServerWS:"localhost",  // proxy for websocket
-		proxyPortWS  : 3211,
-		proxyServerSWF:"localhost", // proxy for peoteSocketBridge.swf
-		proxyPortSWF  :3211,
-	},
-	onfail: function() { trace("Browser doesn't support flash-raw-sockets or websockets"); }
-});
-
-
-function openSocket() { 
-	peoteSocket = new PeoteSocket({
-	...
-}
-
-```
-
 
 ## Peote Server
 To let it run, you need a standalone-server that supports the `joint-protocol` for package forwarding.  

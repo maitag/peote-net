@@ -1,11 +1,7 @@
 package;
 
-
 import openfl.display.Sprite;
 import openfl.events.Event;
-
-
-import peote.bridge.PeoteSocketBridge;
 
 import ui.OutputText;
 import test.Stress;
@@ -49,15 +45,6 @@ class MainOpenfl extends Sprite {
 		
 		stage.addEventListener (Event.RESIZE, stageOnResize);
 		
-		PeoteSocketBridge.load( {
-			onload: onLoadSocketBridge,
-			preferWebsockets: true,
-			onfail: function() { log("Browser doesn't support flash- or websockets",0,0 ); }
-		});
-	}
-	
-	public function onLoadSocketBridge():Void
-	{
 		test = new Stress(host, port, log, maxServers, maxClients, channelName, maxChannel, minBytes, maxBytes );
 	}
 	
