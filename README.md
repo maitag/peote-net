@@ -1,6 +1,6 @@
 # peote-net
 Crossplatform library that provides a simple Client/Server TCP-Networking-API  
-for multiple [Haxe](http://haxe.org) targets (cpp, neko, html5, flash, android).  
+for multiple [Haxe](http://haxe.org) targets (cpp, neko, hashlink, html5, flash, android).  
 
 Inside webbrowser it supports websockets.  
 
