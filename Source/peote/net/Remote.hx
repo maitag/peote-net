@@ -6,17 +6,18 @@ package peote.net;
 
 import haxe.macro.Expr;
 import haxe.macro.Context;
-import haxe.macro.ExprTools;
-//import peote.net.PeoteClient; // <----- HERE error: Class<lime._backend.native.NativeCFFI> has no field lime_system_get_device_model
 
+#if !macro
 
 @:remove @:autoBuild(peote.net.Remote.RemoteImpl.build())
-extern interface Remote {}
+interface Remote {}
+class RemoteImpl {}
+
+#else
 
 class RemoteImpl
 {
 
-#if macro
 	public static function getPackFromImports(name:String, imports:Array<ImportExpr>):Array<String>
 	{
 		var pack = new Array<String>();
@@ -136,7 +137,7 @@ class RemoteImpl
 			fbody += remoteNames[i] + "(" + [for (j in 0...remoteParams[i].length) 'p$j' ].join(",") + ");"; // remote function call
 			exprs.push(Context.parse('v.set($i, function(input:peote.io.PeoteBytesInput):Void { $fbody })', Context.currentPos()));
 		}
-		exprs.push(Context.parse("return v", Context.currentPos())); //trace( ExprTools.toString( macro $b{exprs} ) );
+		exprs.push(Context.parse("return v", Context.currentPos())); //trace( haxe.macro.ExprTools.toString( macro $b{exprs} ) );
 		
 		// add getRemotes function
 		var getRemotes:Function = { 
@@ -248,7 +249,7 @@ class RemoteImpl
 				expr: Context.parse( fbody, Context.currentPos()),
 				ret: null,
 			}
-			//trace( ExprTools.toString( Context.parse( fbody, Context.currentPos()) ) );
+			//trace( haxe.macro.ExprTools.toString( Context.parse( fbody, Context.currentPos()) ) );
 			c.fields.push({
 				name: remoteNames[i],
 				access: [APublic],
@@ -429,6 +430,7 @@ class RemoteImpl
 		return false;
 	}
 	
-#end
 
 }
+
+#end

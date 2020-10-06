@@ -204,10 +204,10 @@ class PeoteServer
 	// RPC -------------------------------------------------------------------------
 	var remotes:Vector<Vector<Vector<PeoteBytesInput->Void>>>; // stores all remote functions for incomming data
 	
-	public function setRemote(userNr:Int, f:Dynamic, remoteId:Int = 0 ):Void
+	public function setRemote(userNr:Int, f:Remote, remoteId:Int = 0 ):Void
 	{
 		if (!isRemote) throw("Error: Do not use 'onDataChunk' or 'onData' while using Remote-Objects in PeoteServer!");	
-		remotes[userNr][remoteId] = f.getRemotes();
+		remotes[userNr][remoteId] = (f:Dynamic).getRemotes();
 
 		var bytes = Bytes.alloc(1); // TODO: max-amount-of-remote-objects
 		bytes.set(0, remoteId);
