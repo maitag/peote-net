@@ -36,7 +36,7 @@ Use `-h` for help with other options.
 ## Build with OpenFL
 
 To build a gui application with [OpenFL framework](https://github.com/openfl)  
-choose a `<target>` (neko, linux, windows, html5, android) and  
+choose a `<target>` (neko, hl, linux, windows, html5, android) and  
 
 build and run a server:
 `openfl test openflProject.xml -Dserver <target>`

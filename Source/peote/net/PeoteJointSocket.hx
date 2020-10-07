@@ -184,7 +184,6 @@ class PeoteJointSocket
 			ownUserDisconnectCallback.set(joint_nr, function(command_chunk:Bytes)
 												{ onUserDisconnect(userDisconnectCallback, joint_nr, command_chunk); }
 										);
-			
 			commandCallback(joint_nr);
 		}
 		else

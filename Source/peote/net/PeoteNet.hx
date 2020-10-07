@@ -201,7 +201,7 @@ class PeoteNet
 			}, obj.localPeoteServer.netLag);
 			return;
 		}
-
+		
 		if (sockets.exists(key))
 		{
 			p = sockets.get(key);
@@ -209,13 +209,19 @@ class PeoteNet
 			// check for local PeoteServer for direct connection
 			for (k in p.server.keys()) {
 				if (p.server.get(k) == jointId) {
-					obj.localPeoteServer = k;
-					var jointNr:Int = freeClientJointNr(obj.localPeoteServer.localPeoteClient);
-					obj.localUserNr = PeoteNet.MAX_USER + obj.localPeoteServer.localPeoteClient.push(obj) - 1;
-					Timer.delay(function() {
-						obj.localPeoteServer._onUserConnect(obj.localPeoteServer.jointNr, obj.localUserNr);
-						obj._onEnterJoint(null, jointNr); // TODO: TESTING !
-					}, obj.localPeoteServer.netLag);
+					if (p.isConnected) {
+						obj.localPeoteServer = k;
+						var jointNr:Int = freeClientJointNr(obj.localPeoteServer.localPeoteClient);
+						obj.localUserNr = PeoteNet.MAX_USER + obj.localPeoteServer.localPeoteClient.push(obj) - 1;
+						Timer.delay(function() {
+							obj.localPeoteServer._onUserConnect(obj.localPeoteServer.jointNr, obj.localUserNr);
+							obj._onEnterJoint(null, jointNr); // TODO: TESTING !
+						}, obj.localPeoteServer.netLag);
+					}
+					else {
+						#if debugPeoteNet trace(key + " local server is not connected yet via socket"); #end
+						if (! p.addClientJoint(obj, jointId) ) obj._onEnterJointError(Reason.ID); // TODO: Reason: can't connect to local PeoteServer
+					}
 					return;
 				}
 			}
@@ -238,7 +244,7 @@ class PeoteNet
 			else
 			{
 				#if debugPeoteNet trace(key + " socket is not connected yet"); #end
-				if ( ! p.addClientJoint(obj, jointId) ) obj._onEnterJointError(Reason.ID);
+				if (! p.addClientJoint(obj, jointId) ) obj._onEnterJointError(Reason.ID);
 			}
 		}
 		else
@@ -249,8 +255,7 @@ class PeoteNet
 			
 			p.peoteJointSocket = new PeoteJointSocket(
 				server, port,
-				function (isConnected:Bool, msg:String):Void
-				                           { PeoteNet.onConnect(key, isConnected, msg); },
+				function (isConnected:Bool, msg:String):Void { PeoteNet.onConnect(key, isConnected, msg); },
 				function (msg:String):Void { PeoteNet.onClose(key, msg); },
 				function (msg:String):Void { PeoteNet.onError(key, msg); }
 			);
@@ -385,7 +390,7 @@ class PeoteNet
 				if (obj.localPeoteServer == null) {
 					obj._onEnterJointError(Reason.DISCONNECT);
 					p.clients.remove(obj);
-				}
+				}  //else TODO: check localPeoteClients Array
 			}
 			sockets.remove(key);
 		}

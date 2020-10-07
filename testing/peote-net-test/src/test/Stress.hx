@@ -73,9 +73,11 @@ class Stress
 			onError: function(server:PeoteServer, userNr:Int, reason:Int) {
 				var isOk:Bool = false;
 				switch(reason) {
-					case Reason.DISCONNECT:log("Can't connect to peote-server.", 0, server.jointNr); stopOnError = true;
+					case Reason.DISCONNECT:log("Can't connect to peote-server.", 0, server.jointNr);
+					                       //stopOnError = true;
 					case Reason.CLOSE:     log("Connection to peote-server is closed.", 0, server.jointNr);
-					case Reason.ID:        isOk = true;//log("There is another channel with same ID. (or wrong ID)");
+					case Reason.ID:        log("There is another channel with same ID. (or wrong ID)", 0, server.jointNr);
+					                       isOk = true;
 					case Reason.MAX:       log("Created to much channels on this server (max is 128).", 0, server.jointNr);
 					case Reason.MALICIOUS: if (userNr > 0) log('User $userNr sending malicious data.', 0, server.jointNr); // TODO: kick/bann user
 				}
@@ -103,16 +105,19 @@ class Stress
 		clientEvents = {
 			maxChunkSize: maxBytes,
 			onEnter: function(client:PeoteClient) {
-				log('Connect: Channel ${client.jointNr} entered ("${client.jointId}")',1, client.jointNr); stopOnError = true;
+				log('Connect: Channel ${client.jointNr} entered ("${client.jointId}")', 1, client.jointNr);
+				//stopOnError = true;
 				Timer.delay(enterNext, 100);
 				sendRandomBytes(client);
 			},
 			onError: function(client:PeoteClient, reason:Int) {
 				var isOk:Bool = false;
 				switch(reason) {
-					case Reason.DISCONNECT:log("Can't connect to peote-server.",1, client.jointNr);
+					case Reason.DISCONNECT:log("Can't connect to peote-server.", 1, client.jointNr);
+					                       //stopOnError = true;
 					case Reason.CLOSE:     log("Connection to peote-server is closed.",1, client.jointNr);
-					case Reason.ID:        isOk = true;//log("No channel with this ID to enter.",1, client.jointNr);
+				    case Reason.ID:        log("No channel with this ID to enter.",1, client.jointNr);
+					                       isOk = true;
 					case Reason.MAX:       log("Entered to much channels on this server (max is 128)",1, client.jointNr);
 					case Reason.FULL:      log("Channel is full (max of 256 users already connected to this channel).",1, client.jointNr);
 					case Reason.MALICIOUS: log("Channel-owner sending malicious data.",1, client.jointNr);

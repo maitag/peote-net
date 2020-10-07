@@ -25,7 +25,7 @@ class MainOpenfl extends Sprite {
 	var maxClients:Int = 1;
 	#else
 	var maxServers:Int = 1;
-	var maxClients:Int = 1;
+	var maxClients:Int = 2;
 	#end
 	
 	var minBytes:Int = 1;
@@ -45,7 +45,7 @@ class MainOpenfl extends Sprite {
 		
 		stage.addEventListener (Event.RESIZE, stageOnResize);
 		
-		test = new Stress(host, port, log, maxServers, maxClients, channelName, maxChannel, minBytes, maxBytes );
+		test = new Stress(host, port, log, maxServers, maxClients, channelName, maxChannel, minBytes, maxBytes);
 	}
 	
 	public function log(s:String, type:Int, nr:Int):Void {

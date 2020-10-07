@@ -116,7 +116,7 @@ class PeoteServer
 			last_delay = delay; // TODO: for local testing put a LIMIT here for OVERFLOW!!!!!
 			last_time = Timer.stamp();
 			Timer.delay(function() {
-				localPeoteClient[PeoteNet.MAX_USER-userNr]._onData(localPeoteClient[PeoteNet.MAX_USER-userNr].jointNr, bytes); // TODO _onLocalData optimizing
+				localPeoteClient[userNr-PeoteNet.MAX_USER]._onData(localPeoteClient[userNr-PeoteNet.MAX_USER].jointNr, bytes); // TODO _onLocalData optimizing
 			}, delay);
 		}
 	}
