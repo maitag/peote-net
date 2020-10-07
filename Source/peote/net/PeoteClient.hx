@@ -104,14 +104,16 @@ class PeoteClient
 	public function send(bytes:Bytes):Void
 	{
 		//trace("send:", bytes.toHex());
-		if (localPeoteServer == null) this.peoteJointSocket.sendDataToJointIn(this.jointNr, bytes );
+		if (localPeoteServer == null ) {
+			if (this.peoteJointSocket != null) this.peoteJointSocket.sendDataToJointIn(this.jointNr, bytes );
+		}
 		else {
 			var delay = Std.int(Math.max(0, last_delay - (Timer.stamp() - last_time) * 1000))
 			          + Std.int(localPeoteServer.netLag + 1000 * bytes.length / localPeoteServer.netSpeed);
 			last_delay = delay; // TODO: for local testing put a LIMIT here for OVERFLOW!!!!!
 			last_time = Timer.stamp();
 			Timer.delay(function() {
-				localPeoteServer._onData(localPeoteServer.jointNr, localUserNr , bytes);
+				if (localPeoteServer != null ) localPeoteServer._onData(localPeoteServer.jointNr, localUserNr , bytes);
 			}, delay);
 		}
 	}

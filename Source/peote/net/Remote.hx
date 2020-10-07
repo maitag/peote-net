@@ -4,9 +4,6 @@ package peote.net;
  * by Sylvio Sell - Rostock 2018
  */
 
-import haxe.macro.Expr;
-import haxe.macro.Context;
-
 #if !macro
 
 @:remove @:autoBuild(peote.net.Remote.RemoteImpl.build())
@@ -14,6 +11,9 @@ interface Remote {}
 class RemoteImpl {}
 
 #else
+
+import haxe.macro.Expr;
+import haxe.macro.Context;
 
 class RemoteImpl
 {
