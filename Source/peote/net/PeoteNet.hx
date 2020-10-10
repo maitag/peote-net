@@ -44,11 +44,11 @@ class PeoteNetSocket
 		clients = new Map();
 	}
 	
-	public function addServerJoint(obj:PeoteServer, jointId:String):Bool {
-		if ( ! server.exists(obj)) {
+	public function addServerJoint(peoteServer:PeoteServer, jointId:String):Bool {
+		if ( ! server.exists(peoteServer)) {
 			if ( ! Lambda.has(server, jointId) ) {
 				if ( ! Lambda.has(clients, jointId)) {
-					server.set(obj, jointId );
+					server.set(peoteServer, jointId );
 					return true;
 				}
 			}
@@ -56,18 +56,17 @@ class PeoteNetSocket
 		return false;
 	}
 	
-	public function addClientJoint(obj:PeoteClient, jointId:String):Bool {
-		if ( ! clients.exists(obj)) {
+	public function addClientJoint(peoteClient:PeoteClient, jointId:String):Bool {
+		if ( ! clients.exists(peoteClient)) {
 			if ( ! Lambda.has(clients, jointId) ) {
 				if ( ! Lambda.has(server, jointId)) {
-					clients.set(obj, jointId );
+					clients.set(peoteClient, jointId );
 					return true;
 				}
 			}
 		}
 		return false;
-	}
-	
+	}	
 }
 
 class PeoteNet
@@ -79,11 +78,11 @@ class PeoteNet
 	private static var sockets:Map<String, PeoteNetSocket> = new Map<String, PeoteNetSocket>();
 	private static var offlineServer:Map<String, PeoteServer> = new Map<String, PeoteServer>();
 	
-	public static function createJoint(obj:PeoteServer, server:String, port:Int, jointId:String):Void 
+	public static function createJoint(peoteServer:PeoteServer, server:String, port:Int, jointId:String):Void 
 	{
 		if (offlineServer.exists(server + ":" + port + ":" + jointId))
 		{
-			obj._onCreateJointError(Reason.ID);
+			peoteServer._onCreateJointError(Reason.ID);
 			return;
 		}
 		
@@ -96,23 +95,23 @@ class PeoteNet
 			if (p.isConnected)
 			{
 				#if debugPeoteNet trace(key + " socket is already connected"); #end
-				if (p.addServerJoint(obj, jointId))
+				if (p.addServerJoint(peoteServer, jointId))
 				{
 					#if debugPeoteNet trace(key + " createOwnJoint"); #end
 					p.peoteJointSocket.createOwnJoint(jointId,
-						function (jointNr:Int):Void { obj._onCreateJoint(p.peoteJointSocket, jointNr); },
-						obj._onData,
-						obj._onUserConnect,
-						obj._onUserDisconnect,
-						function (errorNr:Int):Void { PeoteNet.onCreateJointError(key, obj, errorNr); }
+						function (jointNr:Int):Void { peoteServer._onCreateJoint(p.peoteJointSocket, jointNr); },
+						peoteServer._onData,
+						peoteServer._onUserConnect,
+						peoteServer._onUserDisconnect,
+						function (errorNr:Int):Void { PeoteNet.onCreateJointError(key, peoteServer, errorNr); }
 					);
 				}
-				else obj._onCreateJointError(Reason.ID);
+				else peoteServer._onCreateJointError(Reason.ID);
 			}
 			else
 			{
 				#if debugPeoteNet trace(key + " socket is not connected yet"); #end
-				if (! p.addServerJoint(obj, jointId)) obj._onCreateJointError(Reason.ID);
+				if (! p.addServerJoint(peoteServer, jointId)) peoteServer._onCreateJointError(Reason.ID);
 			}
 		}
 		else
@@ -128,12 +127,12 @@ class PeoteNet
 				function (msg:String):Void { PeoteNet.onError(key, msg); }
 			);
 			
-			if (p.addServerJoint(obj, jointId))
+			if (p.addServerJoint(peoteServer, jointId))
 			{
 				#if debugPeoteNet trace("Peote-Server: trying Connect "+server+":"+port+"..."); #end
 				p.peoteJointSocket.connect(server, port);
 			}
-			else obj._onCreateJointError(Reason.ID);
+			else peoteServer._onCreateJointError(Reason.ID);
 		}
 	}
 	
@@ -152,20 +151,20 @@ class PeoteNet
 		return n;
 	}
 	
-	public static function createOfflineJoint(obj:PeoteServer, server:String, port:Int, jointId:String):Void 
+	public static function createOfflineJoint(peoteServer:PeoteServer, server:String, port:Int, jointId:String):Void 
 	{
 		var key:String = server + ":" + port + ":" + jointId;
 		if (offlineServer.exists(key))
 		{
-			obj._onCreateJointError(Reason.ID);
+			peoteServer._onCreateJointError(Reason.ID);
 		}
 		else
 		{
 			var jointNr:Int = freeServerJointNr(offlineServer);
-			offlineServer.set(key, obj);
+			offlineServer.set(key, peoteServer);
 			Timer.delay(function() {
-				obj._onCreateJoint(null, jointNr);  // TODO: TESTING!!!
-			}, obj.netLag);
+				peoteServer._onCreateJoint(null, jointNr);  // TODO: TESTING!!!
+			}, peoteServer.netLag);
 		}
 	}
 	
@@ -184,7 +183,7 @@ class PeoteNet
 		return n;
 	}
 	
-	public static function enterJoint(obj:PeoteClient, server:String, port:Int, jointId:String):Void 
+	public static function enterJoint(peoteClient:PeoteClient, server:String, port:Int, jointId:String):Void 
 	{
 		var p:PeoteNetSocket;
 		var key:String = server + ":" + port;
@@ -192,13 +191,13 @@ class PeoteNet
 		// check for local offline PeoteServer for direct connection
 		if (offlineServer.exists(key + ":" + jointId))
 		{
-			obj.localPeoteServer = offlineServer.get(key + ":" + jointId);
-			var jointNr:Int = freeClientJointNr(obj.localPeoteServer.localPeoteClient);
-			obj.localUserNr = PeoteNet.MAX_USER + obj.localPeoteServer.localPeoteClient.push(obj) - 1;
+			peoteClient.localPeoteServer = offlineServer.get(key + ":" + jointId);
+			var jointNr:Int = freeClientJointNr(peoteClient.localPeoteServer.localPeoteClient);
+			peoteClient.localUserNr = PeoteNet.MAX_USER + peoteClient.localPeoteServer.localPeoteClient.push(peoteClient) - 1;
 			Timer.delay(function() {
-				obj.localPeoteServer._onUserConnect(obj.localPeoteServer.jointNr, obj.localUserNr);
-				obj._onEnterJoint(null, jointNr); // TODO: TESTING !
-			}, obj.localPeoteServer.netLag);
+				peoteClient.localPeoteServer._onUserConnect(peoteClient.localPeoteServer.jointNr, peoteClient.localUserNr);
+				peoteClient._onEnterJoint(null, jointNr); // TODO: TESTING !
+			}, peoteClient.localPeoteServer.netLag);
 			return;
 		}
 		
@@ -209,24 +208,16 @@ class PeoteNet
 			// check for local PeoteServer for direct connection
 			for (k in p.server.keys()) {
 				if (p.server.get(k) == jointId) {
-					if (p.isConnected) { // TODO: check alsp same as below (already connected...)
-						obj.localPeoteServer = k;
-						var jointNr:Int = freeClientJointNr(obj.localPeoteServer.localPeoteClient);
-						obj.localUserNr = PeoteNet.MAX_USER + obj.localPeoteServer.localPeoteClient.push(obj) - 1;
-						// TODO: bug on windows if perl-server is often connecting/disconnecting..
-						// .. maybe without Timer here!
-						Timer.delay(function() {
-							if (obj.localPeoteServer != null) {
-								obj.localPeoteServer._onUserConnect(obj.localPeoteServer.jointNr, obj.localUserNr);
-								obj._onEnterJoint(null, jointNr); // TODO: TESTING !
-							}
-							else obj._onEnterJointError(Reason.ID);
-						}, obj.localPeoteServer.netLag);
+					if (p.isConnected) {
+						peoteClient.localPeoteServer = k;
+						var jointNr:Int = freeClientJointNr(peoteClient.localPeoteServer.localPeoteClient);
+						peoteClient.localUserNr = PeoteNet.MAX_USER + peoteClient.localPeoteServer.localPeoteClient.push(peoteClient) - 1;
+						peoteClient.localPeoteServer._onUserConnect(peoteClient.localPeoteServer.jointNr, peoteClient.localUserNr);
+						peoteClient._onEnterJoint(null, jointNr);
 					}
 					else {
-						// TODO: bug on windows if perl-server is often connecting/disconnecting
 						#if debugPeoteNet trace(key + " local server is not connected yet via socket"); #end
-						if (! p.addClientJoint(obj, jointId) ) obj._onEnterJointError(Reason.ID); // TODO: Reason: can't connect to local PeoteServer
+						peoteClient._onEnterJointError(Reason.ID); // TODO: Reason: can't connect to local PeoteServer
 					}
 					return;
 				}
@@ -236,21 +227,21 @@ class PeoteNet
 			if (p.isConnected)
 			{
 				#if debugPeoteNet trace(key + " socket is already connected"); #end
-				if (p.addClientJoint(obj, jointId))
+				if (p.addClientJoint(peoteClient, jointId))
 				{
 					p.peoteJointSocket.enterInJoint(jointId,
-						function (jointNr:Int):Void { obj._onEnterJoint(p.peoteJointSocket, jointNr); },
-						obj._onData,
-						//obj.onDisconnect,
-						function (jointNr:Int, reason:Int):Void { PeoteNet.onDisconnect(key, obj, jointNr, reason); },
-						function (errorNr:Int):Void { PeoteNet.onEnterJointError(key, obj, errorNr); }
+						function (jointNr:Int):Void { peoteClient._onEnterJoint(p.peoteJointSocket, jointNr); },
+						peoteClient._onData,
+						//peoteClient.onDisconnect,
+						function (jointNr:Int, reason:Int):Void { PeoteNet.onDisconnect(key, peoteClient, jointNr, reason); },
+						function (errorNr:Int):Void { PeoteNet.onEnterJointError(key, peoteClient, errorNr); }
 					);
-				} else obj._onEnterJointError(Reason.ID);
+				} else peoteClient._onEnterJointError(Reason.ID);
 			}
 			else
 			{
 				#if debugPeoteNet trace(key + " socket is not connected yet"); #end
-				if (! p.addClientJoint(obj, jointId) ) obj._onEnterJointError(Reason.ID);
+				if (! p.addClientJoint(peoteClient, jointId) ) peoteClient._onEnterJointError(Reason.ID);
 			}
 		}
 		else
@@ -266,26 +257,25 @@ class PeoteNet
 				function (msg:String):Void { PeoteNet.onError(key, msg); }
 			);
 			
-			if (p.addClientJoint(obj, jointId))
+			if (p.addClientJoint(peoteClient, jointId))
 			{
 				#if debugPeoteNet trace("Peote-Server: trying Connect "+server+":"+port+"..."); #end
 				p.peoteJointSocket.connect(server, port);
 			}
-			else obj._onEnterJointError(Reason.ID);
+			else peoteClient._onEnterJointError(Reason.ID);
 		}
 	}
 	
-	public static function deleteJoint(obj:PeoteServer, server:String, port:Int, jointNr:Int):Void 
+	public static function deleteJoint(peoteServer:PeoteServer, server:String, port:Int, jointNr:Int):Void 
 	{
 		var key:String = server + ":" + port;
 		if (sockets.exists(key))
 		{
 			var p:PeoteNetSocket = sockets.get(key);
 			p.peoteJointSocket.deleteOwnJoint(jointNr);
-			p.server.remove(obj);
-			for (i in 0...obj.localPeoteClient.length) {
-				//trace("deleteJoint", i);
-				var localClient = obj.localPeoteClient.pop();
+			p.server.remove(peoteServer);
+			for (i in 0...peoteServer.localPeoteClient.length) {
+				var localClient = peoteServer.localPeoteClient.pop();
 				localClient.localPeoteServer = null;
 				localClient._onDisconnect(localClient.jointNr, Reason.DISCONNECT);
 				p.clients.remove(localClient);
@@ -299,21 +289,28 @@ class PeoteNet
 		}
 	}
 	
-	public static function deleteOfflineJoint(obj:PeoteServer, server:String, port:Int, jointId:String):Void 
+	public static function deleteOfflineJoint(peoteServer:PeoteServer, server:String, port:Int, jointId:String):Void 
 	{
 		var key:String = server + ":" + port + ":" + jointId;
 		if (offlineServer.exists(key))
 		{
 			offlineServer.remove(key);
+			for (i in 0...peoteServer.localPeoteClient.length) {
+				var localClient = peoteServer.localPeoteClient.pop();
+				localClient.localPeoteServer = null;
+				localClient._onEnterJointError(Reason.DISCONNECT);
+			}
 		}
 	}
 	
-	public static function leaveJoint(obj:PeoteClient, server:String, port:Int, jointNr:Int):Void
+	public static function leaveJoint(peoteClient:PeoteClient, server:String, port:Int, jointNr:Int):Void
 	{
-		if (obj.localPeoteServer != null) {
-			Timer.delay(function() {
-				obj.localPeoteServer._onUserDisconnect(obj.localPeoteServer.jointNr, obj.localUserNr, 0);
-			}, obj.localPeoteServer.netLag);
+		if (peoteClient.localPeoteServer != null) {
+			//Timer.delay(function() {
+				peoteClient.localPeoteServer._onUserDisconnect(peoteClient.localPeoteServer.jointNr, peoteClient.localUserNr, 0);
+				peoteClient.localPeoteServer.localPeoteClient.remove(peoteClient);
+				peoteClient.localPeoteServer = null;
+			//}, peoteClient.localPeoteServer.netLag);
 			return;
 		}
 		
@@ -322,27 +319,28 @@ class PeoteNet
 		{
 			var p:PeoteNetSocket = sockets.get(key);
 			p.peoteJointSocket.leaveInJoint(jointNr);
-			p.clients.remove(obj);
+			p.clients.remove(peoteClient);
 			if (Lambda.count(p.server) == 0 && Lambda.count(p.clients) == 0 )
 			{
-				#if debugPeoteNet trace("Peote-Server: " + key + " leave last -> closeed"); #end
+				#if debugPeoteNet trace("Peote-Server: " + key + " leave last -> closed"); #end
 				p.peoteJointSocket.close();
 				sockets.remove(key);
 			}
 		}
+		// TODO else throw -> leaveJoint: socket to $server:$port was not connected
 	}
 	
 	// ------------------------ joint create enter error events --------------------------
 
-	public static function onCreateJointError(key:String, obj:PeoteServer, errorNr:Int):Void
+	public static function onCreateJointError(key:String, peoteServer:PeoteServer, errorNr:Int):Void
 	{
 		if (sockets.exists(key))
 		{
 			var p:PeoteNetSocket = sockets.get(key);
-			p.server.remove(obj);
-			for (i in 0...obj.localPeoteClient.length) { //TODO: is this need here? (test if localclient is able to connect inbetween!)
-				//trace("onCreateJointError",i);
-				var localClient = obj.localPeoteClient.pop();
+			p.server.remove(peoteServer);
+			// TODO: can it have local clients ?
+			for (i in 0...peoteServer.localPeoteClient.length) {
+				var localClient = peoteServer.localPeoteClient.pop();
 				localClient.localPeoteServer = null;
 				localClient._onEnterJointError(Reason.DISCONNECT);
 				p.clients.remove(localClient);
@@ -354,15 +352,15 @@ class PeoteNet
 				sockets.remove(key);
 			}
 		}
-		obj._onCreateJointError(errorNr);
+		peoteServer._onCreateJointError(errorNr);
 	}
 	
-	public static function onEnterJointError(key:String, obj:PeoteClient, errorNr:Int):Void
+	public static function onEnterJointError(key:String, peoteClient:PeoteClient, errorNr:Int):Void
 	{
 		if (sockets.exists(key))
 		{
 			var p:PeoteNetSocket = sockets.get(key);
-			p.clients.remove(obj);
+			p.clients.remove(peoteClient);
 			if (Lambda.count(p.server) == 0 && Lambda.count(p.clients) == 0 )
 			{
 				#if debugPeoteNet trace("Peote-Server: " + key + " leave last -> closeed"); #end
@@ -370,15 +368,15 @@ class PeoteNet
 				sockets.remove(key);
 			}
 		}
-		obj._onEnterJointError(errorNr);
+		peoteClient._onEnterJointError(errorNr);
 	}
 	
-	public static function onDisconnect(key:String, obj:PeoteClient, jointNr:Int, reason:Int):Void
+	public static function onDisconnect(key:String, peoteClient:PeoteClient, jointNr:Int, reason:Int):Void
 	{
 		if (sockets.exists(key))
 		{
 			var p:PeoteNetSocket = sockets.get(key);
-			p.clients.remove(obj);
+			p.clients.remove(peoteClient);
 			if (Lambda.count(p.server) == 0 && Lambda.count(p.clients) == 0 )
 			{
 				#if debugPeoteNet trace("Peote-Server: " + key + " leave last -> closeed"); #end
@@ -386,7 +384,7 @@ class PeoteNet
 				sockets.remove(key);
 			}
 		}
-		obj._onDisconnect(jointNr, reason);
+		peoteClient._onDisconnect(jointNr, reason);
 	}
 	
 	// -----------------------------------------------------------------------------------
@@ -398,25 +396,25 @@ class PeoteNet
 		var p:PeoteNetSocket = sockets.get(key);
 		if (!isConnected) {
 			#if debugPeoteNet trace("Peote-Server: " + key + " cant connect: " + msg); #end
-			for (obj in p.server.keys() )
+			for (peoteServer in p.server.keys() )
 			{	
-				if (!obj.offline) {
-					obj._onCreateJointError(Reason.DISCONNECT);
-					p.server.remove(obj);
-					for (i in 0...obj.localPeoteClient.length) { //TODO: is this need here? (test if localclient is able to connect inbetween!)
-						//trace("onConnect->dissconnect",i);
-						var localClient = obj.localPeoteClient.pop();
+				if (!peoteServer.offline) { // TODO: can it be offline ?
+					peoteServer._onCreateJointError(Reason.DISCONNECT);
+					p.server.remove(peoteServer);
+					// TODO: can it have local clients ?
+					for (i in 0...peoteServer.localPeoteClient.length) { // TODO: refactor!
+						var localClient = peoteServer.localPeoteClient.pop();
 						localClient.localPeoteServer = null;
 						localClient._onEnterJointError(Reason.DISCONNECT);
 						p.clients.remove(localClient);
 					}
 				}
 			}
-			for (obj in p.clients.keys() )
+			for (peoteClient in p.clients.keys() )
 			{
-				if (obj.localPeoteServer == null) {
-					obj._onEnterJointError(Reason.DISCONNECT);
-					p.clients.remove(obj);
+				if (peoteClient.localPeoteServer == null) {
+					peoteClient._onEnterJointError(Reason.DISCONNECT);
+					p.clients.remove(peoteClient);
 				}
 			}
 			sockets.remove(key);
@@ -424,24 +422,24 @@ class PeoteNet
 		else {
 			p.isConnected = true;
 			#if debugPeoteNet trace("Peote-Server: " + key + " onConnect: " + msg); #end
-			for (obj in p.server.keys() )
+			for (peoteServer in p.server.keys() )
 			{
-				if (!obj.offline) p.peoteJointSocket.createOwnJoint(p.server.get(obj),
-				    function (jointNr:Int):Void { obj._onCreateJoint(p.peoteJointSocket, jointNr); },
-				    obj._onData,
-					obj._onUserConnect,
-					obj._onUserDisconnect,
-					function (errorNr:Int):Void { PeoteNet.onCreateJointError(key, obj, errorNr); }
+				if (!peoteServer.offline) p.peoteJointSocket.createOwnJoint(p.server.get(peoteServer),
+				    function (jointNr:Int):Void { peoteServer._onCreateJoint(p.peoteJointSocket, jointNr); },
+				    peoteServer._onData,
+					peoteServer._onUserConnect,
+					peoteServer._onUserDisconnect,
+					function (errorNr:Int):Void { PeoteNet.onCreateJointError(key, peoteServer, errorNr); }
 				);
 			}
-			for (obj in p.clients.keys() )
+			for (peoteClient in p.clients.keys() )
 			{
-				if (obj.localPeoteServer == null) p.peoteJointSocket.enterInJoint(p.clients.get(obj),
-				    function (jointNr:Int):Void { obj._onEnterJoint(p.peoteJointSocket, jointNr); },
-				    obj._onData,
-					//obj.onDisconnect,
-					function (jointNr:Int, reason:Int):Void { PeoteNet.onDisconnect(key, obj, jointNr, reason); },
-					function (errorNr:Int):Void { PeoteNet.onEnterJointError(key, obj, errorNr); }
+				if (peoteClient.localPeoteServer == null) p.peoteJointSocket.enterInJoint(p.clients.get(peoteClient),
+				    function (jointNr:Int):Void { peoteClient._onEnterJoint(p.peoteJointSocket, jointNr); },
+				    peoteClient._onData,
+					//peoteClient.onDisconnect,
+					function (jointNr:Int, reason:Int):Void { PeoteNet.onDisconnect(key, peoteClient, jointNr, reason); },
+					function (errorNr:Int):Void { PeoteNet.onEnterJointError(key, peoteClient, errorNr); }
 				);
 			}
 		}
@@ -453,22 +451,22 @@ class PeoteNet
 		if (sockets.exists(key))
 		{
 			var p:PeoteNetSocket = sockets.get(key);
-			for (obj in p.server.keys() )
+			for (peoteServer in p.server.keys() )
 			{
-				obj._onCreateJointError(Reason.CLOSE);
-				p.server.remove(obj); 
-				for (i in 0...obj.localPeoteClient.length) {
-					//trace("onClose", i);
-					var localClient = obj.localPeoteClient.pop();
+				peoteServer._onCreateJointError(Reason.CLOSE);
+				p.server.remove(peoteServer);
+				// TODO: can it have local clients ?
+				for (i in 0...peoteServer.localPeoteClient.length) {  // TODO refactor!
+					var localClient = peoteServer.localPeoteClient.pop();
 					localClient.localPeoteServer = null;
 					localClient._onEnterJointError(Reason.CLOSE);
 					p.clients.remove(localClient);
 				}
 			}
-			for (obj in p.clients.keys() )
+			for (peoteClient in p.clients.keys() )
 			{
-				obj._onEnterJointError(Reason.CLOSE);
-				p.clients.remove(obj);
+				peoteClient._onEnterJointError(Reason.CLOSE);
+				p.clients.remove(peoteClient);
 			}
 			sockets.remove(key);
 		}
@@ -480,22 +478,22 @@ class PeoteNet
 		if (sockets.exists(key))
 		{
 			var p:PeoteNetSocket = sockets.get(key);
-			for (obj in p.server.keys() )
+			for (peoteServer in p.server.keys() )
 			{
-				obj._onCreateJointError(Reason.CLOSE);
-				p.server.remove(obj); 
-				for (i in 0...obj.localPeoteClient.length) {
-					//trace("onError", i);
-					var localClient = obj.localPeoteClient.pop();
+				peoteServer._onCreateJointError(Reason.CLOSE);
+				p.server.remove(peoteServer);
+				// TODO: can it have local clients ?
+				for (i in 0...peoteServer.localPeoteClient.length) { // TODO refactor!
+					var localClient = peoteServer.localPeoteClient.pop();
 					localClient.localPeoteServer = null;
 					localClient._onEnterJointError(Reason.CLOSE);
 					p.clients.remove(localClient);
 				}
 			}
-			for (obj in p.clients.keys() )
+			for (peoteClient in p.clients.keys() )
 			{
-				obj._onEnterJointError(Reason.CLOSE);
-				p.clients.remove(obj);
+				peoteClient._onEnterJointError(Reason.CLOSE);
+				p.clients.remove(peoteClient);
 			}
 			sockets.remove(key);
 		}
