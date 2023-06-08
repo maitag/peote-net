@@ -160,6 +160,7 @@ class RemoteImpl
 		var classnameRemote = classname+"RemoteServer";
 		//Context.defineType(generateRemoteCaller(classnameRemote, true, remoteNames, remoteParams));
 		Context.defineModule(classpackage.concat([classnameRemote]).join('.'),[generateRemoteCaller(classnameRemote, true, remoteNames, remoteParams)],Context.getLocalImports());
+		trace('generating: $classnameRemote');
 		
 		var getRemoteServer:Function = { // add function to return an instanze of that class
 			args:[ {name:"server", type:macro:peote.net.PeoteServer, opt:false, value:null},
@@ -182,6 +183,7 @@ class RemoteImpl
 		classnameRemote = classname+"RemoteClient";
 		//Context.defineType(generateRemoteCaller(classnameRemote, false, remoteNames, remoteParams));		
 		Context.defineModule(classpackage.concat([classnameRemote]).join('.'),[generateRemoteCaller(classnameRemote, false, remoteNames, remoteParams)],Context.getLocalImports());		
+		trace('generating: $classnameRemote');
 		
 		var getRemoteClient:Function = { // add function to return an instanze of that class
 			args:[ {name:"client", type:macro:peote.net.PeoteClient, opt:false, value:null},
