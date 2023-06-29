@@ -159,16 +159,19 @@ class RemoteImpl
 		// -------------------------------------------------------------------------------------------------
 		var classnameRemote = classname+"RemoteServer";
 		//Context.defineType(generateRemoteCaller(classnameRemote, true, remoteNames, remoteParams));
-		Context.defineModule(classpackage.concat([classnameRemote]).join('.'),[generateRemoteCaller(classnameRemote, true, remoteNames, remoteParams)],Context.getLocalImports());
-		trace('generating: $classnameRemote');
+		//Context.defineModule(classpackage.concat([classnameRemote]).join('.'),[generateRemoteCaller(classnameRemote, true, remoteNames, remoteParams)],Context.getLocalImports());
+		Context.defineModule(classpackage.concat([classnameRemote]).join('.'),[generateRemoteCaller(classnameRemote, true, remoteNames, remoteParams)],null);
+		trace('generating: ${classpackage.concat([classnameRemote]).join('.')}');
 		
 		var getRemoteServer:Function = { // add function to return an instanze of that class
 			args:[ {name:"server", type:macro:peote.net.PeoteServer, opt:false, value:null},
 			       {name:"user", type:macro:Int, opt:false, value:null},
 			       {name:"remoteId", type:macro:Int, opt:false, value:null}
 			],
-			expr: Context.parse( 'return new $classnameRemote(server, user, remoteId)', Context.currentPos()),
-			ret: TPath({ name:classnameRemote, pack:[], params:[] }) // ret = return type
+			//expr: Context.parse( 'return new $classnameRemote(server, user, remoteId)', Context.currentPos()),
+			expr: Context.parse( 'return new ${classpackage.concat([classnameRemote]).join('.')}(server, user, remoteId)', Context.currentPos()),
+			//ret: TPath({ name:classnameRemote, pack:[], params:[] }) // ret = return type
+			ret: TPath({ name:classnameRemote, pack:classpackage, params:[] }) // ret = return type
 		}
  		fields.push({
 		  name: "getRemoteServer",
@@ -182,15 +185,18 @@ class RemoteImpl
 		
 		classnameRemote = classname+"RemoteClient";
 		//Context.defineType(generateRemoteCaller(classnameRemote, false, remoteNames, remoteParams));		
-		Context.defineModule(classpackage.concat([classnameRemote]).join('.'),[generateRemoteCaller(classnameRemote, false, remoteNames, remoteParams)],Context.getLocalImports());		
-		trace('generating: $classnameRemote');
+		//Context.defineModule(classpackage.concat([classnameRemote]).join('.'),[generateRemoteCaller(classnameRemote, false, remoteNames, remoteParams)],Context.getLocalImports());		
+		Context.defineModule(classpackage.concat([classnameRemote]).join('.'),[generateRemoteCaller(classnameRemote, false, remoteNames, remoteParams)],null);		
+		trace('generating: ${classpackage.concat([classnameRemote]).join('.')}');
 		
 		var getRemoteClient:Function = { // add function to return an instanze of that class
 			args:[ {name:"client", type:macro:peote.net.PeoteClient, opt:false, value:null},
 			       {name:"remoteId", type:macro:Int, opt:false, value:null}
 			],
-			expr: Context.parse( 'return new $classnameRemote(client, remoteId)', Context.currentPos()) ,
-			ret: TPath({ name:classnameRemote, pack:[], params:[] }) // ret = return type
+			//expr: Context.parse( 'return new $classnameRemote(client, remoteId)', Context.currentPos()) ,
+			expr: Context.parse( 'return new ${classpackage.concat([classnameRemote]).join('.')}(client, remoteId)', Context.currentPos()) ,
+			//ret: TPath({ name:classnameRemote, pack:[], params:[] }) // ret = return type
+			ret: TPath({ name:classnameRemote, pack:classpackage, params:[] }) // ret = return type
 		}
  		fields.push({
 		  name: "getRemoteClient",
@@ -199,7 +205,7 @@ class RemoteImpl
 		  pos: Context.currentPos(),
 		  kind: FieldType.FFun(getRemoteClient),
 		});
-		
+				
 		return fields;
 	}
 	
