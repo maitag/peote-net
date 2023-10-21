@@ -4,9 +4,9 @@
 	"license": "MIT",
 	"tags": ["peote", "socket", "tcp", "networking", "rpc"],
 	"description": "Library to write TCP-Networking Applications",
-	"version": "0.7.2",
+	"version": "0.7.3",
 	"classPath": "src/",
-	"releasenote": "fixing remote-generation, renaming Source into src",
+	"releasenote": "fixing max chunkSize",
 	"contributors": ["maitag"],
 	"dependencies": {
 		"peote-socket": ""

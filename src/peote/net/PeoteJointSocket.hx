@@ -235,6 +235,21 @@ class PeoteJointSocket
 		
 	}
 	
+	// TODO:
+/*	disconnectUserFromOwnJoint(joint_nr:Int, user_nr:Int)
+	{
+		peoteSocket.writeByte(0); // 0 leitet command ein (das waere sonst die chunk-size, die kann aber niemals 1 sein)
+		peoteSocket.writeByte(4); // disconnectUser command
+		peoteSocket.writeByte(0); // (normalerweise die command_nr) 0 -> erwartet keine antwort
+		
+		peoteSocket.writeByte(2); // chunksize ist 2 da nurnoch joint_nr und user_nr kommen
+		peoteSocket.writeByte(joint_nr); // der eigentliche chunk
+		peoteSocket.writeByte(user_nr);
+		
+		peoteSocket.flush();
+		
+	}
+*/	
 	public function enterInJoint(joint_id:String, commandCallback:Int -> Void,
 												dataCallback:Int -> Bytes -> Void,
 												disconnectCallback:Int -> Int -> Void,

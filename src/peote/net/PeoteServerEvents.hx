@@ -14,6 +14,7 @@ typedef PeoteServerEvents = {
 	?onData:PeoteServer -> Int -> Bytes -> Void,
 	?onDataChunk:PeoteServer -> Int -> Bytes -> Void,
 	?onRemote:PeoteServer -> Int -> Int -> Void,
+	?maxBytesPerChunkSize:Int,
 	?maxChunkSize:Int,
 	?offline:Bool,
 	?netLag:Int,

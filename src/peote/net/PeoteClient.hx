@@ -29,6 +29,7 @@ class PeoteClient
 	//            for 2 byte -> max 32768 (32 KB),
 	//            for 3 byte -> max 4194304 (4 MB)
 	//            for 4 byte -> max 536870912 (512 MB)
+	//            for 5 byte -> max 2147483647 (2 GB less one Byte)
 	var maxBytesPerChunkSize:Int = 2;
 	var maxChunkSize:Int = 32768;
 
@@ -55,13 +56,20 @@ class PeoteClient
 		}
 		
 		if (isChunks) {
-			if (events.maxChunkSize != null) {
+			if (events.maxBytesPerChunkSize != null) {
+				if (events.maxChunkSize != null) throw("Error: Use either 'maxBytesPerChunkSize' or 'maxChunkSize' to define the maximum of variable datachunk size.");
+				if (maxBytesPerChunkSize < 1) throw("Error: 'maxBytesPerChunkSize' have to be equal or greater than one.");
+				if (maxBytesPerChunkSize > 5) throw("Error: 'maxBytesPerChunkSize' have to be not greater than 5.");
+				if (maxBytesPerChunkSize == 5) maxChunkSize = 0x7FFFFFFF;
+				else maxChunkSize = 1 << (8 + (maxBytesPerChunkSize-1) * 7);
+			}
+			else if (events.maxChunkSize != null) {
 				maxChunkSize = events.maxChunkSize;
 				maxBytesPerChunkSize = 1;
 				if (maxChunkSize > 256) maxBytesPerChunkSize++;
 				if (maxChunkSize > 32768) maxBytesPerChunkSize++;
 				if (maxChunkSize > 4194304) maxBytesPerChunkSize++;
-				//trace(maxChunkSize, maxBytesPerChunkSize);
+				if (maxChunkSize > 536870912) maxBytesPerChunkSize++;
 			}
 			input = Bytes.alloc((maxChunkSize+maxBytesPerChunkSize)*2);
 		}
