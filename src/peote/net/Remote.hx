@@ -265,7 +265,7 @@ class RemoteImpl
 				kind: FieldType.FFun(f),
 			});
 		}
-		//c.meta= [{name:":keep", params:[], pos:Context.currentPos()}];
+		c.meta= [{name:":keep", params:[], pos:Context.currentPos()}];
 		return(c);
 	}
 	
