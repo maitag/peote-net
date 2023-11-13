@@ -193,7 +193,17 @@ class PeoteNet
 		{
 			peoteClient.localPeoteServer = offlineServer.get(key + ":" + jointId);
 			var jointNr:Int = freeClientJointNr(peoteClient.localPeoteServer.localPeoteClient);
-			peoteClient.localUserNr = PeoteNet.MAX_USER + peoteClient.localPeoteServer.localPeoteClient.push(peoteClient) - 1;
+			// peoteClient.localUserNr = PeoteNet.MAX_USER + peoteClient.localPeoteServer.localPeoteClient.push(peoteClient) - 1;
+			// CHECK: bugfix to avoid same userNr for multiple local clients ---- TODO: same as into "freeClientJointNr"
+			var n = PeoteNet.MAX_USER;
+			if (peoteClient.localPeoteServer.localPeoteClient.length > 0) {
+				var used = new Array<Int>();
+				for (c in peoteClient.localPeoteServer.localPeoteClient) used.push(c.localUserNr);
+				while (used.indexOf(n) >= 0) n++;
+			}
+			peoteClient.localUserNr = n;
+			peoteClient.localPeoteServer.localPeoteClient.push(peoteClient);
+			// ------------------------------------------------------------------
 			Timer.delay(function() {
 				peoteClient.localPeoteServer._onUserConnect(peoteClient.localPeoteServer.jointNr, peoteClient.localUserNr);
 				peoteClient._onEnterJoint(null, jointNr); // TODO: TESTING !
@@ -211,7 +221,17 @@ class PeoteNet
 					if (p.isConnected) {
 						peoteClient.localPeoteServer = k;
 						var jointNr:Int = freeClientJointNr(peoteClient.localPeoteServer.localPeoteClient);
-						peoteClient.localUserNr = PeoteNet.MAX_USER + peoteClient.localPeoteServer.localPeoteClient.push(peoteClient) - 1;
+						//peoteClient.localUserNr = PeoteNet.MAX_USER + peoteClient.localPeoteServer.localPeoteClient.push(peoteClient) - 1;
+						// CHECK: bugfix to avoid same userNr for multiple local clients ----
+						var n = PeoteNet.MAX_USER;
+						if (peoteClient.localPeoteServer.localPeoteClient.length > 0) {
+							var used = new Array<Int>();
+							for (c in peoteClient.localPeoteServer.localPeoteClient) used.push(c.localUserNr);
+							while (used.indexOf(n) >= 0) n++;
+						}
+						peoteClient.localUserNr = n;
+						peoteClient.localPeoteServer.localPeoteClient.push(peoteClient);
+						// ------------------------------------------------------------------
 						peoteClient.localPeoteServer._onUserConnect(peoteClient.localPeoteServer.jointNr, peoteClient.localUserNr);
 						peoteClient._onEnterJoint(null, jointNr);
 					}

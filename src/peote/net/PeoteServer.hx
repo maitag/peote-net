@@ -4,6 +4,7 @@ import haxe.ds.Vector;
 import haxe.io.Bytes;
 import haxe.Timer;
 import peote.io.PeoteBytesInput;
+import peote.net.PeoteClient;
 
 /**
  * by Sylvio Sell - rostock 2015
@@ -122,10 +123,26 @@ class PeoteServer
 			          + Std.int(netLag + 1000 * bytes.length / netSpeed);
 			last_delay = delay; // TODO: for local testing put a LIMIT here for OVERFLOW!!!!!
 			last_time = Timer.stamp();
+			
+			// CHECK:  bugfix to avoid same userNr for multiple local clients ---- (look at peoteNet line 224!)
+			/*
 			Timer.delay(function() {
 				if (localPeoteClient.length > userNr-PeoteNet.MAX_USER)
-					localPeoteClient[userNr-PeoteNet.MAX_USER]._onData(localPeoteClient[userNr-PeoteNet.MAX_USER].jointNr, bytes); // TODO _onLocalData optimizing
+					//if (localPeoteClient[userNr-PeoteNet.MAX_USER] != null)
+						localPeoteClient[userNr-PeoteNet.MAX_USER]._onData(localPeoteClient[userNr-PeoteNet.MAX_USER].jointNr, bytes); // TODO _onLocalData optimizing
 			}, delay);
+			*/
+			// TODO: better make the localPeoteClient as a map !
+			var localClient:PeoteClient = null;
+			for (c in localPeoteClient) {
+				if (c.localUserNr == userNr) {
+					localClient = c;
+					break;
+				}
+			}
+			if (localClient != null)
+				Timer.delay(function() { localClient._onData(localClient.jointNr, bytes); }, delay); // TODO _onLocalData optimizing
+			// ------------------------------
 		}
 	}
 
