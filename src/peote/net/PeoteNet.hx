@@ -1,5 +1,6 @@
 package peote.net;
 
+import haxe.ds.IntMap;
 import haxe.Timer;
 
 /**
@@ -168,9 +169,9 @@ class PeoteNet
 		}
 	}
 	
-	static inline function freeClientJointNr(a:Array<PeoteClient>):Int {
+	static inline function getFreeLocalClientJointNr(localPeoteClientMap:IntMap<PeoteClient>):Int {
 		var n:Int = MAX_JOINTS;
-		var usedJointNr:Array<Int> = [for (s in a) s.jointNr];
+		var usedJointNr:Array<Int> = [for (localPeoteClient in localPeoteClientMap) localPeoteClient.jointNr];
 		haxe.ds.ArraySort.sort(usedJointNr, function(a, b):Int {
 			if (a < b) return -1;
 			else if (a > b) return 1;
@@ -192,21 +193,16 @@ class PeoteNet
 		if (offlineServer.exists(key + ":" + jointId))
 		{
 			peoteClient.localPeoteServer = offlineServer.get(key + ":" + jointId);
-			var jointNr:Int = freeClientJointNr(peoteClient.localPeoteServer.localPeoteClient);
-			// peoteClient.localUserNr = PeoteNet.MAX_USER + peoteClient.localPeoteServer.localPeoteClient.push(peoteClient) - 1;
-			// CHECK: bugfix to avoid same userNr for multiple local clients ---- TODO: same as into "freeClientJointNr"
+			var jointNr:Int = getFreeLocalClientJointNr(peoteClient.localPeoteServer.localPeoteClient);
+			// CHECK: can multiple local clients get the same userNr ???
 			var n = PeoteNet.MAX_USER;
-			if (peoteClient.localPeoteServer.localPeoteClient.length > 0) {
-				var used = new Array<Int>();
-				for (c in peoteClient.localPeoteServer.localPeoteClient) used.push(c.localUserNr);
-				while (used.indexOf(n) >= 0) n++;
-			}
+			while (peoteClient.localPeoteServer.localPeoteClient.exists(n)) n++;
 			peoteClient.localUserNr = n;
-			peoteClient.localPeoteServer.localPeoteClient.push(peoteClient);
+			peoteClient.localPeoteServer.localPeoteClient.set(n, peoteClient);
 			// ------------------------------------------------------------------
 			Timer.delay(function() {
 				peoteClient.localPeoteServer._onUserConnect(peoteClient.localPeoteServer.jointNr, peoteClient.localUserNr);
-				peoteClient._onEnterJoint(null, jointNr); // TODO: TESTING !
+				peoteClient._onEnterJoint(null, jointNr); // TODO: MORE TESTING !
 			}, peoteClient.localPeoteServer.netLag);
 			return;
 		}
@@ -220,17 +216,12 @@ class PeoteNet
 				if (p.server.get(k) == jointId) {
 					if (p.isConnected) {
 						peoteClient.localPeoteServer = k;
-						var jointNr:Int = freeClientJointNr(peoteClient.localPeoteServer.localPeoteClient);
-						//peoteClient.localUserNr = PeoteNet.MAX_USER + peoteClient.localPeoteServer.localPeoteClient.push(peoteClient) - 1;
-						// CHECK: bugfix to avoid same userNr for multiple local clients ----
+						var jointNr:Int = getFreeLocalClientJointNr(peoteClient.localPeoteServer.localPeoteClient);
+						// CHECK: can multiple local clients get the same userNr ???
 						var n = PeoteNet.MAX_USER;
-						if (peoteClient.localPeoteServer.localPeoteClient.length > 0) {
-							var used = new Array<Int>();
-							for (c in peoteClient.localPeoteServer.localPeoteClient) used.push(c.localUserNr);
-							while (used.indexOf(n) >= 0) n++;
-						}
+						while (peoteClient.localPeoteServer.localPeoteClient.exists(n)) n++;
 						peoteClient.localUserNr = n;
-						peoteClient.localPeoteServer.localPeoteClient.push(peoteClient);
+						peoteClient.localPeoteServer.localPeoteClient.set(n, peoteClient);
 						// ------------------------------------------------------------------
 						peoteClient.localPeoteServer._onUserConnect(peoteClient.localPeoteServer.jointNr, peoteClient.localUserNr);
 						peoteClient._onEnterJoint(null, jointNr);
@@ -294,12 +285,13 @@ class PeoteNet
 			var p:PeoteNetSocket = sockets.get(key);
 			p.peoteJointSocket.deleteOwnJoint(jointNr);
 			p.server.remove(peoteServer);
-			for (i in 0...peoteServer.localPeoteClient.length) {
-				var localClient = peoteServer.localPeoteClient.pop();
+			for (localClient in peoteServer.localPeoteClient) {
 				localClient.localPeoteServer = null;
 				localClient._onDisconnect(localClient.jointNr, Reason.DISCONNECT);
 				p.clients.remove(localClient);
 			}
+			peoteServer.localPeoteClient = new IntMap<PeoteClient>();
+
 			if (Lambda.count(p.server) == 0 && Lambda.count(p.clients) == 0 )
 			{
 				#if debugPeoteNet trace("Peote-Server: " + key + " delete last -> closeed"); #end
@@ -315,11 +307,11 @@ class PeoteNet
 		if (offlineServer.exists(key))
 		{
 			offlineServer.remove(key);
-			for (i in 0...peoteServer.localPeoteClient.length) {
-				var localClient = peoteServer.localPeoteClient.pop();
+			for (localClient in peoteServer.localPeoteClient) {
 				localClient.localPeoteServer = null;
 				localClient._onEnterJointError(Reason.DISCONNECT);
 			}
+			peoteServer.localPeoteClient = new IntMap<PeoteClient>();
 		}
 	}
 	
@@ -328,7 +320,7 @@ class PeoteNet
 		if (peoteClient.localPeoteServer != null) {
 			//Timer.delay(function() {
 				peoteClient.localPeoteServer._onUserDisconnect(peoteClient.localPeoteServer.jointNr, peoteClient.localUserNr, 0);
-				peoteClient.localPeoteServer.localPeoteClient.remove(peoteClient);
+				peoteClient.localPeoteServer.localPeoteClient.remove(peoteClient.localUserNr);
 				peoteClient.localPeoteServer = null;
 			//}, peoteClient.localPeoteServer.netLag);
 			return;
@@ -359,12 +351,13 @@ class PeoteNet
 			var p:PeoteNetSocket = sockets.get(key);
 			p.server.remove(peoteServer);
 			// TODO: can it have local clients ?
-			for (i in 0...peoteServer.localPeoteClient.length) {
-				var localClient = peoteServer.localPeoteClient.pop();
+			for (localClient in peoteServer.localPeoteClient) {
 				localClient.localPeoteServer = null;
 				localClient._onEnterJointError(Reason.DISCONNECT);
 				p.clients.remove(localClient);
 			}
+			peoteServer.localPeoteClient = new IntMap<PeoteClient>();
+			
 			if (Lambda.count(p.server) == 0 && Lambda.count(p.clients) == 0 )
 			{
 				#if debugPeoteNet trace("Peote-Server: " + key + " delete last -> closeed"); #end
@@ -422,12 +415,13 @@ class PeoteNet
 					peoteServer._onCreateJointError(Reason.DISCONNECT);
 					p.server.remove(peoteServer);
 					// TODO: can it have local clients ?
-					for (i in 0...peoteServer.localPeoteClient.length) { // TODO: refactor!
-						var localClient = peoteServer.localPeoteClient.pop();
+					for (localClient in peoteServer.localPeoteClient) {
 						localClient.localPeoteServer = null;
 						localClient._onEnterJointError(Reason.DISCONNECT);
 						p.clients.remove(localClient);
 					}
+					peoteServer.localPeoteClient = new IntMap<PeoteClient>();
+
 				}
 			}
 			for (peoteClient in p.clients.keys() )
@@ -476,12 +470,13 @@ class PeoteNet
 				peoteServer._onCreateJointError(Reason.CLOSE);
 				p.server.remove(peoteServer);
 				// TODO: can it have local clients ?
-				for (i in 0...peoteServer.localPeoteClient.length) {  // TODO refactor!
-					var localClient = peoteServer.localPeoteClient.pop();
+				for (localClient in peoteServer.localPeoteClient) {
 					localClient.localPeoteServer = null;
 					localClient._onEnterJointError(Reason.CLOSE);
 					p.clients.remove(localClient);
 				}
+				peoteServer.localPeoteClient = new IntMap<PeoteClient>();
+				
 			}
 			for (peoteClient in p.clients.keys() )
 			{
@@ -503,12 +498,12 @@ class PeoteNet
 				peoteServer._onCreateJointError(Reason.CLOSE);
 				p.server.remove(peoteServer);
 				// TODO: can it have local clients ?
-				for (i in 0...peoteServer.localPeoteClient.length) { // TODO refactor!
-					var localClient = peoteServer.localPeoteClient.pop();
+				for (localClient in peoteServer.localPeoteClient) {
 					localClient.localPeoteServer = null;
 					localClient._onEnterJointError(Reason.CLOSE);
 					p.clients.remove(localClient);
 				}
+				peoteServer.localPeoteClient = new IntMap<PeoteClient>();
 			}
 			for (peoteClient in p.clients.keys() )
 			{

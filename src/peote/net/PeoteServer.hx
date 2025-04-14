@@ -1,6 +1,7 @@
 package peote.net;
 
 import haxe.ds.Vector;
+import haxe.ds.IntMap;
 import haxe.io.Bytes;
 import haxe.Timer;
 import peote.io.PeoteBytesInput;
@@ -23,7 +24,7 @@ class PeoteServer
 	public var isRemote(default, null):Bool=false;
 	public var isChunks(default, null):Bool=false;
 
-	public var localPeoteClient:Array<PeoteClient> = [];
+	public var localPeoteClient = new IntMap<PeoteClient>();
 	public var netLag:Int = 20; // simmulates net-lag in milliseconds
 	public var netSpeed:Int = 1024 * 1024; // simmulates net-behavior (1024 * 1024 bytes [1KB] per second)
 	
@@ -116,33 +117,39 @@ class PeoteServer
 	public var last_time:Float = 0;
 	public inline function send(userNr:Int, bytes:Bytes):Void
 	{
-		if (userNr < PeoteNet.MAX_USER)
+		if (userNr < PeoteNet.MAX_USER) {
 			this.peoteJointSocket.sendDataToJointOwn(this.jointNr, userNr, bytes);
-		else {
+		}
+		else // send to all local clients (same runtime)
+		{	
 			var delay = Std.int(Math.max(0, last_delay - (Timer.stamp() - last_time) * 1000))
 			          + Std.int(netLag + 1000 * bytes.length / netSpeed);
-			last_delay = delay; // TODO: for local testing put a LIMIT here for OVERFLOW!!!!!
+			last_delay = delay; // TODO: for local testing put a LIMIT here to avoid OVERFLOW!!!!!
 			last_time = Timer.stamp();
 			
-			// CHECK:  bugfix to avoid same userNr for multiple local clients ---- (look at peoteNet line 224!)
-			/*
+			if (localPeoteClient.exists(userNr))
+				Timer.delay(function() { 
+					var localClient = localPeoteClient.get(userNr);
+					if (localClient != null) localClient._onData(localClient.jointNr, bytes); // TODO: optimize by extra _onLocalData !
+				}, delay);
+		}
+	}
+
+	public inline function broadcast(bytes:Bytes, ?excludeUserNr:Null<Int>):Void
+	{
+		// TODO:
+		// this.peoteJointSocket.broadcastToJointOwn(this.jointNr, bytes, excludeUserNr);
+		
+		if (localPeoteClient.exists(PeoteNet.MAX_USER)) // send to all local clients (same runtime)
+		{
+			var delay = Std.int(Math.max(0, last_delay - (Timer.stamp() - last_time) * 1000))
+			          + Std.int(netLag + 1000 * bytes.length / netSpeed);
+			last_delay = delay; // TODO: for local testing put a LIMIT here to avoid OVERFLOW!!!!!
+			last_time = Timer.stamp();
+
 			Timer.delay(function() {
-				if (localPeoteClient.length > userNr-PeoteNet.MAX_USER)
-					//if (localPeoteClient[userNr-PeoteNet.MAX_USER] != null)
-						localPeoteClient[userNr-PeoteNet.MAX_USER]._onData(localPeoteClient[userNr-PeoteNet.MAX_USER].jointNr, bytes); // TODO _onLocalData optimizing
+				for (localClient in localPeoteClient) localClient._onData(localClient.jointNr, bytes); // TODO: optimize by extra _onLocalData !
 			}, delay);
-			*/
-			// TODO: better make the localPeoteClient as a map !
-			var localClient:PeoteClient = null;
-			for (c in localPeoteClient) {
-				if (c.localUserNr == userNr) {
-					localClient = c;
-					break;
-				}
-			}
-			if (localClient != null)
-				Timer.delay(function() { localClient._onData(localClient.jointNr, bytes); }, delay); // TODO _onLocalData optimizing
-			// ------------------------------
 		}
 	}
 

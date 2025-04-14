@@ -124,7 +124,7 @@ class PeoteJointSocket
 			nr = -1; // ERROR
 		}
 		else
-		{    // TODO: achtung, wenn viele schnell hintereinander dan: RACE CONDITION
+		{    // TODO: wenn viele schnell hintereinander kommen kanns Probleme geben
 			if (!waitingCommandCallbacks.exists(nr)) waitingCommandCallbacks.set(nr, commandCallback);
 			else nr = -1; // ERROR
 		}
