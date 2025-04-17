@@ -119,6 +119,5 @@ Use [peote-server](https://github.com/maitag/peote-server) (written in [Perl](ht
 ## TODO:
 - more options to handle buffering (max users per server, payload, outbounds)
 - let server disconnect/block users
-- let server send data to all users at once
 - hardening to make it more robust against flooding
 - better implementation/documentation of the network-protocol
