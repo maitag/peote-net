@@ -609,12 +609,65 @@ class PeoteJointSocket
 		}
 	}
 	
+	public function broadcastToJointOwn(joint_nr:Int, ba:Bytes, ?excludeUserNr:Null<Int>):Void
+	{	//trace("broadcast chunk trought OWN joint, length="+ba.length + ((excludeUserNr!=null) ? ', exclude user:$user_nr' : ""));
+		if (ba.length <= 32767 - 2)
+		{
+			peoteSocket.writeByte(1); // broadcast command is followed
+
+			if (excludeUserNr !=null) {
+				peoteSocket.writeByte(0); // broadcast command nr -> send to ALL but exclude one user
+				writeChunkSize(ba.length+2);
+				peoteSocket.writeByte(joint_nr+128);
+				peoteSocket.writeByte(excludeUserNr);
+			}
+			else {
+				peoteSocket.writeByte(1); // broadcast command nr -> send to ALL
+				writeChunkSize(ba.length+1);
+				peoteSocket.writeByte(joint_nr+128);
+			}
+			
+			peoteSocket.writeBytes(ba);
+			peoteSocket.flush();
+		}
+		else
+		{
+			var pos:Int = 0;
+			var len:Int;
+
+			if (excludeUserNr !=null)
+				while (pos < ba.length) {	
+					peoteSocket.writeByte(1); // broadcast command is followed
+					peoteSocket.writeByte(0); // broadcast command nr -> send to ALL but exclude one user
+					len =  (ba.length - pos < 32767 - 2) ? ba.length - pos : 32767 - 2;
+					writeChunkSize(len+2);
+					peoteSocket.writeByte(joint_nr + 128);
+					peoteSocket.writeByte(excludeUserNr);
+					writeFullBytes(ba, pos, len);
+					peoteSocket.flush();
+					pos += len;
+				}
+			else
+				while (pos < ba.length) {	
+					peoteSocket.writeByte(1); // broadcast command is followed
+					peoteSocket.writeByte(1); // broadcast command nr -> send to ALL
+					len =  (ba.length - pos < 32767 - 1) ? ba.length - pos : 32767 - 1;
+					writeChunkSize(len+1);
+					peoteSocket.writeByte(joint_nr + 128);
+					writeFullBytes(ba, pos, len);
+					peoteSocket.flush();
+					pos += len;
+				}
+			
+		}
+	}
+	/*
 	public function sendChunk(bytes:Bytes):Void 
 	{
 		writeChunkSize(bytes.length);
 		peoteSocket.writeBytes(bytes);
 		peoteSocket.flush();
-	}
+	}*/
 	
 	public function writeChunkSize(chunk_size:Int):Void
 	{

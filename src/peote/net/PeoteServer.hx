@@ -137,8 +137,7 @@ class PeoteServer
 
 	public inline function broadcast(bytes:Bytes, ?excludeUserNr:Null<Int>):Void
 	{
-		// TODO:
-		// this.peoteJointSocket.broadcastToJointOwn(this.jointNr, bytes, excludeUserNr);
+		this.peoteJointSocket.broadcastToJointOwn(this.jointNr, bytes, excludeUserNr);
 		
 		if (localPeoteClient.exists(PeoteNet.MAX_USER)) // send to all local clients (same runtime)
 		{
@@ -160,6 +159,16 @@ class PeoteServer
 		else {
 			send( userNr, writeChunkSize(bytes.length) );
 			send( userNr, bytes );
+		}
+	}
+	
+	public function broadcastChunk(bytes:Bytes, ?excludeUserNr:Null<Int>):Void
+	{
+		if (bytes.length <= 0) throw("Error(sendChunk): can't send zero length chunk");
+		else if (bytes.length > maxChunkSize)  throw('Error(sendChunk): max chunksize is $maxChunkSize Bytes');
+		else {
+			broadcast( writeChunkSize(bytes.length), excludeUserNr);
+			broadcast( bytes, excludeUserNr);
 		}
 	}
 	
