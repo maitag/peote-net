@@ -144,9 +144,9 @@ peoteClient.enter("localhost", 7680, "testserver");
 
 - [peote-net-samples](https://github.com/maitag/peote-net-samples) some simple lime samples and also OpenFL ones (chat, rpc)  
 
-- used inside [peote-playground net-samples](https://github.com/maitag/peote-playground/tree/master/net) 
+- used inside of [peote-playground](https://github.com/maitag/peote-playground/tree/master/net)s net-samples
 
-- [peote-net integration by logic nodes](https://github.com/maitag/armory-3d-land/tree/main/peote-net) to use inside of [Armory3d](https://github.com/armory3d)
+- [peote-net integration](https://github.com/maitag/armory-3d-land/tree/main/peote-net) by logic nodes to use inside of [Armory3d](https://github.com/armory3d)
 
 - used inside ohmruns [stx framework](https://github.com/ohmrun), e.g. by the [datura](https://github.com/ohmrun/datura) p2p tool  
 
