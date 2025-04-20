@@ -140,15 +140,15 @@ peoteClient.enter("localhost", 7680, "testserver");
 
 ## Samples and usecases
 
-- [core/stress test]<https://github.com/maitag/peote-net/tree/master/testing/peote-net-test>: creates multiple servers/clients at the same time wich send/recieve random bytes (commandline/OpenFL)  
+- [core/stress test](https://github.com/maitag/peote-net/tree/master/testing/peote-net-test): creates multiple servers/clients at the same time wich send/recieve random bytes (commandline/OpenFL)  
 
-- [peote-net-samples]<https://github.com/maitag/peote-net-samples> some simple lime samples and also OpenFL ones (chat, rpc)  
+- [peote-net-samples](https://github.com/maitag/peote-net-samples) some simple lime samples and also OpenFL ones (chat, rpc)  
 
-- used inside [peote-playground net-samples]<https://github.com/maitag/peote-playground/tree/master/net>  
+- used inside [peote-playground net-samples](https://github.com/maitag/peote-playground/tree/master/net) 
 
-- [peote-net integration by logic nodes]<https://github.com/maitag/armory-3d-land/tree/main/peote-net> to use inside of [Armory3d]<https://github.com/armory3d>
+- [peote-net integration by logic nodes](https://github.com/maitag/armory-3d-land/tree/main/peote-net) to use inside of [Armory3d](https://github.com/armory3d)
 
-- used inside ohmruns [stx framework]<https://github.com/ohmrun>, e.g. by the [datura]<https://github.com/ohmrun/datura> p2p tool  
+- used inside ohmruns [stx framework](https://github.com/ohmrun), e.g. by the [datura](https://github.com/ohmrun/datura) p2p tool  
 
 
 
