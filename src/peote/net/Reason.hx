@@ -1,6 +1,6 @@
 package peote.net;
 
-enum abstract Reason(Int) from Int to Int 
+enum abstract Reason(Int) from Int to Int
 {
 	var DISCONNECT = 0; // disconnected from peote-server (channel-owner/user)
 	var CLOSE      = 1; // owner closed channel or user leaves
@@ -12,7 +12,7 @@ enum abstract Reason(Int) from Int to Int
 
 	var MALICIOUS  = 20; // malicious input
 
-	@to public function toString():String {
+	@:to public function toString():String {
 		return switch(this)
 		{
 			case DISCONNECT : "DISCONNECT"; 

@@ -209,10 +209,10 @@ class PeoteServer
 		events.onCreate(this);
 	}
 	
-	public inline function _onCreateJointError(errorNr:Int):Void
+	public inline function _onCreateJointError(reason:Reason):Void
 	{
 		this.server = "";
-		events.onError(this, -1, errorNr);
+		events.onError(this, -1, reason);
 	}
 	
 	public inline function _onUserConnect(jointNr:Int, userNr:Int):Void 

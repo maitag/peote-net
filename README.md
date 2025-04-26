@@ -51,13 +51,14 @@ peoteServer = new PeoteServer({
 	onCreate: function(server:PeoteServer) {
 		trace('Channel ${server.jointNr} created.');
 	},
-	onError: function(server:PeoteServer, userNr:Int, reason:Int) {
+	onError: function(server:PeoteServer, userNr:Int, reason:Reason) {
 		switch(reason) {
-			case Reason.DISCONNECT: trace("Can't connect to peote-server.");
-			case Reason.CLOSE:      trace("Connection to peote-server is closed.");
-			case Reason.ID:         trace("Another channel with same id (or wrong id).");
-			case Reason.MAX:        trace("Created to much channels on this server (max is 128).");
-			case Reason.MALICIOUS:  trace("Malicious data (by user).");
+			case DISCONNECT: trace("Can't connect to peote-server.");
+			case CLOSE:      trace("Connection to peote-server is closed.");
+			case ID:         trace("Another channel with same id (or wrong id).");
+			case MAX:        trace("Created to much channels on this server (max is 128).");
+			case MALICIOUS:  trace("Malicious data (by user).");
+			default: trace(reason);
 		}
 	},
 	onUserConnect: function(server:PeoteServer, userNr:Int) {
@@ -74,11 +75,12 @@ peoteServer = new PeoteServer({
 		server.broadcastChunk( output.getBytes() ); // to all connected clients
 		server.broadcastChunk( output.getBytes(), userNr ); // to all connected clients but exclude the userNr
 	},
-	onUserDisconnect: function(server:PeoteServer, userNr:Int, reason:Int) {
+	onUserDisconnect: function(server:PeoteServer, userNr:Int, reason:Reason) {
 		trace('User $userNr disconnects from channel ${server.jointNr}.');
 		switch (reason) {
-			case Reason.CLOSE:      trace("User leaves channel.");
-			case Reason.DISCONNECT: trace("User was disconnected.");
+			case CLOSE:      trace("User leaves channel.");
+			case DISCONNECT: trace("User was disconnected.");
+			default: trace(reason);
 		}
 	},
 	// choose between onData or onDataChunk (do not use this handlers for remoteobject functioncalling)
@@ -106,21 +108,23 @@ peoteClient = new PeoteClient({
 		output.writeString("Hello Server");
 		client.sendChunk( output.getBytes() );
 	},
-	onError: function(client:PeoteClient, reason:Int) {
+	onError: function(client:PeoteClient, reason:Reason) {
 		switch(reason) {
-			case Reason.DISCONNECT:trace("can't connect to peote-server");
-			case Reason.CLOSE:     trace("disconnected from peote-server");
-			case Reason.ID:        trace("No channel with this ID to enter.");
-			case Reason.MAX:       trace("Entered to much channels on this server (max is 128)");
-			case Reason.FULL:      trace("Channel is full (max of 256 users already connected).");
-			case Reason.MALICIOUS: trace("Malicious data.");
+			case DISCONNECT:trace("can't connect to peote-server");
+			case CLOSE:     trace("disconnected from peote-server");
+			case ID:        trace("No channel with this ID to enter.");
+			case MAX:       trace("Entered to much channels on this server (max is 128)");
+			case FULL:      trace("Channel is full (max of 256 users already connected).");
+			case MALICIOUS: trace("Malicious data.");
+			default: trace(reason);
 		}
 	},
-	onDisconnect: function(client:PeoteClient, reason:Int) {
+	onDisconnect: function(client:PeoteClient, reason:Reason) {
 		trace('Disconnected from channel ${client.jointNr}');
 		switch (reason) {
-			case Reason.CLOSE:      trace("Channel closed by creator.");
-			case Reason.DISCONNECT: trace("Channel-creator disconnected.");
+			case CLOSE:      trace("Channel closed by creator.");
+			case DISCONNECT: trace("Channel-creator disconnected.");
+			default: trace(reason);
 		}
 	},
 	// choose between onData or onDataChunk (do not use this handlers for remoteobject functioncalling)

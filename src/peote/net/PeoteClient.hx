@@ -174,10 +174,10 @@ class PeoteClient
 		events.onEnter(this);
  	}
 	
-	public function _onEnterJointError(errorNr:Int):Void // bei FEHLER
+	public function _onEnterJointError(reason:Reason):Void
 	{
 		this.server = "";
-		events.onError(this, errorNr );
+		events.onError(this, reason );
  	}
 	
 	public function _onDisconnect(jointNr:Int, reason:Reason):Void 

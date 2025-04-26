@@ -134,8 +134,8 @@ class PeoteJointSocket
 	public function createOwnJoint(joint_id:String, commandCallback:Int -> Void,
 												dataCallback:Int -> Int -> Bytes -> Void,
 												userConnectCallback:Int -> Int-> Void,
-												userDisconnectCallback:Int -> Int -> Int -> Void,
-												errorCallback:Int -> Void = null):Void 
+												userDisconnectCallback:Int -> Int -> Reason -> Void,
+												errorCallback:Reason -> Void = null):Void 
 	{
 		var bytes:Bytes = Bytes.ofString(joint_id);
 		if (bytes.length <= 255)
@@ -171,8 +171,8 @@ class PeoteJointSocket
 	private function onCreateOwnJoint(command_chunk:Bytes, commandCallback:Int -> Void,
 															dataCallback:Int -> Int -> Bytes -> Void,
 															userConnectCallback:Int -> Int-> Void,
-															userDisconnectCallback:Int -> Int -> Int -> Void,
-															errorCallback:Int -> Void = null):Void 
+															userDisconnectCallback:Int -> Int -> Reason -> Void,
+															errorCallback:Reason -> Void = null):Void 
 	{
 		if (command_chunk.get(0) == 0) // -> OK 
 		{	
@@ -204,7 +204,7 @@ class PeoteJointSocket
 		userConnectCallback(joint_nr, command_chunk.get(0));
 	}
 	
-	private function onUserDisconnect(userDisconnectCallback:Int -> Int -> Int -> Void, joint_nr:Int, command_chunk:Bytes):Void
+	private function onUserDisconnect(userDisconnectCallback:Int -> Int -> Reason -> Void, joint_nr:Int, command_chunk:Bytes):Void
 	{
 		userDisconnectCallback(joint_nr,  command_chunk.get(0),  command_chunk.get(1));
 	}
@@ -252,8 +252,8 @@ class PeoteJointSocket
 */	
 	public function enterInJoint(joint_id:String, commandCallback:Int -> Void,
 												dataCallback:Int -> Bytes -> Void,
-												disconnectCallback:Int -> Int -> Void,
-												errorCallback:Int -> Void = null):Void 
+												disconnectCallback:Int -> Reason -> Void,
+												errorCallback:Reason -> Void = null):Void 
 	{
 		var bytes:Bytes = Bytes.ofString(joint_id);
 		if (bytes.length <= 255)
@@ -287,8 +287,8 @@ class PeoteJointSocket
 	
 	private function onEnterInJoint(command_chunk:Bytes, commandCallback:Int -> Void,
 															dataCallback:Int -> Bytes -> Void,
-															disconnectCallback:Int -> Int -> Void,
-															errorCallback:Int -> Void = null):Void 
+															disconnectCallback:Int -> Reason -> Void,
+															errorCallback:Reason -> Void = null):Void 
 	{
 		if (command_chunk.get(0) == 0) // -> OK 
 		{	//trace("OK ----");
@@ -315,7 +315,7 @@ class PeoteJointSocket
 		}
 	}
 	
-	private function onInDisconnect(disconnectCallback:Int -> Int -> Void, joint_nr:Int, command_chunk:Bytes):Void
+	private function onInDisconnect(disconnectCallback:Int -> Reason -> Void, joint_nr:Int, command_chunk:Bytes):Void
 	{
 		inJointDataCallback.remove(joint_nr);
 		disconnectCallback(joint_nr, command_chunk.get(0));
