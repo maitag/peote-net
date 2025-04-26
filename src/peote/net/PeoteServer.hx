@@ -225,7 +225,7 @@ class PeoteServer
 		events.onUserConnect(this, userNr);
 	}
 	
-	public inline function _onUserDisconnect(jointNr:Int, userNr:Int, reason:Int):Void 
+	public inline function _onUserDisconnect(jointNr:Int, userNr:Int, reason:Reason):Void 
 	{
 		remotes[userNr] = null;
 		

@@ -15,7 +15,6 @@ import peote.net.Reason;
 
 class Stress
 {
-
 	var host:String;
 	var port:Int;
 	
@@ -70,16 +69,18 @@ class Stress
 				log('Channel ${server.jointNr} created. ("${server.jointId}")', 0, server.jointNr);
 				Timer.delay(createNext, 100);
 			},
-			onError: function(server:PeoteServer, userNr:Int, reason:Int) {
+			onError: function(server:PeoteServer, userNr:Int, reason:Reason) {
 				var isOk:Bool = false;
 				switch(reason) {
-					case Reason.DISCONNECT:log("Can't connect to peote-server.", 0, server.jointNr);
+					case DISCONNECT:log("Can't connect to peote-server.", 0, server.jointNr);
 					                       //stopOnError = true;
-					case Reason.CLOSE:     log("Connection to peote-server is closed.", 0, server.jointNr);
-					case Reason.ID:        log("There is another channel with same ID. (or wrong ID)", 0, server.jointNr);
+					case CLOSE:     log("Connection to peote-server is closed.", 0, server.jointNr);
+					case ID:        log("There is another channel with same ID. (or wrong ID)", 0, server.jointNr);
 					                       isOk = true;
-					case Reason.MAX:       log("Created to much channels on this server (max is 128).", 0, server.jointNr);
-					case Reason.MALICIOUS: if (userNr > 0) log('User $userNr sending malicious data.', 0, server.jointNr); // TODO: kick/bann user
+					case MAX:       log("Created to much channels on this server (max is 128).", 0, server.jointNr);
+					case MALICIOUS: if (userNr > 0) log('User $userNr sending malicious data.', 0, server.jointNr); // TODO: kick/bann user
+
+					default: trace(reason);
 				}
 				activeServers--;
 				if (!stopOnError || isOk) Timer.delay(createNext, 100);
@@ -87,11 +88,12 @@ class Stress
 			onUserConnect: function(server:PeoteServer, userNr:Int) {
 				log('New user connects: jointNr:${server.jointNr}, userNr=$userNr', 0, server.jointNr);
 			},
-			onUserDisconnect: function(server:PeoteServer, userNr:Int, reason:Int) {
+			onUserDisconnect: function(server:PeoteServer, userNr:Int, reason:Reason) {
 				log('User disconnects: jointNr=${server.jointNr}, userNr=$userNr', 0, server.jointNr);
 				switch (reason) {
-					case Reason.CLOSE:      log("User leaves channel.", 0, server.jointNr);
-					case Reason.DISCONNECT: log("User disconnected from peote-server.", 0, server.jointNr);
+					case CLOSE:      log("User leaves channel.", 0, server.jointNr);
+					case DISCONNECT: log("User disconnected from peote-server.", 0, server.jointNr);
+					default: trace(reason);
 				}
 			},
 			onDataChunk: function(server:PeoteServer, userNr:Int, bytes:Bytes) {
@@ -101,7 +103,9 @@ class Stress
 				else server.sendChunk(userNr, bytes);
 			}
 		};
+
 		// --------------------------------------------------------------------------
+		
 		clientEvents = {
 			maxChunkSize: maxBytes,
 			onEnter: function(client:PeoteClient) {
@@ -110,27 +114,30 @@ class Stress
 				Timer.delay(enterNext, 100);
 				sendRandomBytes(client);
 			},
-			onError: function(client:PeoteClient, reason:Int) {
+			onError: function(client:PeoteClient, reason:Reason) {
 				var isOk:Bool = false;
 				switch(reason) {
-					case Reason.DISCONNECT:log("Can't connect to peote-server.", 1, client.jointNr);
+					case DISCONNECT:log("Can't connect to peote-server.", 1, client.jointNr);
 					                       //stopOnError = true;
-					case Reason.CLOSE:     log("Connection to peote-server is closed.",1, client.jointNr);
-				    case Reason.ID:        log("No channel with this ID to enter.",1, client.jointNr);
+					case CLOSE:     log("Connection to peote-server is closed.",1, client.jointNr);
+				    case ID:        log("No channel with this ID to enter.",1, client.jointNr);
 					                       isOk = true;
-					case Reason.MAX:       log("Entered to much channels on this server (max is 128)",1, client.jointNr);
-					case Reason.FULL:      log("Channel is full (max of 256 users already connected to this channel).",1, client.jointNr);
-					case Reason.MALICIOUS: log("Channel-owner sending malicious data.",1, client.jointNr);
+					case MAX:       log("Entered to much channels on this server (max is 128)",1, client.jointNr);
+					case FULL:      log("Channel is full (max of 256 users already connected to this channel).",1, client.jointNr);
+					case MALICIOUS: log("Channel-owner sending malicious data.",1, client.jointNr);
+
+					default: trace(reason);
 				}
 				activeClients--;
 				if (!stopOnError || isOk) Timer.delay(enterNext, 100);
 			},
-			onDisconnect: function(client:PeoteClient, reason:Int) {
+			onDisconnect: function(client:PeoteClient, reason:Reason) {
 				log('Disconnect: jointNr:${client.jointNr}',1, client.jointNr);
 				switch (reason) {
-					case Reason.CLOSE:     log("Channel closed by owner.",1, client.jointNr);
-					case Reason.DISCONNECT:log("Channel-owner disconnected.",1, client.jointNr);
-					//case Reason.KICK: log("Kicked by channel-owner.",1, client.jointNr); // TODO
+					case CLOSE:     log("Channel closed by owner.",1, client.jointNr);
+					case DISCONNECT:log("Channel-owner disconnected.",1, client.jointNr);
+					//case KICK: log("Kicked by channel-owner.",1, client.jointNr); // TODO
+					default: trace(reason);
 				}
 				activeClients--;
 				Timer.delay(enterNext, 100);

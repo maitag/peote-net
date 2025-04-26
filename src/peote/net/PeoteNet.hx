@@ -244,7 +244,7 @@ class PeoteNet
 						function (jointNr:Int):Void { peoteClient._onEnterJoint(p.peoteJointSocket, jointNr); },
 						peoteClient._onData,
 						//peoteClient.onDisconnect,
-						function (jointNr:Int, reason:Int):Void { PeoteNet.onDisconnect(key, peoteClient, jointNr, reason); },
+						function (jointNr:Int, reason:Reason):Void { PeoteNet.onDisconnect(key, peoteClient, jointNr, reason); },
 						function (errorNr:Int):Void { PeoteNet.onEnterJointError(key, peoteClient, errorNr); }
 					);
 				} else peoteClient._onEnterJointError(Reason.ID);
@@ -384,7 +384,7 @@ class PeoteNet
 		peoteClient._onEnterJointError(errorNr);
 	}
 	
-	public static function onDisconnect(key:String, peoteClient:PeoteClient, jointNr:Int, reason:Int):Void
+	public static function onDisconnect(key:String, peoteClient:PeoteClient, jointNr:Int, reason:Reason):Void
 	{
 		if (sockets.exists(key))
 		{
@@ -452,7 +452,7 @@ class PeoteNet
 				    function (jointNr:Int):Void { peoteClient._onEnterJoint(p.peoteJointSocket, jointNr); },
 				    peoteClient._onData,
 					//peoteClient.onDisconnect,
-					function (jointNr:Int, reason:Int):Void { PeoteNet.onDisconnect(key, peoteClient, jointNr, reason); },
+					function (jointNr:Int, reason:Reason):Void { PeoteNet.onDisconnect(key, peoteClient, jointNr, reason); },
 					function (errorNr:Int):Void { PeoteNet.onEnterJointError(key, peoteClient, errorNr); }
 				);
 			}

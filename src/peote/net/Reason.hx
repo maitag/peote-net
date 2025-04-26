@@ -1,15 +1,31 @@
 package peote.net;
 
-#if (haxe_ver >= 4.0) enum #else @:enum#end
-abstract Reason(Int) from Int to Int 
+enum abstract Reason(Int) from Int to Int 
 {
-	public static inline var DISCONNECT :Int = 0; // disconnected from peote-server (joint-owner/user)
-	public static inline var CLOSE      :Int = 1; // owner closed joint or user leaves
-	public static inline var KICK       :Int = 2; // user was kicked by joint-owner
-	                                    
-	public static inline var ID         :Int = 10; // can't enter/open joint with this id (another or none exists)
-	public static inline var FULL       :Int = 11; // channel is full (max of 256 users already connected) (max is 128).
-	public static inline var MAX        :Int = 12; // created/joined to much channels on this server (max is 128).
-                                        
-	public static inline var MALICIOUS  :Int = 20; // malicious input
+	var DISCONNECT = 0; // disconnected from peote-server (channel-owner/user)
+	var CLOSE      = 1; // owner closed channel or user leaves
+	var KICK       = 2; // user was kicked by channel-owner (TODO!!!)
+
+	var ID         = 10; // can't enter/open channel with this id (server: wrong id or already used, client: no chan with this id)
+	var FULL       = 11; // channel is full (max of 256 users already connected) (max is 128)
+	var MAX        = 12; // server created or client joined to much channels on this server (max is 128)
+
+	var MALICIOUS  = 20; // malicious input
+
+	@to public function toString():String {
+		return switch(this)
+		{
+			case DISCONNECT : "DISCONNECT"; 
+			case CLOSE      : "CLOSE"; 
+			case KICK       : "KICK"; // not yet implemented !!!
+
+			case ID         : "ID"; 
+			case FULL       : "FULL"; 
+			case MAX        : "MAX"; 
+
+			case MALICIOUS  : "MALICIOUS";
+
+			default: "unknown";
+		}
+	}
 }

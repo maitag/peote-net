@@ -180,7 +180,7 @@ class PeoteClient
 		events.onError(this, errorNr );
  	}
 	
-	public function _onDisconnect(jointNr:Int, reason:Int):Void 
+	public function _onDisconnect(jointNr:Int, reason:Reason):Void 
 	{
 		events.onDisconnect(this, reason);	
  	}
