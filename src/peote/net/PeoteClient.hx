@@ -9,6 +9,7 @@ import peote.io.PeoteBytesInput;
  * by Sylvio Sell - rostock 2015
  */
 
+@:allow(peote.net)
 class PeoteClient
 {
 	public var events:PeoteClientEvents;
@@ -21,8 +22,8 @@ class PeoteClient
 	public var isRemote(default, null):Bool=false;
 	public var isChunks(default, null):Bool=false;
 
-	public var localPeoteServer:PeoteServer = null;
-	public var localUserNr:Int;
+	var localPeoteServer:PeoteServer = null;
+	var localUserNr:Int;
 
 	// variable chunksize:
 	// max values for 1 byte -> max 256
@@ -102,7 +103,7 @@ class PeoteClient
 	public function leave():Void 
 	{
 		PeoteNet.leaveJoint(this, this.server, this.port, this.jointNr);
-		this.server = "";
+		this.server = ""; // to let enter again
 	}
 
 	// -----------------------------------------------------------------------------------
@@ -176,12 +177,13 @@ class PeoteClient
 	
 	public function _onEnterJointError(reason:Reason):Void
 	{
-		this.server = "";
+		this.server = ""; // to let enter again
 		events.onError(this, reason );
  	}
 	
 	public function _onDisconnect(jointNr:Int, reason:Reason):Void 
 	{
+		this.server = ""; // to let enter again
 		events.onDisconnect(this, reason);	
  	}
 	

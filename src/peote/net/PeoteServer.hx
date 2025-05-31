@@ -11,6 +11,7 @@ import peote.net.PeoteClient;
  * by Sylvio Sell - rostock 2015
  */
 
+@:allow(peote.net)
 class PeoteServer
 {
 	public var events:PeoteServerEvents;
@@ -24,9 +25,10 @@ class PeoteServer
 	public var isRemote(default, null):Bool=false;
 	public var isChunks(default, null):Bool=false;
 
-	public var localPeoteClient = new IntMap<PeoteClient>();
 	public var netLag:Int = 20; // simmulates net-lag in milliseconds
 	public var netSpeed:Int = 1024 * 1024; // simmulates net-behavior (1024 * 1024 bytes [1KB] per second)
+	
+	var localPeoteClient = new IntMap<PeoteClient>();
 	
 	// variable chunksize:
 	// max values for 1 byte -> max 256
@@ -107,7 +109,7 @@ class PeoteServer
 	{
 		if (offline) PeoteNet.deleteOfflineJoint(this, this.server, this.port, this.jointId);
 		else PeoteNet.deleteJoint(this, this.server, this.port, this.jointNr);
-		this.server = "";
+		this.server = ""; // to let create again
 	}
 	
 	// -----------------------------------------------------------------------------------
@@ -211,7 +213,7 @@ class PeoteServer
 	
 	public inline function _onCreateJointError(reason:Reason):Void
 	{
-		this.server = "";
+		this.server = ""; // to let create again
 		events.onError(this, -1, reason);
 	}
 	
